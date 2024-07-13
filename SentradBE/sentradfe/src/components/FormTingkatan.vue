@@ -34,6 +34,7 @@
     import { ref, reactive, onMounted } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import axios from '../services/api.js';
+    import Swal from 'sweetalert2';
 
     const formData = reactive({
         nama_tingkatan: '',
@@ -70,6 +71,19 @@
     });
 
     const handleSubmit = async () => {
+        const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
+
+        const result = await Swal.fire({
+            title: `Apakah Anda yakin ingin ${action} tingkatan ini?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
         try {
             let response;
             if (mode.value === 'add') {

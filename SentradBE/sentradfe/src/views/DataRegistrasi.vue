@@ -38,7 +38,7 @@
                         <span v-else-if="individu.status_individu === 0" class="status-inactive">Nonaktif</span>
                     </td>
                     <td>
-                        <router-link :to="{ name: 'FormEditIndividu', params: { id: individu.id } }" class="edit-btn material-icons">
+                        <router-link :to="{ name: 'FormIndividuEdit', params: { id: individu.id } }" class="edit-btn material-icons">
                             settings
                         </router-link>
                         <button @click="deleteIndividu(individu.id)" class="delete-btn">
@@ -91,7 +91,7 @@
                         <span v-else-if="kelompok.status_kelompok === 0" class="status-inactive">Nonaktif</span>
                     </td>
                     <td>
-                        <router-link :to="{ name: 'FormEditKelompok', params: { id: kelompok.id } }" class="edit-btn material-icons">
+                        <router-link :to="{ name: 'FormKelompokedit', params: { id: kelompok.id } }" class="edit-btn material-icons">
                             settings
                         </router-link>
                         <button @click="deleteKelompok(kelompok.id)" class="delete-btn">
@@ -115,6 +115,7 @@
     import { ref, onMounted } from 'vue';
     import axios from '../services/api.js';
     import Sidebar from '../components/SidebarAdmin.vue';
+    import Swal from 'sweetalert2';
 
     const registrasi_individus = ref([]);
     const registrasi_kelompoks = ref([]);
@@ -125,7 +126,7 @@
 
     const loadIndividus = async () => {
         try {
-        const response = await axios.get('/register-individu');
+        const response = await axios.get('/registerIndividu');
         if (response.status === 200 && response.data.status === 'success') {
             registrasi_individus.value = response.data.data;
         } else {
@@ -138,7 +139,7 @@
 
     const loadKelompoks = async () => {
         try {
-        const response = await axios.get('/register-kelompok');
+        const response = await axios.get('/registerKelompok');
         if (response.status === 200 && response.data.status === 'success') {
             registrasi_kelompoks.value = response.data.data;
         } else {
@@ -150,31 +151,58 @@
     };
 
     const deleteIndividu = async (id) => {
-        try {
-        const response = await axios.delete(`/register-individu/${id}`);
-        if (response.status === 200 && response.data.status === 'success') {
-            alert('Individu deleted successfully');
-            loadIndividus();
-        } else {
-            console.error('Failed to delete individu. Status:', response.status);
+        const result = await Swal.fire({
+            title: 'Apakah Anda yakin ingin menghapus registrasi individu ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
         }
+        try {
+            const response = await axios.delete(`/registerIndividu/${id}`);
+            if (response.status === 200 && response.data.status === 'success') {
+                Swal.fire('Regitrasi individu berhasil dihapus', '', 'success');
+                loadKelompoks();
+            } else {
+                Swal.fire('Gagal menghapus regitrasi individu', response.data.message, 'error');
+                console.error('Gagal menghapus regitrasi individu:', response.data.message);
+            }
         } catch (error) {
-        console.error('Error:', error.message);
+            Swal.fire('Error menghapus regitrasi individu', error.message, 'error');
+            console.error('Error menghapus regitrasi individu:', error.message);
         }
     };
 
 
     const deleteKelompok = async (id) => {
-        try {
-        const response = await axios.delete(`/api/register-kelompok/${id}`);
-        if (response.status === 200 && response.data.status === 'success') {
-            alert('Kelompok deleted successfully');
-            loadKelompoks();
-        } else {
-            console.error('Failed to delete kelompok. Status:', response.status);
+        const result = await Swal.fire({
+            title: 'Apakah Anda yakin ingin menghapus regitrasi kelompok ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
         }
+
+        try {
+            const response = await axios.delete(`/registerKelompok/${id}`);
+            if (response.status === 200 && response.data.status === 'success') {
+                Swal.fire('Regitrasi kelompok berhasil dihapus', '', 'success');
+                loadKelompoks();
+            } else {
+                Swal.fire('Gagal menghapus regitrasi kelompok', response.data.message, 'error');
+                console.error('Gagal menghapus regitrasi kelompok:', response.data.message);
+            }
         } catch (error) {
-        console.error('Error:', error.message);
+            Swal.fire('Error menghapus regitrasi kelompok', error.message, 'error');
+            console.error('Error menghapus regitrasi kelompok:', error.message);
         }
     };
 

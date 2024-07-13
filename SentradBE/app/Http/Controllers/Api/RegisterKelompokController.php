@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\RegistrasiKelompok;
+use App\Models\Seniman;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -70,6 +71,64 @@ class RegisterKelompokController extends Controller
 
             $storeData['tgl_terbentuk'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_terbentuk'])->format('Y-m-d');
 
+
+            $register = RegistrasiKelompok::create($storeData);
+
+            Log::info('Data Registrasi Kelompok Berhasil Ditambahakan');
+            return response()->json([
+                'data' => $register,
+                'status' => 'success',
+                'message' => 'Data Registrasi Kelompok Berhasil Ditambahakan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storebyAdmin(Request $request)
+    {
+        try {
+            $storeData = $request->all();
+
+            $validate = Validator::make($storeData, [
+                'nama_seniman'=>'required|exists:seniman,nama_seniman',
+                'nama_kelompok' => 'required',
+                'tgl_terbentuk' => 'required|date_format:d/m/Y',
+                'alamat_kelompok' => 'required',
+                'deskripsi_kelompok' => 'required',
+                'noTelp_kelompok' => 'required|numeric',
+                'email_kelompok' => 'required|email',
+                'jumlah_anggota' => 'required|numeric',
+                'status_kelompok' => 'required|boolean',
+            ]);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
+
+            $seniman = Seniman::where('nama_seniman', $request->nama_seniman)->first();
+
+            if (!$seniman) {
+                Log::error('Seniman not found with nama_seniman: ' . $request->nama_seniman);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Seniman not found',
+                ], 404);
+            }
+
+            $storeData['tgl_terbentuk'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_terbentuk'])->format('Y-m-d');
+            $storeData['seniman_id'] = $seniman->id;
 
             $register = RegistrasiKelompok::create($storeData);
 

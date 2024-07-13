@@ -51,6 +51,7 @@
     import { useRouter } from 'vue-router';
     import axios from '../services/api.js';
     import Sidebar from '../components/SidebarAdmin.vue';
+    import Swal from 'sweetalert2'
 
     const senis = ref([]);
     const currentPage = ref(1);
@@ -72,18 +73,33 @@
     };
 
     const deleteSeni = async (id) => {
-        try {
-        const response = await axios.delete(`/seni/${id}`);
-        if (response.status === 200 && response.data.status === 'success') {
-            alert('Seni deleted successfully');
-            getSeni(); // Refresh penilais list after deletion
-        } else {
-            console.error('Failed to delete penilai:', response.data.message);
+        const result = await Swal.fire({
+            title: 'Apakah Anda yakin ingin menghapus seni ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
         }
+        try {
+            const response = await axios.delete(`/seni/${id}`);
+            if (response.status === 200 && response.data.status === 'success') {
+                Swal.fire('Seni berhasil dihapus', '', 'success');
+                getSeni(); // Refresh penilais list after deletion
+            } else {
+                Swal.fire('Gagal menghapus seni', response.data.message, 'error');
+                console.error('Failed to delete seni:', response.data.message);
+            }
         } catch (error) {
-        console.error('Error deleting penilai:', error.message);
+            Swal.fire('Error menghapus seni', error.message, 'error');
+            console.error('Error deleting seni:', error.message);
         }
     };
+
+    
 
     const prevPage = () => {
         if (currentPage.value > 1) {

@@ -9,10 +9,12 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterIndividuController extends Controller
 {
-    public function index(){
+    public function index()
+    {
         try {
             $register = RegistrasiIndividu::whereNull('deleted_at')->get();
 
@@ -41,13 +43,12 @@ class RegisterIndividuController extends Controller
         }
     }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         try {
-
             $storeData = $request->all();
 
             $validate = Validator::make($storeData, [
-                'nama_seniman'=>'required',
                 'nama' => 'required',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
                 'tgl_mulai' => 'required|date_format:d/m/Y',
@@ -57,6 +58,63 @@ class RegisterIndividuController extends Controller
                 'status_individu' => 'required',
             ]);
 
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
+
+            $seniman = Auth::user(); // Assuming the logged-in user is a Seniman
+
+            if (!$seniman) {
+                Log::error('Seniman not logged in');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Seniman not logged in',
+                ], 401);
+            }
+
+            $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
+            $storeData['tgl_mulai'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_mulai'])->format('Y-m-d');
+            $storeData['seniman_id'] = $seniman->id;
+
+            $register = RegistrasiIndividu::create($storeData);
+
+            Log::info('Data Registrasi Individu Berhasil Ditambahakan');
+            return response()->json([
+                'data' => $register,
+                'status' => 'success',
+                'message' => 'Data Registrasi Individu Berhasil Ditambahakan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storebyAdmin(Request $request)
+    {
+        try {
+            $storeData = $request->all();
+
+            $validate = Validator::make($storeData, [
+                'nama_seniman' => 'required|exists:seniman,nama_seniman',
+                'nama' => 'required',
+                'tgl_lahir' => 'required|date_format:d/m/Y',
+                'tgl_mulai' => 'required|date_format:d/m/Y',
+                'alamat' => 'required',
+                'noTelp' => 'required|numeric',
+                'email' => 'required|email',
+                'status_individu' => 'required',
+            ]);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -66,12 +124,22 @@ class RegisterIndividuController extends Controller
                     'message' => $validate->errors(),
                 ], 400);
             }
-            $seniman = Seniman::where('nama_seniman', $storeData['nama_seniman'])->first();
+
+            // Lookup seniman_id by nama_seniman
+            $seniman = Seniman::where('nama_seniman', $request->nama_seniman)->first();
+
+            if (!$seniman) {
+                Log::error('Seniman not found with nama_seniman: ' . $request->nama_seniman);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Seniman not found',
+                ], 404);
+            }
 
             $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
             $storeData['tgl_mulai'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_mulai'])->format('Y-m-d');
             $storeData['seniman_id'] = $seniman->id;
-            unset($storeData['nama_seniman']);
 
             $register = RegistrasiIndividu::create($storeData);
 
@@ -92,7 +160,8 @@ class RegisterIndividuController extends Controller
     }
 
 
-    public function show($id){
+    public function show($id)
+    {
         try {
             $register = RegistrasiIndividu::whereNull('deleted_at')->find($id);
 
@@ -119,8 +188,8 @@ class RegisterIndividuController extends Controller
         }
     }
 
-
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         try {
             $register = RegistrasiIndividu::whereNull('deleted_at')->find($id);
 
@@ -134,7 +203,7 @@ class RegisterIndividuController extends Controller
             }
 
             $validate = Validator::make($request->all(), [
-                'seniman_id'=>'required',
+                'seniman_id'=>'required|exists:seniman,id',
                 'nama' => 'required',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
                 'tgl_mulai' => 'required|date_format:d/m/Y',
@@ -162,7 +231,7 @@ class RegisterIndividuController extends Controller
             $register->tgl_mulai = $tgl_mulai;
             $register->alamat = $request->alamat;
             $register->noTelp = $request->noTelp;
-            $register->email = $$request->email;;
+            $register->email = $request->email;
             $register->status_individu = $request->status_individu;
 
             $register->save();
@@ -183,8 +252,8 @@ class RegisterIndividuController extends Controller
         }
     }
 
-
-    public function destroy($id){
+    public function destroy($id)
+    {
         try {
             $register = RegistrasiIndividu::whereNull('deleted_at')->find($id);
 

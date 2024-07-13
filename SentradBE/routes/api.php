@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\SeniController;
 use App\Http\Controllers\Api\SenimanController;
 use App\Http\Controllers\Api\TingkatanController;
 use App\Http\Controllers\Api\UserController;
+use App\Models\RegistrasiIndividu;
 
 // Route untuk register, login, dan verifikasi email
 Route::post('register', [AuthController::class, 'register']);
@@ -30,8 +31,8 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('seni', SeniController::class);
     Route::apiResource('penilaian', PenilaianKaryaController::class);
     Route::apiResource('kategori-seni', KategoriSeniController::class); // Ganti dengan nama yang konsisten
-    Route::apiResource('register-individu', RegisterIndividuController::class); // Ganti dengan nama yang konsisten
-    Route::apiResource('register-kelompok', RegisterKelompokController::class); // Ganti dengan nama yang konsisten
+    Route::apiResource('registerIndividu', RegisterIndividuController::class); // Ganti dengan nama yang konsisten
+    Route::apiResource('registerKelompok', RegisterKelompokController::class); // Ganti dengan nama yang konsisten
     Route::apiResource('rubrik', RubrikController::class);
     Route::apiResource('tingkatan', TingkatanController::class);
     Route::apiResource('user', UserController::class);
@@ -40,8 +41,10 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/penilai/download', [PenilaiController::class, 'downloadPenilai'])->name('penilai.downloadPenilai');
     Route::get('/penilai/laporan', [PenilaiController::class, 'showLaporan']);
     Route::get('/penilai/downloadLaporan', [PenilaiController::class, 'downloadPenilaiLaporan']);
+    Route::post('/registerIndividu/storeByAdmin', [RegisterIndividuController::class, 'storebyAdmin']);
+    Route::post('/registerKelompok/storeByAdmin', [RegisterKelompokController::class, 'storebyAdmin']);
     Route::get('/user-profile', function (Request $request) {
-        return $request->user(); // Jika membutuhkan profil user saat ini
+        return $request->user();
     });
 });
 

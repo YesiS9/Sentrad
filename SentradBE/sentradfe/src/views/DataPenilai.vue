@@ -59,6 +59,7 @@
     import { useRouter } from 'vue-router';
     import axios from '../services/api.js';
     import Sidebar from '../components/SidebarAdmin.vue';
+    import Swal from 'sweetalert2';
 
     const penilais = ref([]);
     const currentPage = ref(1);
@@ -80,16 +81,29 @@
     };
 
     const deletePenilai = async (id) => {
-        try {
-        const response = await axios.delete(`/penilai/${id}`);
-        if (response.status === 200 && response.data.status === 'success') {
-            alert('Penilai deleted successfully');
-            getPenilais(); // Refresh penilais list after deletion
-        } else {
-            console.error('Failed to delete penilai:', response.data.message);
+        const result = await Swal.fire({
+            title: 'Apakah Anda yakin ingin menghapus penilai ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
         }
+        try {
+            const response = await axios.delete(`/penilai/${id}`);
+            if (response.status === 200 && response.data.status === 'success') {
+                Swal.fire('Penilai berhasil dihapus', '', 'success');
+                getPenilais();
+            } else {
+                Swal.fire('Gagal menghapus penilai', response.data.message, 'error');
+                console.error('Failed to delete penilai:', response.data.message);
+            }
         } catch (error) {
-        console.error('Error deleting penilai:', error.message);
+            Swal.fire('Error menghapus penilai', error.message, 'error');
+            console.error('Error deleting penilai:', error.message);
         }
     };
 

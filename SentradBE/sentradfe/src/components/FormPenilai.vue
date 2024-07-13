@@ -57,6 +57,7 @@
     import { ref, reactive, onMounted } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import axios from '../services/api.js';
+    import Swal from 'sweetalert2';
 
     const formData = reactive({
         username: '',
@@ -112,6 +113,19 @@
     };
 
     const handleSubmit = async () => {
+        const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
+
+        const result = await Swal.fire({
+            title: `Apakah Anda yakin ingin ${action} penilai ini?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
         try {
             const formattedData = { ...formData, tgl_lahir: formatDate(formData.tgl_lahir) };
             console.log('Formatted Data:', formattedData);

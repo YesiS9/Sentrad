@@ -48,6 +48,7 @@
     import { useRouter } from 'vue-router';
     import axios from '../services/api.js';
     import Sidebar from '../components/SidebarAdmin.vue';
+    import Swal from 'sweetalert2'
 
     const kategori_senis = ref([]);
     const currentPage = ref(1);
@@ -69,18 +70,33 @@
     };
 
     const deleteKategori = async (id) => {
+        const result = await Swal.fire({
+            title: 'Apakah Anda yakin ingin menghapus kategori seni ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
         try {
             const response = await axios.delete(`/kategori-seni/${id}`);
             if (response.status === 200 && response.data.status === 'success') {
-                alert('Kategori Seni deleted successfully');
+                Swal.fire('Kategori seni berhasil dihapus', '', 'success');
                 getkategori();
             } else {
+                Swal.fire('Gagal menghapus kategori seni', response.data.message, 'error');
                 console.error('Failed to delete Kategori Seni:', response.data.message);
             }
         } catch (error) {
+            Swal.fire('Error menghapus kategori seni', error.message, 'error');
             console.error('Error deleting Kategori Seni:', error.message);
         }
     };
+
+
 
     const prevPage = () => {
         if (currentPage.value > 1) {

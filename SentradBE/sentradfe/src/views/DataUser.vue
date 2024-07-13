@@ -56,6 +56,7 @@
     import { useRouter } from 'vue-router';
     import axios from '../services/api.js';
     import Sidebar from '../components/SidebarAdmin.vue';
+    import Swal from 'sweetalert2';
 
     const users = ref([]);
     const currentPage = ref(1);
@@ -77,16 +78,30 @@
     };
 
     const deleteUser = async (id) => {
+        const result = await Swal.fire({
+            title: 'Apakah Anda yakin ingin menghapus user ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
         try {
             const response = await axios.delete(`/user/${id}`);
             if (response.status === 200 && response.data.status === 'success') {
-                alert('User deleted successfully');
+                Swal.fire('User berhasil dihapus', '', 'success');
                 fetchUsers(); // Refresh users list after deletion
             } else {
-                console.error('Failed to delete user:', response.data.message);
+                Swal.fire('Gagal menghapus user', response.data.message, 'error');
+                console.error('Gagal menghapus user:', response.data.message);
             }
         } catch (error) {
-            console.error('Error deleting user:', error.message);
+            Swal.fire('Error menghapus user', error.message, 'error');
+            console.error('Error menghapus user:', error.message);
         }
     };
 

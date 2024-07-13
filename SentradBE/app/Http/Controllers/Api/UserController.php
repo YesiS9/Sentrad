@@ -157,7 +157,6 @@ class UserController extends Controller
         try {
             $user = User::whereNull('deleted_at')->find($id);
             if (!$user) {
-                Log::error('Data User Tidak Ditemukan');
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
@@ -166,49 +165,51 @@ class UserController extends Controller
             }
 
             $validate = Validator::make($request->all(), [
-                'username' => 'required|string|max:255|unique:users',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:8',
-                'nama_role' => 'required|string|exists:roles,nama_role',
+                'username' => 'required|string|max:255|unique:users,username,' . $id,
+                'email' => 'required|string|email|max:255|unique:users,email,' . $id,
+                'password' => 'sometimes|nullable|string|min:8',
+                'nama_role' => 'required|string|max:255',
             ]);
 
             if ($validate->fails()) {
-                Log::error('Validation error: ' . $validate->errors());
                 return response()->json([
-                    'data' => null,
                     'status' => 'error',
-                    'message' => $validate->errors(),
-                ], 400);
-            }
-            if ($request->has('username')) {
-                $user->username = $request->username;
-            }
-            if ($request->has('email')) {
-                $user->email = $request->email;
-            }
-            if ($request->has('password')) {
-                $user->password = Hash::make($request->password);
+                    'message' => $validate->errors()->first(),
+                ], 422);
             }
 
+            $user->username = $request->username;
+            $user->email = $request->email;
 
-            $user->roles()->sync($request->role_id);
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->password); // Hash the password
+            }
+
+            // Update user role
+            $role = Role::where('nama_role', $request->nama_role)->first();
+            if ($role) {
+                UserRole::where('user_id', $user->id)->delete(); // Remove existing roles
+                UserRole::create([
+                    'user_id' => $user->id,
+                    'role_id' => $role->id,
+                ]);
+            }
+
             $user->save();
-            Log::info('User updated successfully', ['user' => $user]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'User updated successfully',
+                'message' => 'Data User berhasil diperbarui',
                 'data' => $user,
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Error updating user: ' . $e->getMessage());
-
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error updating user: ' . $e->getMessage(),
+                'message' => 'Terjadi kesalahan saat memperbarui data user: ' . $e->getMessage(),
             ], 500);
         }
     }
+
 
     public function show($id){
         try {
@@ -267,5 +268,5 @@ class UserController extends Controller
         }
     }
 
-    
+
 }

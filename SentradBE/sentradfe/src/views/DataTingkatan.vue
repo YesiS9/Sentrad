@@ -52,6 +52,7 @@
     import { useRouter } from 'vue-router';
     import axios from '../services/api.js';
     import Sidebar from '../components/SidebarAdmin.vue';
+    import Swal from 'sweetalert2'
 
     const tingkatan_list = ref([]);
     const currentPage = ref(1);
@@ -73,18 +74,34 @@
     };
 
     const deleteTingkatan = async (id) => {
+        const result = await Swal.fire({
+            title: 'Apakah Anda yakin ingin menghapus tingkatan ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
         try {
             const response = await axios.delete(`/tingkatan/${id}`);
             if (response.status === 200 && response.data.status === 'success') {
-                alert('Tingkatan deleted successfully');
+                Swal.fire('Tingkatan berhasil dihapus', '', 'success');
                 getTingkatan();
             } else {
+                Swal.fire('Gagal menghapus tingkatan', response.data.message, 'error');
                 console.error('Failed to delete Tingkatan:', response.data.message);
             }
         } catch (error) {
+            Swal.fire('Error menghapus tingkatan', error.message, 'error');
             console.error('Error deleting Tingkatan:', error.message);
         }
     };
+
+    
+
 
     const prevPage = () => {
         if (currentPage.value > 1) {

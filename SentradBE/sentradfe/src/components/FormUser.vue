@@ -12,9 +12,13 @@
                         <label for="email">Email</label>
                         <input type="email" id="email" v-model="formData.email" placeholder="Email" required>
                     </div>
-                    <div class="form-group">
+                    <div v-if="mode === 'add'" class="form-group">
                         <label for="password">Password</label>
                         <input type="password" id="password" v-model="formData.password" placeholder="Password" required>
+                    </div>
+                    <div v-if="mode === 'edit'" class="form-group">
+                        <label for="password">Password (Kosongkan jika tidak ingin mengubah)</label>
+                        <input type="password" id="password" v-model="formData.new_password" placeholder="Password">
                     </div>
                     <div class="form-group">
                         <label for="role">Role</label>
@@ -37,11 +41,14 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../services/api.js';
+import Swal from 'sweetalert2';
 
 const formData = reactive({
+    id: '',
     username: '',
     email: '',
     password: '',
+    new_password: '',
     nama_role: '',
 });
 
@@ -91,6 +98,20 @@ onMounted(async () => {
 });
 
 const handleSubmit = async () => {
+    const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
+
+    const result = await Swal.fire({
+        title: `Apakah Anda yakin ingin ${action} user ini?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Tidak',
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
     try {
         console.log('Form Data:', formData); // Add logging here
         console.log('mode:', mode);
@@ -98,7 +119,15 @@ const handleSubmit = async () => {
         if (mode.value === 'add') {
             response = await axios.post('/user/store-byAdmin', formData);
         } else if (mode.value === 'edit') {
-            response = await axios.put(`/user/${formData.id}`, formData);
+            const payload = {
+                username: formData.username,
+                email: formData.email,
+                nama_role: formData.nama_role,
+            };
+            if (formData.password) {
+                payload.password = formData.password;
+            }
+            response = await axios.put(`/user/${formData.id}`, payload);
         } else {
             console.error('Invalid mode:', mode.value);
             return;
@@ -122,17 +151,16 @@ const handleSubmit = async () => {
 };
 
 const closeForm = () => {
+    formData.id = '';
     formData.username = '';
     formData.email = '';
     formData.password = '';
+    formData.new_password = '';
     formData.nama_role = '';
     mode.value = 'add';
     router.push({ name: 'DataUser' });
 };
 </script>
-
-
-
 
 
 <style lang="scss" scoped>
@@ -203,22 +231,14 @@ main {
             padding: 0.5rem 1rem;
             border-radius: 4px;
             cursor: pointer;
-        }
 
-        button[type="submit"] {
-            background-color: #4caf50;
-        }
+            &:first-child {
+                margin-left: 0;
+            }
 
-        button[type="submit"]:hover {
-            background-color: #45a049;
-        }
-
-        button[type="button"] {
-            background-color: #f44336;
-        }
-
-        button[type="button"]:hover {
-            background-color: #d32f2f;
+            &:hover {
+                background-color: #e78310;
+            }
         }
     }
 }
