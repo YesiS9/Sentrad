@@ -1,0 +1,213 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\KategoriSeni;
+use App\Models\Seni;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+
+class SeniController extends Controller
+{
+    public function index(){
+        try {
+            $seni = Seni::whereNull('deleted_at')->get();
+
+            if (count($seni) > 0) {
+                Log::info('Data Seni Berhasil Ditampilkan');
+                return response()->json([
+                    'data' => $seni,
+                    'status' => 'success',
+                    'message' => 'Data Seni Berhasil Ditampilkan',
+                ], 200);
+            }
+
+            Log::info('Data Penilai Kosong');
+            return response()->json([
+                'data' => null,
+                'status' => 'success',
+                'message' => 'Data Penilai Kosong',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function store(Request $request){
+        try {
+
+            $storeData = $request->all();
+
+            $validate = Validator::make($storeData, [
+                'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
+                'nama_seni' => 'required',
+                'deskripsi_seni' => 'required',
+                'status_seni' => 'required'
+            ]);
+
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
+
+            $kategori = KategoriSeni::where('nama_kategori', $storeData['nama_kategori'])->first();
+            if (!$kategori) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Kategori tidak ditemukan',
+                ], 404);
+            }
+            $storeData['kategori_id'] = $kategori->id;
+            $seni = Seni::create($storeData);
+
+            Log::info('Data Seni Berhasil Ditambahakan');
+            return response()->json([
+                'data' => $seni,
+                'status' => 'success',
+                'message' => 'Data Seni Berhasil Ditambahakan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function show($id){
+        try {
+            $seni = Seni::whereNull('deleted_at')->find($id);
+
+            if (!$seni) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Data Seni tidak ditemukan',
+                ], 404);
+            }
+
+            return response()->json([
+                'data' => $seni,
+                'status' => 'success',
+                'message' => 'Data Seni Berhasil Ditampilkan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function update(Request $request, $id){
+        try {
+            $seni = Seni::whereNull('deleted_at')->find($id);
+
+            if (!$seni) {
+                Log::error('Data Seni Tidak Ditemukan');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Data Seni Tidak Ditemukan',
+                ], 404);
+            }
+
+            $validate = Validator::make($request->all(), [
+                'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
+                'nama_seni' => 'required',
+                'deskripsi_seni' => 'required',
+                'status_seni' => 'required'
+            ]);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
+
+            $kategori = KategoriSeni::where('nama_kategori',  $request->nama_kategori)->first();
+            if (!$kategori) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Kategori tidak ditemukan',
+                ], 404);
+            }
+
+            $seni->kategori_id = $request->kategori_id;
+            $seni->nama_seni = $request->nama_seni;
+            $seni->deskripsi_seni = $request->deskripsi_seni;
+            $seni->status_seni = $request->status_seni;
+
+            $seni->save();
+
+            Log::info('Data Seni Berhasil Diupdate');
+            return response()->json([
+                'data' => $seni,
+                'status' => 'success',
+                'message' => 'Data Seni Berhasil Diupdate',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function destroy($id){
+        try {
+            $seni = Seni::whereNull('deleted_at')->find($id);
+
+            if (!$seni) {
+                Log::error('Data Seni Tidak Ditemukan');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Data Seni Tidak Ditemukan',
+                ], 404);
+            }
+
+            if ($seni->delete()) {
+                Log::info('Data Seni Berhasil Dihapus');
+                return response()->json([
+                    'data' => $seni,
+                    'status' => 'success',
+                    'message' => 'Data Seni Berhasil Dihapus',
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+}

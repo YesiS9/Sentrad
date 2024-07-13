@@ -1,0 +1,197 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Proyek;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+
+class ProyekController extends Controller
+{
+    public function index()
+    {
+        try {
+            $proyeks = Proyek::whereNull('deleted_at')->get();
+
+            if (count($proyeks) > 0) {
+                Log::info('Data Proyek Berhasil Ditampilkan');
+                return response()->json([
+                    'data' => $proyeks,
+                    'status' => 'success',
+                    'message' => 'Data Proyek Berhasil Ditampilkan',
+                ], 200);
+            }
+
+            Log::info('Data Proyek Kosong');
+            return response()->json([
+                'data' => null,
+                'status' => 'success',
+                'message' => 'Data Proyek Kosong',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            $storeData = $request->all();
+
+            $validate = Validator::make($storeData, [
+                'seniman_id' => 'required|string',
+                'judul_proyek' => 'required|string|max:100',
+                'deskripsi_proyek' => 'required|string',
+                'waktu_mulai' => 'required|date',
+                'waktu_selesai' => 'required|date',
+                'lokasi_proyek' => 'required|string',
+                'tautan_proyek' => 'required|string',
+                'status_proyek' => 'required|boolean',
+            ]);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
+
+            $proyek = Proyek::create($storeData);
+
+            Log::info('Data Proyek Berhasil Ditambahkan');
+            return response()->json([
+                'data' => $proyek,
+                'status' => 'success',
+                'message' => 'Data Proyek Berhasil Ditambahkan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $proyek = Proyek::whereNull('deleted_at')->find($id);
+
+            if (!$proyek) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Data Proyek tidak ditemukan',
+                ], 404);
+            }
+
+            return response()->json([
+                'data' => $proyek,
+                'status' => 'success',
+                'message' => 'Data Proyek Berhasil Ditampilkan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $proyek = Proyek::whereNull('deleted_at')->find($id);
+
+            if (!$proyek) {
+                Log::error('Data Proyek Tidak Ditemukan');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Data Proyek Tidak Ditemukan',
+                ], 404);
+            }
+
+            $validate = Validator::make($request->all(), [
+                'seniman_id' => 'required|string',
+                'judul_proyek' => 'required|string|max:100',
+                'deskripsi_proyek' => 'required|string',
+                'waktu_mulai' => 'required|date',
+                'waktu_selesai' => 'required|date',
+                'lokasi_proyek' => 'required|string',
+                'tautan_proyek' => 'required|string',
+                'status_proyek' => 'required|boolean',
+            ]);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
+
+            $proyek->update($request->all());
+
+            Log::info('Data Proyek Berhasil Diupdate');
+            return response()->json([
+                'data' => $proyek,
+                'status' => 'success',
+                'message' => 'Data Proyek Berhasil Diupdate',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $proyek = Proyek::whereNull('deleted_at')->find($id);
+
+            if (!$proyek) {
+                Log::error('Data Proyek Tidak Ditemukan');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Data Proyek Tidak Ditemukan',
+                ], 404);
+            }
+
+            if ($proyek->delete()) {
+                Log::info('Data Proyek Berhasil Dihapus');
+                return response()->json([
+                    'data' => $proyek,
+                    'status' => 'success',
+                    'message' => 'Data Proyek Berhasil Dihapus',
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+}
