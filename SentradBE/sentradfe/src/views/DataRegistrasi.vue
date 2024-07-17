@@ -49,9 +49,9 @@
                 </tbody>
             </table>
             <div class="pagination">
-                <button @click="prevIndividuPage">Previous</button>
+                <button @click="prevIndividuPage" :disabled="currentIndividuPage === 1">Previous</button>
                 <span>{{ currentIndividuPage }} / {{ totalIndividuPages }}</span>
-                <button @click="nextIndividuPage">Next</button>
+                <button @click="nextIndividuPage" :disabled="currentIndividuPage === totalIndividuPages">Next</button>
             </div>
             </div>
         </div>
@@ -91,7 +91,7 @@
                         <span v-else-if="kelompok.status_kelompok === 0" class="status-inactive">Nonaktif</span>
                     </td>
                     <td>
-                        <router-link :to="{ name: 'FormKelompokedit', params: { id: kelompok.id } }" class="edit-btn material-icons">
+                        <router-link :to="{ name: 'FormKelompokEdit', params: { id: kelompok.id } }" class="edit-btn material-icons">
                             settings
                         </router-link>
                         <button @click="deleteKelompok(kelompok.id)" class="delete-btn">
@@ -102,9 +102,9 @@
                 </tbody>
             </table>
             <div class="pagination">
-                <button @click="prevKelompokPage">Previous</button>
+                <button @click="prevKelompokPage" :disabled="currentKelompokPage === 1">Previous</button>
                 <span>{{ currentKelompokPage }} / {{ totalKelompokPages }}</span>
-                <button @click="nextKelompokPage">Next</button>
+                <button @click="nextKelompokPage" :disabled="currentKelompokPage === totalKelompokPages">Next</button>
             </div>
             </div>
         </div>
@@ -123,12 +123,20 @@
     const totalIndividuPages = ref(1);
     const currentKelompokPage = ref(1);
     const totalKelompokPages = ref(1);
+    const perPage = 10;
 
     const loadIndividus = async () => {
         try {
-        const response = await axios.get('/registerIndividu');
+        const response = await axios.get('/registerIndividu',{
+            params: {
+                per_page: perPage,
+                page: currentIndividuPage.value
+            }
+        });
         if (response.status === 200 && response.data.status === 'success') {
             registrasi_individus.value = response.data.data;
+            currentIndividuPage.value = response.data.current_page;
+            totalIndividuPages.value = response.data.last_page;
         } else {
             console.error('Failed to load individus data.');
         }
@@ -139,9 +147,16 @@
 
     const loadKelompoks = async () => {
         try {
-        const response = await axios.get('/registerKelompok');
+        const response = await axios.get('/registerKelompok',{
+            params: {
+                per_page: perPage,
+                page: currentKelompokPage.value
+            }
+        });
         if (response.status === 200 && response.data.status === 'success') {
             registrasi_kelompoks.value = response.data.data;
+            currentKelompokPage.value = response.data.current_page;
+            totalKelompokPages.value = response.data.last_page;
         } else {
             console.error('Failed to load kelompoks data.');
         }
@@ -364,7 +379,11 @@
             margin: 0 0.5rem;
 
             &:hover {
-            background-color: #e6830d;
+                background-color: #e6830d;
+            }
+            &:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
             }
         }
 

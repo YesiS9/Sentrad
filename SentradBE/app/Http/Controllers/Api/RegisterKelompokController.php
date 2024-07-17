@@ -12,14 +12,19 @@ use Illuminate\Support\Facades\Validator;
 
 class RegisterKelompokController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
         try {
-            $register = RegistrasiKelompok::whereNull('deleted_at')->get();
+            $perPage = $request->input('per_page', 10);
+            $register = RegistrasiKelompok::whereNull('deleted_at')->paginate($perPage);
 
             if (count($register) > 0) {
                 Log::info('Data Registrasi Kelompok Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $register,
+                    'data' => $register->items(),
+                    'current_page' => $register->currentPage(),
+                    'per_page' => $register->perPage(),
+                    'total' => $register->total(),
+                    'last_page' => $register->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Registrasi Kelompok Berhasil Ditampilkan',
                 ], 200);

@@ -13,14 +13,19 @@ use Barryvdh\DomPDF\Facade as PDF;
 
 class PenilaiController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
         try {
-            $penilai = Penilai::whereNull('deleted_at')->get();
+            $perPage = $request->input('per_page', 10);
+            $penilai = Penilai::whereNull('deleted_at')->paginate($perPage);
 
             if (count($penilai) > 0) {
                 Log::info('Data Penilai Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $penilai,
+                    'data' => $penilai->items(),
+                    'current_page' => $penilai->currentPage(),
+                    'per_page' => $penilai->perPage(),
+                    'total' => $penilai->total(),
+                    'last_page' => $penilai->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Penilai Berhasil Ditampilkan',
                 ], 200);

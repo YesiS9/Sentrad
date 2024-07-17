@@ -11,14 +11,19 @@ use Illuminate\Support\Facades\Validator;
 
 class SeniController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
         try {
-            $seni = Seni::whereNull('deleted_at')->get();
+            $perPage = $request->input('per_page', 10);
+            $seni = Seni::whereNull('deleted_at')->paginate($perPage);
 
             if (count($seni) > 0) {
                 Log::info('Data Seni Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $seni,
+                    'data' => $seni->items(),
+                    'current_page' => $seni->currentPage(),
+                    'per_page' => $seni->perPage(),
+                    'total' => $seni->total(),
+                    'last_page' => $seni->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Seni Berhasil Ditampilkan',
                 ], 200);

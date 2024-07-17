@@ -61,14 +61,22 @@
     const users = ref([]);
     const currentPage = ref(1);
     const totalPages = ref(1);
+    const perPage = 10;
 
     const router = useRouter();
 
     const fetchUsers = async () => {
         try {
-            const response = await axios.get('/user'); // Assuming endpoint to fetch users
+            const response = await axios.get('/user',{
+                params: {
+                    per_page: perPage,
+                    page: currentPage.value
+                }
+            });
             if (response.status === 200 && response.data.status === 'success') {
                 users.value = response.data.data;
+                currentPage.value = response.data.current_page;
+                totalPages.value = response.data.last_page;
             } else {
                 console.error('Failed to fetch users:', response.data.message);
             }
@@ -256,6 +264,10 @@
 
                 &:hover {
                     background-color: #e6830d;
+                }
+                &:disabled {
+                    background-color: #ccc;
+                    cursor: not-allowed;
                 }
             }
 

@@ -17,15 +17,17 @@
                         <input type="password" id="password" v-model="formData.password" placeholder="Password" required>
                     </div>
                     <div v-if="mode === 'edit'" class="form-group">
-                        <label for="password">Password (Kosongkan jika tidak ingin mengubah)</label>
+                        <label for="password">Password</label>
                         <input type="password" id="password" v-model="formData.new_password" placeholder="Password">
                     </div>
                     <div class="form-group">
-                        <label for="role">Role</label>
-                        <select id="role" v-model="formData.nama_role" required>
-                            <option value="">Pilih Role</option>
-                            <option v-for="role in roles" :key="role.id" :value="role.nama_role">{{ role.nama_role }}</option>
-                        </select>
+                        <label>Role</label>
+                        <div class="checkbox-group">
+                            <div v-for="role in roles" :key="role.id" class="checkbox-item">
+                                <input type="checkbox" :id="`role_${role.id}`" :value="role.nama_role" v-model="formData.nama_role">
+                                <label :for="`role_${role.id}`">{{ role.nama_role }}</label>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-actions">
                         <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
@@ -36,7 +38,6 @@
         </div>
     </main>
 </template>
-
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -49,7 +50,7 @@ const formData = reactive({
     email: '',
     password: '',
     new_password: '',
-    nama_role: '',
+    nama_role: [],
 });
 
 const roles = ref([]);
@@ -76,7 +77,7 @@ const getUser = async (id) => {
                 id: userData.id,
                 username: userData.username,
                 email: userData.email,
-                nama_role: userData.nama_role
+                nama_role: userData.roles.map(role => role.nama_role), // Adjust to array of role names
             });
             mode.value = 'edit';
             console.log('User data:', formData); // Add logging here
@@ -122,7 +123,7 @@ const handleSubmit = async () => {
             const payload = {
                 username: formData.username,
                 email: formData.email,
-                nama_role: formData.nama_role,
+                nama_role: formData.nama_role, // Send array of roles
             };
             if (formData.password) {
                 payload.password = formData.password;
@@ -156,13 +157,11 @@ const closeForm = () => {
     formData.email = '';
     formData.password = '';
     formData.new_password = '';
-    formData.nama_role = '';
+    formData.nama_role = []; // Clear array
     mode.value = 'add';
     router.push({ name: 'DataUser' });
 };
 </script>
-
-
 <style lang="scss" scoped>
 main {
     background-color: #f7941e;
@@ -181,7 +180,7 @@ main {
     width: 90vw;
     height: 90vh;
     max-width: 400px;
-    max-height: 450px;
+    max-height: 600px;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -215,6 +214,21 @@ main {
         select {
             height: auto;
             min-height: 2.5rem;
+        }
+    }
+
+    .checkbox-group {
+        display: flexbox;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 0.5rem;
         }
     }
 

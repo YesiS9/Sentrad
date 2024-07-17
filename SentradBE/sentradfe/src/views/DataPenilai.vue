@@ -64,14 +64,22 @@
     const penilais = ref([]);
     const currentPage = ref(1);
     const totalPages = ref(1);
+    const perPage = 10;
 
     const router = useRouter();
 
     const getPenilais = async () => {
         try {
-        const response = await axios.get('/penilai');
+        const response = await axios.get('/penilai',{
+            params: {
+                per_page: perPage,
+                page: currentPage.value
+            }
+        });
         if (response.status === 200 && response.data.status === 'success') {
             penilais.value = response.data.data;
+            currentPage.value = response.data.current_page;
+            totalPages.value = response.data.last_page;
         } else {
             console.error('Failed to fetch penilais:', response.data.message);
         }
@@ -255,7 +263,11 @@
             margin: 0 0.5rem;
 
             &:hover {
-            background-color: #e6830d;
+                background-color: #e6830d;
+            }
+            &:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
             }
         }
 

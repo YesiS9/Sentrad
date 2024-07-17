@@ -41,6 +41,7 @@ export default {
                     console.log('Login response:', user, role, token);
 
                     localStorage.setItem('token', token);
+                    localStorage.setItem('user_id', user.id); // Simpan user_id di local storage
 
                     let roleName = '';
                     if (role && typeof role === 'object' && role.nama_role) {
@@ -50,7 +51,6 @@ export default {
                         return;
                     }
 
-
                     if (roleName === 'seniman') {
                         this.$router.push('/dashboardSeniman');
                     } else if (roleName === 'penilai') {
@@ -58,7 +58,7 @@ export default {
                     } else if (roleName === 'admin') {
                         this.$router.push('/dashboardAdmin');
                     } else {
-                        console.error('Error logging in:', 'Invalid role:', roleName)
+                        console.error('Error logging in:', 'Invalid role:', roleName);
                     }
 
                 } else {
@@ -69,7 +69,7 @@ export default {
             }
         },
         goToRegister() {
-            this.$router.push('/register'); 
+            this.$router.push('/register');
         }
     }
 };

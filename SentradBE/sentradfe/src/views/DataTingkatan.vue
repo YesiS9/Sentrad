@@ -57,14 +57,22 @@
     const tingkatan_list = ref([]);
     const currentPage = ref(1);
     const totalPages = ref(1);
+    const perPage = 10;
 
     const router = useRouter();
 
     const getTingkatan = async () => {
         try {
-            const response = await axios.get('/tingkatan');
+            const response = await axios.get('/tingkatan',{
+                params: {
+                    per_page: perPage,
+                    page: currentPage.value
+                }
+            });
             if (response.status === 200 && response.data.status === 'success') {
                 tingkatan_list.value = response.data.data;
+                currentPage.value = response.data.current_page;
+                totalPages.value = response.data.last_page;
             } else {
                 console.error('Failed to fetch tingkatan:', response.data.message);
             }
@@ -100,7 +108,7 @@
         }
     };
 
-    
+
 
 
     const prevPage = () => {
@@ -254,6 +262,11 @@
                 &:hover {
                     background-color: #e6830d;
                 }
+                &:disabled {
+                    background-color: #ccc;
+                    cursor: not-allowed;
+                }
+
             }
 
             span {

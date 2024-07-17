@@ -55,7 +55,7 @@
 
   const getKategori = async () => {
     try {
-      const response = await axios.get('/kategori-seni');
+      const response = await axios.get('/kategoriSeni');
       kategori_senis.value = response.data.data;
       console.log('Kategori response:', response.data);
     } catch (error) {

@@ -30,9 +30,9 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('forum', ForumController::class);
     Route::apiResource('seni', SeniController::class);
     Route::apiResource('penilaian', PenilaianKaryaController::class);
-    Route::apiResource('kategori-seni', KategoriSeniController::class); // Ganti dengan nama yang konsisten
-    Route::apiResource('registerIndividu', RegisterIndividuController::class); // Ganti dengan nama yang konsisten
-    Route::apiResource('registerKelompok', RegisterKelompokController::class); // Ganti dengan nama yang konsisten
+    Route::apiResource('kategoriSeni', KategoriSeniController::class);
+    Route::apiResource('registerIndividu', RegisterIndividuController::class);
+    Route::apiResource('registerKelompok', RegisterKelompokController::class);
     Route::apiResource('rubrik', RubrikController::class);
     Route::apiResource('tingkatan', TingkatanController::class);
     Route::apiResource('user', UserController::class);

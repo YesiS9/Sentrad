@@ -38,6 +38,7 @@
 
     const formData = reactive({
         nama_tingkatan: '',
+        deskripsi_tingkatan: '',
         nilai_max: null,
         nilai_min: null,
     });
@@ -113,9 +114,11 @@
 
     const closeForm = () => {
         formData.nama_tingkatan = '';
+        formData.deskripsi_tingkatan = '';
         formData.nilai_max = null;
         formData.nilai_min = null;
         mode.value = 'add';
+        router.push({ name: 'DataTingkatan' });
     };
 </script>
 

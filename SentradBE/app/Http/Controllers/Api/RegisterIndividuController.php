@@ -13,15 +13,20 @@ use Illuminate\Support\Facades\Auth;
 
 class RegisterIndividuController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $register = RegistrasiIndividu::whereNull('deleted_at')->get();
+            $perPage = $request->input('per_page', 10);
+            $register = RegistrasiIndividu::whereNull('deleted_at')->paginate($perPage);
 
             if (count($register) > 0) {
                 Log::info('Data Registrasi Individu Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $register,
+                    'data' => $register->items(),
+                    'current_page' => $register->currentPage(),
+                    'per_page' => $register->perPage(),
+                    'total' => $register->total(),
+                    'last_page' => $register->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Registrasi Individu Berhasil Ditampilkan',
                 ], 200);

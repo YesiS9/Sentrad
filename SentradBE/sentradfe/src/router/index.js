@@ -18,6 +18,7 @@ import FormKelompok from '../components/FormKelompok.vue'
 import Laporan from '../views/Laporan.vue'
 import DashboardSeniman from '../views/DashboardSeniman.vue'
 import DashboardPenilai from '../views/DashboardPenilai.vue'
+import FormKategori from '../components/formKategori.vue'
 
 const router = createRouter({
 	history: createWebHistory(),
@@ -148,8 +149,20 @@ const router = createRouter({
         },
         {
             path: '/form-kelompok/edit/:id',
-            name: 'FormKelompokedit',
+            name: 'FormKelompokEdit',
             component: FormKelompok,
+            props: true,
+        },
+        {
+            path: '/form-kategori',
+            name: 'FormKategori',
+            component: FormKategori,
+            props: true,
+        },
+        {
+            path: '/form-kategorik/edit/:id',
+            name: 'FormKategoriEdit',
+            component: FormKategori,
             props: true,
         },
 

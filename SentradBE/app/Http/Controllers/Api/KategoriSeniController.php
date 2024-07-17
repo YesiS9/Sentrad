@@ -10,15 +10,20 @@ use Illuminate\Support\Facades\Validator;
 
 class KategoriSeniController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $kategoriSeni = KategoriSeni::whereNull('deleted_at')->get();
+            $perPage = $request->input('per_page', 10); // Ambil jumlah data per halaman dari request, default 10 jika tidak diset
+            $kategoriSeni = KategoriSeni::whereNull('deleted_at')->paginate($perPage);
 
-            if (count($kategoriSeni) > 0) {
+            if ($kategoriSeni->count() > 0) {
                 Log::info('Data Kategori Seni Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $kategoriSeni,
+                    'data' => $kategoriSeni->items(), // Ambil data dari halaman yang sedang ditampilkan
+                    'current_page' => $kategoriSeni->currentPage(),
+                    'per_page' => $kategoriSeni->perPage(),
+                    'total' => $kategoriSeni->total(),
+                    'last_page' => $kategoriSeni->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Kategori Seni Berhasil Ditampilkan',
                 ], 200);
@@ -27,6 +32,7 @@ class KategoriSeniController extends Controller
             Log::info('Data Kategori Seni Kosong');
             return response()->json([
                 'data' => null,
+                'meta' => null,
                 'status' => 'success',
                 'message' => 'Data Kategori Seni Kosong',
             ], 200);
@@ -43,10 +49,7 @@ class KategoriSeniController extends Controller
     public function store(Request $request)
     {
         try {
-            $storeData = $request->all();
-
-            $validate = Validator::make($storeData, [
-                'user_id' => 'required|uuid',
+            $validate = Validator::make($request->all(), [
                 'nama_kategori' => 'required|string|max:100',
                 'deskripsi_kategori' => 'required',
             ]);
@@ -60,7 +63,11 @@ class KategoriSeniController extends Controller
                 ], 400);
             }
 
-            $kategoriSeni = KategoriSeni::create($storeData);
+            $kategoriSeni = KategoriSeni::create([
+                'user_id' => auth()->id(),
+                'nama_kategori' => $request->nama_kategori,
+                'deskripsi_kategori' => $request->deskripsi_kategori,
+            ]);
 
             Log::info('Data Kategori Seni Berhasil Ditambahkan');
             return response()->json([

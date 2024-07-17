@@ -10,14 +10,19 @@ use Illuminate\Support\Facades\Validator;
 
 class TingkatanController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
         try {
-            $tingkatan = Tingkatan::whereNull('deleted_at')->get();
+            $perPage = $request->input('per_page', 10);
+            $tingkatan = Tingkatan::whereNull('deleted_at')->paginate($perPage);
 
             if (count($tingkatan) > 0) {
                 Log::info('Data Tingkatan Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $tingkatan,
+                    'data' => $tingkatan->items(),
+                    'current_page' => $tingkatan->currentPage(),
+                    'per_page' => $tingkatan->perPage(),
+                    'total' => $tingkatan->total(),
+                    'last_page' => $tingkatan->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Tingkatan Berhasil Ditampilkan',
                 ], 200);
