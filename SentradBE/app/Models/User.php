@@ -48,4 +48,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasManyThrough(Role::class, UserRole::class, 'user_id', 'id', 'id', 'role_id');
     }
+    
+    public function seniman()
+    {
+        return $this->hasOne(Seniman::class);
+    }
 }

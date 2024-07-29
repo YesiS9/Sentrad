@@ -13,7 +13,7 @@
                         <textarea id="deskripsi_kategori" v-model="formData.deskripsi_kategori" placeholder="Deskripsi Kategori" rows="3" required></textarea>
                     </div>
                     <div class="form-actions">
-                        <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan Perubahan' }}</button>
+                        <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
                         <button type="button" @click="closeForm">Batal</button>
                     </div>
                 </form>

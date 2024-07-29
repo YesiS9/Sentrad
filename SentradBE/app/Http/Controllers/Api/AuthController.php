@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
+use App\Models\Seniman;
 use App\Models\User;
 use App\Models\UserRole;
 use Illuminate\Auth\Events\Registered;
@@ -77,6 +78,7 @@ class AuthController extends Controller{
         ]);
 
         try {
+            // Attempt to authenticate the user
             if (!Auth::attempt($request->only('email', 'password'))) {
                 Log::error('Email atau password salah');
                 return response()->json([
@@ -89,17 +91,30 @@ class AuthController extends Controller{
             $tokenResult = $user->createToken('AuthToken');
             $token = $tokenResult->accessToken;
 
+            // Retrieve user role
             $getRole = UserRole::join('roles', 'user_roles.role_id', '=', 'roles.id')
                 ->where('user_roles.user_id', $user->id)
                 ->select('roles.nama_role')
                 ->first();
+
+            // Initialize seniman_id as null
+            $seniman_id = null;
+
+            // If user is a 'seniman', get the associated seniman_id
+            if ($getRole && strtolower($getRole->nama_role) === 'seniman') {
+                $seniman = Seniman::where('user_id', $user->id)->first();
+                if ($seniman) {
+                    $seniman_id = $seniman->id;
+                }
+            }
 
             Log::info('Login berhasil');
             return response()->json([
                 'data' => [
                     'user' => $user,
                     'role' => $getRole,
-                    'token' => $token
+                    'token' => $token,
+                    'seniman_id' => $seniman_id // Include seniman_id if applicable
                 ],
                 'status' => 'success',
                 'message' => 'Login berhasil'
@@ -112,6 +127,7 @@ class AuthController extends Controller{
             ], 500);
         }
     }
+
 
     public function verifyEmail($id)
     {

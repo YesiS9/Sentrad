@@ -37,11 +37,20 @@ export default {
                 const { data, status, message } = response.data;
 
                 if (status === 'success') {
-                    const { user, role, token } = data;
-                    console.log('Login response:', user, role, token);
+                    const { user, role, token, seniman_id } = data;
+                    console.log('Login response:', user, role, token, seniman_id);
 
                     localStorage.setItem('token', token);
-                    localStorage.setItem('user_id', user.id); // Simpan user_id di local storage
+                    localStorage.setItem('user_id', user.id);
+                    localStorage.setItem('username', user.username);
+
+
+                    if (seniman_id !== null) {
+                        localStorage.setItem('seniman_id', seniman_id);
+                    } else {
+                        localStorage.removeItem('seniman_id');
+                    }
+                    console.log('seniman_id:',seniman_id);
 
                     let roleName = '';
                     if (role && typeof role === 'object' && role.nama_role) {

@@ -24,4 +24,9 @@ class RegistrasiKelompok extends Model
         'jumlah_anggota',
         'status_kelompok',
     ];
+
+    public function seniman()
+    {
+        return $this->belongsTo(Seniman::class);
+    }
 }

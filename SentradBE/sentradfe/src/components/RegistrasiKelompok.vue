@@ -2,44 +2,27 @@
     <main>
       <div class="auth-container">
         <div class="auth-form">
-          <h3>{{ mode === 'add' ? 'Tambah Registrasi Kelompok' : 'Edit Registrasi Kelompok' }}</h3>
+          <h3>{{ mode === 'add' ? 'Tambah Kelompok' : 'Edit Kelompok' }}</h3>
           <form @submit.prevent="handleSubmit">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="nama_seniman">Seniman</label>
-                <Multiselect
-                  v-model="formData.nama_seniman"
-                  :options="senimans"
-                  :searchable="true"
-                  :close-on-select="true"
-                  :clear-on-select="false"
-                  :preserve-search="true"
-                  placeholder="Pilih atau cari seniman"
-                  label="nama_seniman"
-                  track-by="nama_seniman"
-                  class="custom-multiselect"
-                ></Multiselect>
-              </div>
 
               <div class="form-group">
                 <label for="nama_kelompok">Nama Kelompok</label>
                 <input type="text" id="nama_kelompok" v-model="formData.nama_kelompok" placeholder="Nama Kelompok" required>
               </div>
-            </div>
 
-            <div class="form-row">
+
+
               <div class="form-group">
-                <label for="tgl_terbentuk">Tanggal Kelompok Terbentuk</label>
+                <label for="tgl_terbentuk">Tanggal Terbentuk</label>
                 <input type="date" id="tgl_terbentuk" v-model="formData.tgl_terbentuk" placeholder="Tanggal Terbentuk" required>
               </div>
 
               <div class="form-group">
                 <label for="alamat_kelompok">Alamat Kelompok</label>
                 <input type="text" id="alamat_kelompok" v-model="formData.alamat_kelompok" placeholder="Alamat Kelompok" required>
-              </div>
             </div>
 
-            <div class="form-row">
+
               <div class="form-group">
                 <label for="deskripsi_kelompok">Deskripsi Kelompok</label>
                 <input type="text" id="deskripsi_kelompok" v-model="formData.deskripsi_kelompok" placeholder="Deskripsi Kelompok" required>
@@ -49,9 +32,8 @@
                 <label for="noTelp_kelompok">No. Telp Kelompok</label>
                 <input type="text" id="noTelp_kelompok" v-model="formData.noTelp_kelompok" placeholder="No. Telp Kelompok" required>
               </div>
-            </div>
 
-            <div class="form-row">
+
               <div class="form-group">
                 <label for="email_kelompok">Email Kelompok</label>
                 <input type="email" id="email_kelompok" v-model="formData.email_kelompok" placeholder="Email Kelompok" required>
@@ -61,17 +43,6 @@
                 <label for="jumlah_anggota">Jumlah Anggota</label>
                 <input type="number" id="jumlah_anggota" v-model="formData.jumlah_anggota" placeholder="Jumlah Anggota" required>
               </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="status_kelompok">Status Kelompok</label>
-                <select id="status_kelompok" v-model="formData.status_kelompok" required>
-                  <option value="1">Aktif</option>
-                  <option value="0">Tidak Aktif</option>
-                </select>
-              </div>
-            </div>
 
             <div class="form-actions">
               <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
@@ -92,7 +63,6 @@ import '@vueform/multiselect/themes/default.css';
 import Swal from 'sweetalert2';
 
 const formData = reactive({
-    nama_seniman: '',
     nama_kelompok: '',
     tgl_terbentuk: '',
     alamat_kelompok: '',
@@ -101,27 +71,23 @@ const formData = reactive({
     email_kelompok: '',
     jumlah_anggota: '',
     status_kelompok: 1,
+    seniman_id: ''
 });
 
-const senimans = ref([]);
+
 
 const route = useRoute();
 const router = useRouter();
 const mode = ref('add');
 
-const getSeniman = async () => {
-    try {
-        const response = await axios.get('/seniman');
-        console.log('Response data:', response.data);
-        if (Array.isArray(response.data.data)) {
-            senimans.value = response.data.data.map(seniman => seniman.nama_seniman);
-        } else {
-            console.error('Unexpected response data format:', response.data);
-        }
-    } catch (error) {
-        console.error('Error fetching seniman list:', error.message);
+const getSeniman = () => {
+    const senimanId = localStorage.getItem('seniman_id');
+    if (senimanId) {
+      formData.seniman_id = senimanId;
+    } else {
+      console.error('Seniman ID is missing from localStorage.');
     }
-};
+  };
 
 const getKelompok = async (id) => {
     try {
@@ -139,7 +105,7 @@ const getKelompok = async (id) => {
 };
 
 onMounted(async () => {
-    await getSeniman();
+    getSeniman();
 
     const { id } = route.params;
     if (id) {
@@ -175,14 +141,14 @@ const handleSubmit = async () => {
         if (mode.value === 'add') {
             response = await axios.post('/registerKelompok/storeByAdmin', formattedData);
         } else if (mode.value === 'edit' && formData.id) {
-            response = await axios.put(`/registerKelompok/${formData.id}`, formattedData);
+            response = await axios.put(`/kelompok/${formData.id}`, formattedData);
         } else {
             console.error('Invalid mode or missing formData.id for edit.');
         return;
         }
 
         if (response.status === 200 && response.data.status === 'success') {
-            router.push({ name: 'DataRegistrasi' });
+            router.push({ name: 'Registrasi' });
             closeForm();
         } else {
         console.error(
@@ -201,7 +167,7 @@ const handleSubmit = async () => {
 };
 
 const closeForm = () => {
-    formData.nama_seniman = '';
+    formData.seniman_id = '';
     formData.nama_kelompok = '';
     formData.tgl_terbentuk = '';
     formData.alamat_kelompok = '';
@@ -211,100 +177,89 @@ const closeForm = () => {
     formData.jumlah_anggota = '';
     formData.status_kelompok = 1;
     mode.value = 'add';
-    router.push({ name: 'DataRegistrasi' });
+    router.push({ name: 'Registrasi' });
 };
 </script>
 
 <style lang="scss" scoped>
-@import '@vueform/multiselect/themes/default.css';
-
-main {
-  background-color: #f7941e;
-}
-.auth-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #f7941e;
-}
-
-.auth-form {
-  background-color: #fff;
-  width: 90vw;
-  height: 90vw;
-  max-width: 650px;
-  max-height: 700px;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
-  h3 {
-    margin-bottom: 1rem;
+  main {
+    background-color: #f7941e;
+  }
+  .auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f7941e;
   }
 
-  .form-row {
+  .auth-form {
+    background-color: #fff;
+    width: 90vw;
+    height: 90vw;
+    max-width: 650px;
+    max-height: 700px;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
     display: flex;
-    justify-content: space-between;
-    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    h3 {
+      margin-bottom: 1rem;
+    }
+
 
     .form-group {
       margin-bottom: 1rem;
       text-align: left;
-      width: 48%;
+      width: calc(50% - 0.5rem);
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="email"],
+    input[type="number"],
+    select {
+      width: 40vw;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .form-actions {
+      margin-top: 1rem;
+      text-align: right;
+      width: 100%;
+    }
+
+    button {
+      background-color: #f7941e;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 0.5rem;
+    }
+
+    button[type="submit"] {
+      background-color: #4caf50;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #45a049;
+    }
+
+    button[type="button"] {
+      background-color: #f44336;
+    }
+
+    button[type="button"]:hover {
+      background-color: #da190b;
     }
   }
-
-  .custom-multiselect {
-    width: 100%;
-  }
-
-  input[type='text'],
-  input[type='date'],
-  input[type='email'],
-  input[type='number'],
-  select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-
-  .form-actions {
-    margin-top: 1rem;
-    text-align: right;
-    width: 100%;
-  }
-
-  button {
-    background-color: #f7941e;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 0.5rem;
-  }
-
-  button[type='submit'] {
-    background-color: #4caf50;
-  }
-
-  button[type='submit']:hover {
-    background-color: #45a049;
-  }
-
-  button[type='button'] {
-    background-color: #f44336;
-  }
-
-  button[type='button']:hover {
-    background-color: #d32f2f;
-  }
-}
-</style>
+  </style>

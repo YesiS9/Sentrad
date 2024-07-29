@@ -31,4 +31,8 @@ class Penilai extends Model
     {
         return $this->hasMany(PenilaianKarya::class);
     }
+    public function seni()
+    {
+        return $this->belongsTo(Seni::class);
+    }
 }

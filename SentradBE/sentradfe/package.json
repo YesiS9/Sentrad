@@ -12,6 +12,7 @@
   "dependencies": {
     "@vueform/multiselect": "^2.6.8",
     "axios": "^1.7.2",
+    "date-fns": "^3.6.0",
     "jwt-decode": "^4.0.0",
     "sweetalert2": "^11.12.2",
     "vue": "^3.4.29",

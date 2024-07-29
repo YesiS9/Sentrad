@@ -22,5 +22,10 @@ class RegistrasiIndividu extends Model
         'email',
         'status_individu',
     ];
+
+    public function seniman()
+    {
+        return $this->belongsTo(Seniman::class);
+    }
 }
 

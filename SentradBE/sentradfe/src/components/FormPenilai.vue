@@ -7,12 +7,34 @@
                 <div class="form-row">
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" v-model="formData.username" placeholder="Username" :readonly="mode === 'edit'" required>
+                    <Multiselect
+                    v-model="formData.username"
+                    :options="users"
+                    :searchable="true"
+                    :close-on-select="true"
+                    :clear-on-select="false"
+                    :preserve-search="true"
+                    placeholder="Pilih atau cari username"
+                    label="username"
+                    track-by="username"
+                    class="custom-multiselect"
+                    ></Multiselect>
                 </div>
                 <div class="form-group">
-                    <label for="bidang_ahli">Bidang Ahli</label>
-                    <input type="text" id="bidang_ahli" v-model="formData.bidang_ahli" placeholder="Bidang Ahli" required>
-                </div>
+                        <label for="nama_seni">Bidang Ahli</label>
+                            <Multiselect
+                                v-model="formData.nama_seni"
+                                :options="seniOptions"
+                                :searchable="true"
+                                :close-on-select="true"
+                                :clear-on-select="false"
+                                :preserve-search="true"
+                                placeholder="Pilih atau cari bidang ahli"
+                                label="nama_seni"
+                                track-by="nama_seni"
+                                class="custom-multiselect"
+                            ></Multiselect>
+                    </div>
                 <div class="form-group">
                     <label for="nama_penilai">Nama Penilai</label>
                     <input type="text" id="nama_penilai" v-model="formData.nama_penilai" placeholder="Nama Penilai" required>
@@ -44,7 +66,7 @@
                 </div>
                 </div>
                 <div class="form-actions">
-                <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan Perubahan' }}</button>
+                <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
                 <button type="button" @click="closeForm">Batal</button>
                 </div>
             </form>
@@ -57,6 +79,8 @@
     import { ref, reactive, onMounted } from 'vue';
     import { useRoute, useRouter } from 'vue-router';
     import axios from '../services/api.js';
+    import Multiselect from '@vueform/multiselect';
+    import '@vueform/multiselect/themes/default.css';
     import Swal from 'sweetalert2';
 
     const formData = reactive({
@@ -69,11 +93,39 @@
         tgl_lahir: '',
         status_penilai: ''
     });
-
+    const seniOptions = ref([])
+    const users = ref([]);
     const route = useRoute();
     const router = useRouter();
     const mode = ref('add');
 
+    const getUser = async () => {
+        try {
+            const response = await axios.get('/userbyrole');
+            console.log('Response data:', response.data);
+            if (Array.isArray(response.data.data)) {
+                users.value = response.data.data.map(user => user.username);
+            } else {
+                console.error('Unexpected response data format:', response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching user list:', error.message);
+        }
+    };
+
+    const getSeniOptions = async () => {
+        try {
+            const response = await axios.get('/nama-seni');
+            if (response.status === 200 && response.data.status === 'success') {
+                seniOptions.value = response.data.data;
+                seniOptions.value = response.data.data.map(seni => seni.nama_seni);
+            } else {
+                console.error('Failed to fetch seni options:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching seni options:', error.message);
+        }
+    };
     const getPenilai = async (id) => {
         try {
         console.log('Fetching penilai with id:', id); // Log the id being used
@@ -100,10 +152,12 @@
         }
     };
 
-    onMounted(() => {
+    onMounted(async () => {
+        await getUser();
+        await getSeniOptions();
         const { id } = route.params;
         if (id) {
-        getPenilai(id);
+            getPenilai(id);
         }
     });
 

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class RegisterIndividuController extends Controller
 {
@@ -48,62 +49,98 @@ class RegisterIndividuController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function getRegistrasiIndividu()
     {
         try {
-            $storeData = $request->all();
-
-            $validate = Validator::make($storeData, [
-                'nama' => 'required',
-                'tgl_lahir' => 'required|date_format:d/m/Y',
-                'tgl_mulai' => 'required|date_format:d/m/Y',
-                'alamat' => 'required',
-                'noTelp' => 'required|numeric',
-                'email' => 'required|email',
-                'status_individu' => 'required',
-            ]);
-
-            if ($validate->fails()) {
-                Log::error('Validation error: ' . $validate->errors());
+            $user = Auth::user();
+            if (!$user->seniman) {
                 return response()->json([
-                    'data' => null,
                     'status' => 'error',
-                    'message' => $validate->errors(),
-                ], 400);
+                    'data' => null,
+                    'message' => 'Seniman not found for the user',
+                ], 404);
             }
 
-            $seniman = Auth::user(); // Assuming the logged-in user is a Seniman
+            $senimanId = $user->seniman->id;
 
-            if (!$seniman) {
-                Log::error('Seniman not logged in');
+            $individu = RegistrasiIndividu::where('seniman_id', $senimanId)
+                ->select('nama', 'created_at', 'status_individu')
+                ->paginate(10);
+
+            if ($individu->count() > 0) {
                 return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'Seniman not logged in',
-                ], 401);
+                    'status' => 'success',
+                    'data' => $individu->items(),
+                    'current_page' => $individu->currentPage(),
+                    'last_page' => $individu->lastPage(),
+                    'per_page' => $individu->perPage(),
+                    'total' => $individu->total(),
+                ]);
             }
 
-            $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
-            $storeData['tgl_mulai'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_mulai'])->format('Y-m-d');
-            $storeData['seniman_id'] = $seniman->id;
-
-            $register = RegistrasiIndividu::create($storeData);
-
-            Log::info('Data Registrasi Individu Berhasil Ditambahakan');
             return response()->json([
-                'data' => $register,
                 'status' => 'success',
-                'message' => 'Data Registrasi Individu Berhasil Ditambahakan',
+                'data' => null,
+                'message' => 'Data Registrasi Individu tidak ditemukan',
             ], 200);
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
             return response()->json([
-                'data' => null,
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'data' => null,
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
+
+
+
+    public function store(Request $request)
+{
+    try {
+        $storeData = $request->all();
+
+        $validate = Validator::make($storeData, [
+            'seniman_id' => 'required|exists:seniman,id',
+            'nama' => 'required',
+            'tgl_lahir' => 'required|date_format:d/m/Y',
+            'tgl_mulai' => 'required|date_format:d/m/Y',
+            'alamat' => 'required',
+            'noTelp' => 'required|numeric',
+            'email' => 'required|email',
+            'status_individu' => 'required',
+        ]);
+
+        if ($validate->fails()) {
+            Log::error('Validation error: ' . $validate->errors());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $validate->errors(),
+            ], 400);
+        }
+
+        $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
+        $storeData['tgl_mulai'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_mulai'])->format('Y-m-d');
+
+        $register = RegistrasiIndividu::create($storeData);
+
+        Log::info('Data Registrasi Individu Berhasil Ditambahkan');
+        return response()->json([
+            'data' => $register,
+            'status' => 'success',
+            'message' => 'Data Registrasi Individu Berhasil Ditambahkan',
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error('Exception Error: ' . $e->getMessage());
+        return response()->json([
+            'data' => null,
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
 
     public function storebyAdmin(Request $request)
     {
@@ -213,7 +250,7 @@ class RegisterIndividuController extends Controller
                 'tgl_lahir' => 'required|date_format:d/m/Y',
                 'tgl_mulai' => 'required|date_format:d/m/Y',
                 'alamat' => 'required',
-                'noTelp' => 'required|numeric|max:20',
+                'noTelp' => 'required|numeric',
                 'email' => 'required|email',
                 'status_individu' => 'required',
             ]);

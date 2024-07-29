@@ -7,6 +7,8 @@ use App\Models\RegistrasiKelompok;
 use App\Models\Seniman;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -46,13 +48,56 @@ class RegisterKelompokController extends Controller
         }
     }
 
-    public function store(Request $request){
+    public function getRegistrasiKelompok()
+    {
         try {
+            $user = Auth::user();
+            if (!$user->seniman) {
+                return response()->json([
+                    'status' => 'error',
+                    'data' => null,
+                    'message' => 'Seniman not found for the user',
+                ], 404);
+            }
 
+            $senimanId = $user->seniman->id;
+
+            $kelompok = RegistrasiKelompok::where('seniman_id', $senimanId)
+                ->select('nama_kelompok', 'created_at', 'status_kelompok')
+                ->paginate(10);
+
+            if ($kelompok->count() > 0) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $kelompok->items(),
+                    'current_page' => $kelompok->currentPage(),
+                    'last_page' => $kelompok->lastPage(),
+                    'per_page' => $kelompok->perPage(),
+                    'total' => $kelompok->total(),
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => null,
+                'message' => 'Data Registrasi Kelompok tidak ditemukan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'data' => null,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        try {
             $storeData = $request->all();
 
             $validate = Validator::make($storeData, [
-                'seniman_id'=>'required',
                 'nama_kelompok' => 'required',
                 'tgl_terbentuk' => 'required|date_format:d/m/Y',
                 'alamat_kelompok' => 'required',
@@ -63,7 +108,6 @@ class RegisterKelompokController extends Controller
                 'status_kelompok' => 'required|boolean',
             ]);
 
-
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
                 return response()->json([
@@ -73,17 +117,29 @@ class RegisterKelompokController extends Controller
                 ], 400);
             }
 
+            $seniman = Auth::user();
 
+            if (!$seniman) {
+                Log::error('Seniman not logged in');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Seniman not logged in',
+                ], 401);
+            }
+
+            // Converting date to Y-m-d format
             $storeData['tgl_terbentuk'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_terbentuk'])->format('Y-m-d');
+            $storeData['seniman_id'] = $seniman->id; // Set the seniman_id to the logged-in user's ID
 
-
+            // Create the RegistrasiKelompok record
             $register = RegistrasiKelompok::create($storeData);
 
-            Log::info('Data Registrasi Kelompok Berhasil Ditambahakan');
+            Log::info('Data Registrasi Kelompok Berhasil Ditambahkan');
             return response()->json([
                 'data' => $register,
                 'status' => 'success',
-                'message' => 'Data Registrasi Kelompok Berhasil Ditambahakan',
+                'message' => 'Data Registrasi Kelompok Berhasil Ditambahkan',
             ], 200);
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
@@ -94,6 +150,7 @@ class RegisterKelompokController extends Controller
             ], 500);
         }
     }
+
 
     public function storebyAdmin(Request $request)
     {
@@ -154,6 +211,8 @@ class RegisterKelompokController extends Controller
     }
 
 
+
+
     public function show($id){
         try {
             $register = RegistrasiKelompok::whereNull('deleted_at')->find($id);
@@ -182,7 +241,8 @@ class RegisterKelompokController extends Controller
     }
 
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         try {
             $register = RegistrasiKelompok::whereNull('deleted_at')->find($id);
 
@@ -196,12 +256,12 @@ class RegisterKelompokController extends Controller
             }
 
             $validate = Validator::make($request->all(), [
-                'seniman_id'=>'required',
+                'nama_seniman' => 'required|exists:seniman,nama_seniman',
                 'nama_kelompok' => 'required',
                 'tgl_terbentuk' => 'required|date_format:d/m/Y',
                 'alamat_kelompok' => 'required',
                 'deskripsi_kelompok' => 'required',
-                'noTelp_kelompok' => 'required|numeric|max:20',
+                'noTelp_kelompok' => 'required|numeric',
                 'email_kelompok' => 'required|email',
                 'jumlah_anggota' => 'required|numeric',
                 'status_kelompok' => 'required|boolean',
@@ -216,9 +276,23 @@ class RegisterKelompokController extends Controller
                 ], 400);
             }
 
+            // Find the Seniman by nama_seniman
+            $seniman = Seniman::where('nama_seniman', $request->nama_seniman)->first();
+
+            if (!$seniman) {
+                Log::error('Seniman not found with nama_seniman: ' . $request->nama_seniman);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Seniman not found',
+                ], 404);
+            }
+
+            // Convert the date format
             $tgl_terbentuk = Carbon::createFromFormat('d/m/Y', $request->tgl_terbentuk)->format('Y-m-d');
 
-            $register->seniman_id = $request->seniman_id;
+            // Update the RegistrasiKelompok record
+            $register->seniman_id = $seniman->id;
             $register->nama_kelompok = $request->nama_kelompok;
             $register->tgl_terbentuk = $tgl_terbentuk;
             $register->alamat_kelompok = $request->alamat_kelompok;
@@ -227,7 +301,6 @@ class RegisterKelompokController extends Controller
             $register->email_kelompok = $request->email_kelompok;
             $register->jumlah_anggota = $request->jumlah_anggota;
             $register->status_kelompok = $request->status_kelompok;
-
 
             $register->save();
 
@@ -246,6 +319,7 @@ class RegisterKelompokController extends Controller
             ], 500);
         }
     }
+
 
 
     public function destroy($id){

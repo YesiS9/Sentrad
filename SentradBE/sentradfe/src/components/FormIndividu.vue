@@ -31,7 +31,7 @@
             </div>
 
             <div class="form-group">
-              <label for="tgl_mulai">Tanggal Mulai</label>
+              <label for="tgl_mulai">Tanggal Mulai Berkarya</label>
               <input type="date" id="tgl_mulai" v-model="formData.tgl_mulai" placeholder="Tanggal Mulai" required>
             </div>
 
@@ -51,7 +51,7 @@
             </div>
 
             <div class="form-actions">
-              <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan Perubahan' }}</button>
+              <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
               <button type="button" @click="closeForm">Batal</button>
             </div>
           </form>
@@ -88,7 +88,7 @@
   const getSeniman = async () => {
         try {
             const response = await axios.get('/seniman');
-            console.log('Response data:', response.data); // Tambahkan log ini
+            console.log('Response data:', response.data);
             if (Array.isArray(response.data.data)) {
                 senimans.value = response.data.data.map(seniman => seniman.nama_seniman);
             } else {

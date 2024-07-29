@@ -9,7 +9,7 @@
         <input v-model="password" type="password" placeholder="Password" />
         <input v-model="password_confirmation" type="password" placeholder="Confirm Password" required />
         <button @click="register">Sign Up</button>
-        <a href="#" @click.prevent="goToLogin">Login</a>
+        <a href="#" @click.prevent="goToHome">Back Home</a>
       </div>
     </div>
   </main>
@@ -45,7 +45,10 @@ export default {
         if (response.status === 200 || response.status === 201) {
           toast.success(response.data.message);
           localStorage.setItem('token', response.data.token);
-          this.$router.push('/login');
+          localStorage.setItem('user_id', response.data.data.id);
+          console.log(response.data);
+
+          this.$router.push('/seniman');
         } else {
           toast.error('Registration failed: ' + response.data.message);
         }
@@ -60,8 +63,8 @@ export default {
         }
       }
     },
-    goToLogin() {
-      this.$router.push('/login');
+    goToHome() {
+      this.$router.push('/');
     },
   },
 };

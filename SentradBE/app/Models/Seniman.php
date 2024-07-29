@@ -32,5 +32,15 @@ class Seniman extends Model
     {
         return $this->belongsTo(Tingkatan::class, 'tingkatan_id', 'id');
     }
+
+    public function registrasiIndividu()
+    {
+        return $this->hasMany(RegistrasiIndividu::class);
+    }
+
+    public function registrasiKelompok()
+    {
+        return $this->hasMany(RegistrasiKelompok::class);
+    }
 }
 

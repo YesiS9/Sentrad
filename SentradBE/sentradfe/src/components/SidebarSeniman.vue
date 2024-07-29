@@ -16,11 +16,11 @@
 		  <span class="material-icons">dashboard</span>
 		  <span class="text">Dashboard</span>
 		</router-link>
-		<router-link to="/dataPortofolio" class="button">
+		<router-link to="/portofolio" class="button">
 		  <span class="material-icons">description</span>
 		  <span class="text">Portofolio</span>
 		</router-link>
-		<router-link to="/dataRegistrasi" class="button">
+		<router-link to="/registrasi-user" class="button">
 		  <span class="material-icons">app_registration</span>
 		  <span class="text">Registrasi</span>
 		</router-link>
@@ -41,10 +41,6 @@
 		  <span class="material-icons">logout</span>
 		  <span class="text">Logout</span>
 		</button>
-		<!-- <router-link to="/account" class="button">
-		  <span class="material-icons">account_circle</span>
-		  <span class="text">Account</span>
-		</router-link> -->
 	  </div>
 	</aside>
 </template>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Penilai;
+use App\Models\Seni;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -47,7 +48,10 @@ class PenilaiController extends Controller
         }
     }
 
-    public function store(Request $request){
+
+
+    public function store(Request $request)
+    {
         try {
             $storeData = $request->all();
 
@@ -56,7 +60,7 @@ class PenilaiController extends Controller
                 'nama_penilai' => 'required|string|max:100',
                 'alamat_penilai' => 'required|string',
                 'noTelp_penilai' => 'required|numeric',
-                'bidang_ahli' => 'required|string',
+                'nama_seni' => 'required|exists:senis,nama_seni',
                 'lembaga' => 'required|string|max:100',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
                 'status_penilai' => 'required|boolean',
@@ -79,8 +83,20 @@ class PenilaiController extends Controller
                     'message' => 'User not found',
                 ], 404);
             }
-	        $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
+
+            // Check if the user already has a Penilai entry
+            $existingPenilai = Penilai::where('user_id', $user->id)->first();
+            if ($existingPenilai) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'User already has a Penilai entry',
+                ], 400);
+            }
+
+            $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
             $storeData['user_id'] = $user->id;
+            $storeData['bidang_ahli'] = $storeData['nama_seni']; // Directly copy nama_seni to bidang_ahli
             unset($storeData['username']);
 
             $penilai = Penilai::create($storeData);
@@ -100,6 +116,8 @@ class PenilaiController extends Controller
             ], 500);
         }
     }
+
+
 
 
     public function show($id){

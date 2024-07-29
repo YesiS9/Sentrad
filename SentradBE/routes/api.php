@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ForumController;
 use App\Http\Controllers\Api\KategoriSeniController;
 use App\Http\Controllers\Api\PenilaianKaryaController;
 use App\Http\Controllers\Api\PenilaiController;
+use App\Http\Controllers\Api\PortofolioController;
 use App\Http\Controllers\Api\RegisterIndividuController;
 use App\Http\Controllers\Api\RegisterKelompokController;
 use App\Http\Controllers\Api\RoleController;
@@ -15,7 +16,7 @@ use App\Http\Controllers\Api\SeniController;
 use App\Http\Controllers\Api\SenimanController;
 use App\Http\Controllers\Api\TingkatanController;
 use App\Http\Controllers\Api\UserController;
-use App\Models\RegistrasiIndividu;
+
 
 // Route untuk register, login, dan verifikasi email
 Route::post('register', [AuthController::class, 'register']);
@@ -23,6 +24,7 @@ Route::post('login', [AuthController::class, 'login']);
 Route::get('email/verify/{id}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
 Route::get('/roles', [AuthController::class, 'getRoles']);
 Route::post('/user/store-byAdmin', [UserController::class, 'storeByAdmin']);
+Route::post('seniman', [SenimanController::class, 'store']);
 
 // Middleware untuk memproteksi rute-rute di bawah ini dengan autentikasi
 Route::middleware('auth:api')->group(function () {
@@ -37,12 +39,17 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('tingkatan', TingkatanController::class);
     Route::apiResource('user', UserController::class);
     Route::apiResource('role', RoleController::class);
-    Route::apiResource('seniman', SenimanController::class);
+    Route::get('seniman', [SenimanController::class, 'index']);
+    Route::get('/nama-seni', [SeniController::class, 'indexSeni']);
+    Route::get('/userbyrole', [UserController::class,'indexByRole']);
+    Route::apiResource('portofolio', PortofolioController::class);
     Route::get('/penilai/download', [PenilaiController::class, 'downloadPenilai'])->name('penilai.downloadPenilai');
     Route::get('/penilai/laporan', [PenilaiController::class, 'showLaporan']);
     Route::get('/penilai/downloadLaporan', [PenilaiController::class, 'downloadPenilaiLaporan']);
     Route::post('/registerIndividu/storeByAdmin', [RegisterIndividuController::class, 'storebyAdmin']);
     Route::post('/registerKelompok/storeByAdmin', [RegisterKelompokController::class, 'storebyAdmin']);
+    Route::get('/registerIndividuUser', [RegisterIndividuController::class, 'getRegistrasiIndividu']);
+    Route::get('/registerKelompokUser', [RegisterKelompokController::class, 'getRegistrasiKelompok']);
     Route::get('/user-profile', function (Request $request) {
         return $request->user();
     });

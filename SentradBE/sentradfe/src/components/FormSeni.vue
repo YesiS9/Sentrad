@@ -26,7 +26,7 @@
               <input type="text" id="status_seni" v-model="formData.status_seni" placeholder="Status Seni" required>
             </div>
             <div class="form-actions">
-              <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan Perubahan' }}</button>
+              <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
               <button type="button" @click="closeForm">Batal</button>
             </div>
           </form>

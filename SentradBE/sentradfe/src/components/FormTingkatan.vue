@@ -21,7 +21,7 @@
                         <input type="number" id="nilai_min" v-model.number="formData.nilai_min" placeholder="Nilai Min" required>
                     </div>
                     <div class="form-actions">
-                        <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan Perubahan' }}</button>
+                        <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
                         <button type="button" @click="closeForm">Batal</button>
                     </div>
                 </form>
