@@ -13,12 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('rubriks', function (Blueprint $table) {
+        Schema::create('penilaian_karyas', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('penilai_id')->references('id')->on('penilais')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->string('nama_rubrik', 100);
-            $table->text('deskripsi_rubrik');
-            $table->integer('bobot');
+            $table->foreignUuid('regisIndividu_id')->nullable()->references('id')->on('registrasi_individus')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('regisKelompok_id')->nullable()->references('id')->on('registrasi_kelompoks')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('tingkatan_id')->references('id')->on('tingkatans')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->datetime('tgl_penilaian');
+            $table->integer('total_nilai');
+            $table->string('komentar');
             $table->timestamps();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
         });
@@ -31,6 +34,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('rubriks');
+        Schema::dropIfExists('penilaian_karyas');
     }
 };

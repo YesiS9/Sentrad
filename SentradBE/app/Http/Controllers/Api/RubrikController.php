@@ -3,23 +3,37 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\KategoriRubrik;
+use App\Models\KategoriSeni;
 use App\Models\Penilai;
 use App\Models\Rubrik;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class RubrikController extends Controller
 {
-    public function index()
+
+    public function index(Request $request)
     {
         try {
-            $rubrik = Rubrik::whereNull('deleted_at')->get();
+            $perPage = $request->input('per_page', 10);
 
-            if (count($rubrik) > 0) {
+            $rubriks = Rubrik::with(['kategoriSeni', 'penilai'])
+                ->whereNull('deleted_at')
+                ->paginate($perPage);
+
+            Log::info('Rubrik Data:', $rubriks->toArray());
+
+            if ($rubriks->count() > 0) {
                 Log::info('Data Rubrik Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $rubrik,
+                    'data' => $rubriks->items(), // Return the paginated items
+                    'current_page' => $rubriks->currentPage(),
+                    'per_page' => $rubriks->perPage(),
+                    'total' => $rubriks->total(),
+                    'last_page' => $rubriks->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Rubrik Berhasil Ditampilkan',
                 ], 200);
@@ -41,45 +55,39 @@ class RubrikController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function indexByUser(Request $request)
     {
         try {
-            $storeData = $request->all();
+            $perPage = $request->input('per_page', 10);
+            $userId = Auth::id();
 
-            $validate = Validator::make($storeData, [
-                'nama_penilai' => 'required|string|exists:penilais,nama',
-                'nama_rubrik' => 'required|string|max:100',
-                'deskripsi_rubrik' => 'required|string',
-                'bobot' => 'required|numeric',
-            ]);
+            $penilaiIds = Penilai::where('user_id', $userId)->pluck('id');
 
-            if ($validate->fails()) {
-                Log::error('Validation error: ' . $validate->errors());
+            $rubriks = Rubrik::with(['kategoriSeni', 'penilai'])
+                ->whereIn('penilai_id', $penilaiIds)
+                ->whereNull('deleted_at')
+                ->paginate($perPage);
+
+            Log::info('Rubrik Data by User:', $rubriks->toArray());
+
+            if ($rubriks->count() > 0) {
+                Log::info('Data Rubrik by User Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => $validate->errors(),
-                ], 400);
+                    'data' => $rubriks->items(),
+                    'current_page' => $rubriks->currentPage(),
+                    'per_page' => $rubriks->perPage(),
+                    'total' => $rubriks->total(),
+                    'last_page' => $rubriks->lastPage(),
+                    'status' => 'success',
+                    'message' => 'Data Rubrik by User Berhasil Ditampilkan',
+                ], 200);
             }
 
-            $penilai = Penilai::where('nama', $storeData['nama_penilai'])->first();
-            if (!$penilai) {
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'Penilai tidak ditemukan',
-                ], 404);
-            }
-
-            $storeData['penilai_id'] = $penilai->id;
-
-            $rubrik = Rubrik::create($storeData);
-
-            Log::info('Data Rubrik Berhasil Ditambahkan');
+            Log::info('Data Rubrik by User Kosong');
             return response()->json([
-                'data' => $rubrik,
+                'data' => null,
                 'status' => 'success',
-                'message' => 'Data Rubrik Berhasil Ditambahkan',
+                'message' => 'Data Rubrik by User Kosong',
             ], 200);
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
@@ -90,6 +98,74 @@ class RubrikController extends Controller
             ], 500);
         }
     }
+
+    public function store(Request $request)
+    {
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'nama_rubrik' => 'required|string|max:100|unique:rubriks',
+                'deskripsi_rubrik' => 'required|string',
+                'bobot' => 'required|numeric',
+                'nama_kategori' => 'required|string|exists:kategori_senis,nama_kategori',
+            ]);
+
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $validator->errors(),
+                ], 422);
+            }
+
+
+            try {
+
+                $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->firstOrFail();
+
+
+                $rubrik = Rubrik::create([
+                    'nama_rubrik' => $request->nama_rubrik,
+                    'deskripsi_rubrik' => $request->deskripsi_rubrik,
+                    'bobot' => $request->bobot,
+                    'penilai_id' => $request->penilai_id,
+                ]);
+
+
+                KategoriRubrik::create([
+                    'rubrik_id' => $rubrik->id,
+                    'kategori_id' => $kategori->id,
+                ]);
+
+                Log::info('Rubrik added successfully', ['rubrik' => $rubrik]);
+
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Rubrik added successfully',
+                    'data' => $rubrik,
+                ], 200);
+
+            } catch (\Exception $e) {
+                Log::error('Error adding Rubrik: ' . $e->getMessage());
+
+
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Error adding Rubrik: ' . $e->getMessage(),
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error adding Rubrik: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
 
     public function show($id)
     {
@@ -133,37 +209,38 @@ class RubrikController extends Controller
                 ], 404);
             }
 
-            $validate = Validator::make($request->all(), [
-                'nama_penilai' => 'required|string|exists:penilais,nama',
+            $validator = Validator::make($request->all(), [
                 'nama_rubrik' => 'required|string|max:100',
                 'deskripsi_rubrik' => 'required|string',
                 'bobot' => 'required|numeric',
+                'nama_kategori' => 'required|string|exists:kategori_senis,nama_kategori',
             ]);
 
-            if ($validate->fails()) {
-                Log::error('Validation error: ' . $validate->errors());
+            if ($validator->fails()) {
+                Log::error('Validation error: ' . $validator->errors());
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
-                    'message' => $validate->errors(),
-                ], 400);
+                    'message' => $validator->errors(),
+                ], 422);
             }
 
-            $penilai = Penilai::where('nama', $request->nama_penilai)->first();
-            if (!$penilai) {
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'Penilai tidak ditemukan',
-                ], 404);
-            }
+            // Retrieve the KategoriSeni by nama_kategori
+            $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->firstOrFail();
 
-            $rubrik->penilai_id = $penilai->id;
+            // Update Rubrik
             $rubrik->nama_rubrik = $request->nama_rubrik;
             $rubrik->deskripsi_rubrik = $request->deskripsi_rubrik;
             $rubrik->bobot = $request->bobot;
 
+            // Save the updated Rubrik
             $rubrik->save();
+
+            // Update or create KategoriRubrik
+            $kategoriRubrik = KategoriRubrik::updateOrCreate(
+                ['rubrik_id' => $rubrik->id],
+                ['kategori_id' => $kategori->id]
+            );
 
             Log::info('Data Rubrik Berhasil Diupdate');
             return response()->json([
@@ -171,6 +248,7 @@ class RubrikController extends Controller
                 'status' => 'success',
                 'message' => 'Data Rubrik Berhasil Diupdate',
             ], 200);
+
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
             return response()->json([
@@ -180,6 +258,7 @@ class RubrikController extends Controller
             ], 500);
         }
     }
+
 
     public function destroy($id)
     {

@@ -33,10 +33,7 @@
                     <td>{{ individu.tgl_mulai }}</td>
                     <td>{{ individu.alamat }}</td>
                     <td>{{ individu.noTelp }}</td>
-                    <td>
-                        <span v-if="individu.status_individu === 1" class="status-active">Aktif</span>
-                        <span v-else-if="individu.status_individu === 0" class="status-inactive">Nonaktif</span>
-                    </td>
+                    <td>{{ individu.status_individu }}</td>
                     <td>
                         <router-link :to="{ name: 'FormIndividuEdit', params: { id: individu.id } }" class="edit-btn material-icons">
                             settings
@@ -86,10 +83,7 @@
                     <td>{{ kelompok.noTelp_kelompok }}</td>
                     <td>{{ kelompok.alamat_kelompok }}</td>
                     <td>{{ kelompok.jumlah_anggota }}</td>
-                    <td>
-                        <span v-if="kelompok.status_kelompok === 1" class="status-active">Aktif</span>
-                        <span v-else-if="kelompok.status_kelompok === 0" class="status-inactive">Nonaktif</span>
-                    </td>
+                    <td>{{ kelompok.status_kelompok }}</td>
                     <td>
                         <router-link :to="{ name: 'FormKelompokEdit', params: { id: kelompok.id } }" class="edit-btn material-icons">
                             settings

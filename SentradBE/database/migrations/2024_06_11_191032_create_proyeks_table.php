@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('proyeks', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('seniman_id')->references('id')->on('seniman')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('kategori_id')->references('id')->on('kategori_senis')->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('judul_proyek', 100);
             $table->string('deskripsi_proyek');
             $table->datetime('waktu_mulai');

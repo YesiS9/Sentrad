@@ -29,10 +29,7 @@
                     <td>{{ penilai.noTelp_penilai }}</td>
                     <td>{{ penilai.bidang_ahli }}</td>
                     <td>{{ penilai.lembaga }}</td>
-                    <td>
-                        <span v-if="penilai.status_penilai === 1" class="status-active">Aktif</span>
-                        <span v-else-if="penilai.status_penilai === 0" class="status-inactive">Nonaktif</span>
-                    </td>
+                    <td>{{ penilai.status_penilai }}</td>
                     <td>
                     <router-link :to="{ name: 'FormPenilaiEdit', params: { id: penilai.id } }" class="edit-btn material-icons">
                         settings

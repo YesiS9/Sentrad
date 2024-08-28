@@ -13,9 +13,10 @@ class Forum extends Model
 
     protected $fillable = [
         'seniman_id',
+        'kategori_id',
         'judul_forum',
         'status_forum'
     ];
 
-    
+
 }

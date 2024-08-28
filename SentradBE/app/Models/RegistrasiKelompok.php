@@ -14,7 +14,7 @@ class RegistrasiKelompok extends Model
 
     protected $fillable = [
         'seniman_id',
-        'penilaian_karya_id',
+        'kategori_id',
         'nama_kelompok',
         'tgl_terbentuk',
         'alamat_kelompok',
@@ -28,5 +28,10 @@ class RegistrasiKelompok extends Model
     public function seniman()
     {
         return $this->belongsTo(Seniman::class);
+    }
+
+    public function kategoriSeni()
+    {
+        return $this->belongsTo(KategoriSeni::class, 'kategori_id');
     }
 }

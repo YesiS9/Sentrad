@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Penilai;
 use App\Models\Role;
 use App\Models\Seniman;
 use App\Models\User;
@@ -73,12 +74,15 @@ class AuthController extends Controller{
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|exists:users,email',
             'password' => 'required'
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.exists' => 'Email tidak ditemukan.',
+            'password.required' => 'Password wajib diisi.'
         ]);
 
         try {
-            // Attempt to authenticate the user
             if (!Auth::attempt($request->only('email', 'password'))) {
                 Log::error('Email atau password salah');
                 return response()->json([
@@ -91,20 +95,27 @@ class AuthController extends Controller{
             $tokenResult = $user->createToken('AuthToken');
             $token = $tokenResult->accessToken;
 
-            // Retrieve user role
             $getRole = UserRole::join('roles', 'user_roles.role_id', '=', 'roles.id')
                 ->where('user_roles.user_id', $user->id)
                 ->select('roles.nama_role')
                 ->first();
 
-            // Initialize seniman_id as null
             $seniman_id = null;
+            $penilai_id = null;
 
-            // If user is a 'seniman', get the associated seniman_id
-            if ($getRole && strtolower($getRole->nama_role) === 'seniman') {
-                $seniman = Seniman::where('user_id', $user->id)->first();
-                if ($seniman) {
-                    $seniman_id = $seniman->id;
+            if ($getRole) {
+                $roleName = strtolower($getRole->nama_role);
+
+                if ($roleName === 'seniman') {
+                    $seniman = Seniman::where('user_id', $user->id)->first();
+                    if ($seniman) {
+                        $seniman_id = $seniman->id;
+                    }
+                } elseif ($roleName === 'penilai') {
+                    $penilai = Penilai::where('user_id', $user->id)->first();
+                    if ($penilai) {
+                        $penilai_id = $penilai->id;
+                    }
                 }
             }
 
@@ -114,7 +125,8 @@ class AuthController extends Controller{
                     'user' => $user,
                     'role' => $getRole,
                     'token' => $token,
-                    'seniman_id' => $seniman_id // Include seniman_id if applicable
+                    'seniman_id' => $seniman_id,  // Include seniman_id if applicable
+                    'penilai_id' => $penilai_id   // Include penilai_id if applicable
                 ],
                 'status' => 'success',
                 'message' => 'Login berhasil'
@@ -127,6 +139,7 @@ class AuthController extends Controller{
             ], 500);
         }
     }
+
 
 
     public function verifyEmail($id)

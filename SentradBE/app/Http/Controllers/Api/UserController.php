@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\UserRole; // Import model UserRole
+use App\Models\UserRole;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -50,7 +50,8 @@ class UserController extends Controller
             ], 500);
         }
     }
-    public function indexByRole()
+
+    public function indexByPenilai()
     {
         try {
             $role = Role::where('nama_role', 'Penilai')->first();
@@ -82,6 +83,43 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function indexBySeniman()
+    {
+        try {
+            $role = Role::where('nama_role', 'Seniman')->first();
+
+            if (!$role) {
+                Log::info('Role Seniman tidak ditemukan');
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Role Seniman tidak ditemukan'
+                ], 404);
+            }
+
+            $usernames = User::whereHas('roles', function ($query) use ($role) {
+                $query->where('role_id', $role->id);
+            })
+            ->whereNull('deleted_at')
+            ->whereDoesntHave('seniman')
+            ->pluck('username');
+
+            Log::info('Usernames with role Seniman and not in seniman table:', $usernames->toArray());
+
+            return response()->json([
+                'data' => $usernames,
+                'status' => 'success',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
 
 
@@ -226,7 +264,6 @@ class UserController extends Controller
                 $user->password = Hash::make($request->password); // Hash the password
             }
 
-            // Update user role
             $role = Role::where('nama_role', $request->nama_role)->first();
             if ($role) {
                 UserRole::where('user_id', $user->id)->delete(); // Remove existing roles

@@ -25,6 +25,18 @@ import Portofolio from '../views/Portofolio.vue'
 import FormPortofolio from '../components/FormPortofolio.vue'
 import RegistrasiIndividu from '../components/RegistrasiIndividu.vue'
 import RegistrasiKelompok from '../components/RegistrasiKelompok.vue'
+import Forum from '../views/Forum.vue'
+import FormSeniman from '../components/FormSeniman.vue'
+import DataSeniman from '../views/DataSeniman.vue'
+import FormKarya from '../components/FormKarya.vue'
+import InfoPortofolio from '../components/InfoPortofolio.vue'
+import InfoKarya from '../components/InfoKarya.vue'
+import Proyek from '../views/Proyek.vue'
+import RubrikData from '../views/RubrikData.vue'
+import PenilaianKarya from '../views/PenilaianKarya.vue'
+import FormRubrik from '../components/FormRubrik.vue'
+import PortofolioSeniman from '../components/PortofolioSeniman.vue'
+
 
 const router = createRouter({
     history: createWebHistory(),
@@ -37,13 +49,18 @@ const router = createRouter({
         { path: '/dashboardPenilai', component: DashboardPenilai },
         { path: '/seniman', component: Seniman },
         { path: '/dataUser', name: 'DataUser', component: DataUser },
-        { path: '/dataRegistrasi', name: 'DataRegistrasi', component: DataRegistrasi },
+        { path: '/dataSeniman', name: 'DataSeniman', component: DataSeniman },
         { path: '/dataPenilai', name: 'DataPenilai', component: DataPenilai },
+        { path: '/dataRegistrasi', name: 'DataRegistrasi', component: DataRegistrasi },
         { path: '/dataSeni', name: 'DataSeni', component: DataSeni },
         { path: '/dataKategori', name: 'DataKategori', component: DataKategori },
         { path: '/dataTingkatan', name: 'DataTingkatan', component: DataTingkatan },
         { path: '/laporan', name: 'Laporan', component: Laporan },
         { path: '/portofolio', name: 'Portofolio', component: Portofolio },
+        { path: '/forum', name: 'Forum', component: Forum },
+        { path: '/proyek', name: 'Proyek', component: Proyek },
+        { path: '/rubrik', name: 'Rubrik', component: RubrikData },
+        { path: '/penilaian-registrasi', name: 'PenilaianKarya', component: PenilaianKarya },
         { path: '/form-penilai', name: 'FormPenilai', component: FormPenilai },
         { path: '/form-penilai/edit/:id', name: 'FormPenilaiEdit', component: FormPenilai, props: true },
         { path: '/form-seni', name: 'FormSeni', component: FormSeni, props: true },
@@ -65,7 +82,15 @@ const router = createRouter({
         { path: '/kelompok-user/edit/:id', name: 'KelompokEdit', component: RegistrasiKelompok, props: true },
         { path: '/form-portofolio', name: 'FormPortofolio', component: FormPortofolio, props: true },
         { path: '/form-portofolio/edit/:id', name: 'FormPortofolioEdit', component: FormPortofolio, props: true },
-        
+        { path: '/form-seniman', name: 'FormSeniman', component: FormSeniman, props: true },
+        { path: '/form-seniman/edit/:id', name: 'FormSenimanEdit', component: FormSeniman, props: true },
+        { path: '/form-karya/:portofolioId', name: 'FormKarya', component: FormKarya, props: true },
+        { path: '/form-karya/edit/:id', name: 'FormKaryaEdit', component: FormKarya, props: true },
+        { path: '/info-portofolio/:id', name: 'InfoPortofolio', component: InfoPortofolio, props: true },
+        { path: '/info-karya/:id', name: 'InfoKarya', component: InfoKarya },
+        { path: '/form-rubrik', name: 'FormRubrik', component: FormRubrik, props: true },
+        { path: '/form-rubrik/edit/:id', name: 'FormRubrikEdit', component: FormRubrik, props: true },
+        { path: '/portofolioRegis/:id', name: 'PortofolioSeniman', component: PortofolioSeniman, props: true },
         { path: '/:pathMatch(.*)*', redirect: '/' }
     ]
 })

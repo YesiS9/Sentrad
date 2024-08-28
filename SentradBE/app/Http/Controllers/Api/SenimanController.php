@@ -4,21 +4,28 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Seniman;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class SenimanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $seniman = Seniman::whereNull('deleted_at')->get();
+            $perPage = $request->input('per_page', 10);
+            $seniman = Seniman::whereNull('deleted_at')->paginate($perPage);
 
             if (count($seniman) > 0) {
                 Log::info('Data Seniman Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $seniman,
+                    'data' => $seniman->items(),
+                    'current_page' => $seniman->currentPage(),
+                    'per_page' => $seniman->perPage(),
+                    'total' => $seniman->total(),
+                    'last_page' => $seniman->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Seniman Berhasil Ditampilkan',
                 ], 200);
@@ -40,21 +47,112 @@ class SenimanController extends Controller
         }
     }
 
+    public function storeByAdmin(Request $request)
+    {
+        try {
+            // Retrieve all request data
+            $storeData = $request->all();
+
+            // Validate request data
+            $validate = Validator::make($storeData, [
+                'username' => 'required|string|exists:users,username',
+                'nama_seniman' => 'required|string|max:100',
+                'tgl_lahir' => 'required|date_format:d/m/Y',
+                'deskripsi_seniman' => 'required|string',
+                'alamat_seniman' => 'required|string',
+                'noTelp_seniman' => 'required|numeric',
+                'lama_pengalaman' => 'required|integer|min:0',
+                'status_seniman' => 'required|boolean',
+            ], [
+                'username.required' => 'Username wajib diisi.',
+                'username.exists' => 'Username tidak ditemukan.',
+                'nama_seniman.required' => 'Nama Seniman wajib diisi.',
+                'nama_seniman.string' => 'Nama Seniman harus berupa teks.',
+                'nama_seniman.max' => 'Nama Seniman tidak boleh lebih dari 100 karakter.',
+                'tgl_lahir.required' => 'Tanggal Lahir wajib diisi.',
+                'tgl_lahir.date_format' => 'Tanggal Lahir harus dalam format Y-m-d.',
+                'deskripsi_seniman.required' => 'Deskripsi Seniman wajib diisi.',
+                'deskripsi_seniman.string' => 'Deskripsi Seniman harus berupa teks.',
+                'alamat_seniman.required' => 'Alamat Seniman wajib diisi.',
+                'alamat_seniman.string' => 'Alamat Seniman harus berupa teks.',
+                'noTelp_seniman.required' => 'No. Telp Seniman wajib diisi.',
+                'noTelp_seniman.numeric' => 'No. Telp Seniman harus berupa angka.',
+                'lama_pengalaman.required' => 'Lama Pengalaman wajib diisi.',
+                'lama_pengalaman.integer' => 'Lama Pengalaman harus berupa angka.',
+                'lama_pengalaman.min' => 'Lama Pengalaman tidak boleh kurang dari 0.',
+            ]);
+
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors()->first(),
+                ], 400);
+            }
+
+
+            $user = User::where('username', $storeData['username'])->first();
+            if (!$user) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'User not found',
+                ], 404);
+            }
+
+
+            $existingSeniman = Seniman::where('user_id', $user->id)->first();
+            if ($existingSeniman) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'User already has a Seniman entry',
+                ], 400);
+            }
+
+            $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
+            $storeData['user_id'] = $user->id;
+            unset($storeData['username']);
+
+
+            $seniman = Seniman::create($storeData);
+
+            Log::info('Data Seniman Berhasil Ditambahkan');
+            return response()->json([
+                'data' => $seniman,
+                'status' => 'success',
+                'message' => 'Data Seniman Berhasil Ditambahkan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => 'Something went wrong. Please try again.',
+            ], 500);
+        }
+    }
+
+
     public function store(Request $request)
     {
         try {
             $storeData = $request->all();
 
+
             $validate = Validator::make($storeData, [
-                'user_id' => 'required|string',
+                'username' => 'required|string|exists:users,username',
                 'nama_seniman' => 'required|string',
-                'tgl_lahir' => 'required|date',
+                'tgl_lahir' => 'required|date_format:d/m/Y',
                 'deskripsi_seniman' => 'required|string',
                 'alamat_seniman' => 'required|string',
                 'noTelp_seniman' => 'required|string',
                 'lama_pengalaman' => 'required|integer',
                 'status_seniman' => 'required|boolean',
             ]);
+
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -64,6 +162,23 @@ class SenimanController extends Controller
                     'message' => $validate->errors(),
                 ], 400);
             }
+
+            $user = User::where('username', $storeData['username'])->first();
+
+            if (!$user) {
+                Log::error('User not found for username: ' . $storeData['username']);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'User not found',
+                ], 404);
+            }
+
+
+            $storeData['user_id'] = $user->id;
+
+            $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
+
 
             $seniman = Seniman::create($storeData);
 
@@ -83,39 +198,95 @@ class SenimanController extends Controller
         }
     }
 
+
     public function show($id)
-    {
-        try {
-            $seniman = Seniman::whereNull('deleted_at')->find($id);
+{
+    try {
+        $seniman = Seniman::whereNull('deleted_at')
+            ->with('user')
+            ->find($id);
 
-            if (!$seniman) {
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'Data Seniman tidak ditemukan',
-                ], 404);
-            }
-
-            return response()->json([
-                'data' => $seniman,
-                'status' => 'success',
-                'message' => 'Data Seniman Berhasil Ditampilkan',
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Exception Error: ' . $e->getMessage());
+        if (!$seniman) {
             return response()->json([
                 'data' => null,
                 'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+                'message' => 'Data Seniman tidak ditemukan',
+            ], 404);
         }
+
+        
+        $responseData = $seniman->toArray();
+        $responseData['username'] = $seniman->user->username;
+
+        return response()->json([
+            'data' => $responseData,
+            'status' => 'success',
+            'message' => 'Data Seniman Berhasil Ditampilkan',
+        ], 200);
+    } catch (\Exception $e) {
+        Log::error('Exception Error: ' . $e->getMessage());
+        return response()->json([
+            'data' => null,
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
+
 
     public function update(Request $request, $id)
     {
         try {
-            $seniman = Seniman::whereNull('deleted_at')->find($id);
 
+            $updateData = $request->all();
+
+            $validate = Validator::make($updateData, [
+                'username' => 'required|string|exists:users,username',
+                'nama_seniman' => 'required|string|max:100',
+                'tgl_lahir' => 'required|date_format:d/m/Y',
+                'deskripsi_seniman' => 'required|string',
+                'alamat_seniman' => 'required|string',
+                'noTelp_seniman' => 'required|numeric',
+                'lama_pengalaman' => 'required|integer|min:0',
+                'status_seniman' => 'required|boolean',
+            ], [
+                'username.required' => 'Username wajib diisi.',
+                'username.exists' => 'Username tidak ditemukan.',
+                'nama_seniman.required' => 'Nama Seniman wajib diisi.',
+                'nama_seniman.string' => 'Nama Seniman harus berupa teks.',
+                'nama_seniman.max' => 'Nama Seniman tidak boleh lebih dari 100 karakter.',
+                'tgl_lahir.required' => 'Tanggal Lahir wajib diisi.',
+                'tgl_lahir.date_format' => 'Tanggal Lahir harus dalam format d/m/Y.',
+                'deskripsi_seniman.required' => 'Deskripsi Seniman wajib diisi.',
+                'deskripsi_seniman.string' => 'Deskripsi Seniman harus berupa teks.',
+                'alamat_seniman.required' => 'Alamat Seniman wajib diisi.',
+                'alamat_seniman.string' => 'Alamat Seniman harus berupa teks.',
+                'noTelp_seniman.required' => 'No. Telp Seniman wajib diisi.',
+                'noTelp_seniman.numeric' => 'No. Telp Seniman harus berupa angka.',
+                'lama_pengalaman.required' => 'Lama Pengalaman wajib diisi.',
+                'lama_pengalaman.integer' => 'Lama Pengalaman harus berupa angka.',
+                'lama_pengalaman.min' => 'Lama Pengalaman tidak boleh kurang dari 0.',
+            ]);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors()->first(),
+                ], 400);
+            }
+
+            $user = User::where('username', $updateData['username'])->first();
+            if (!$user) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'User not found',
+                ], 404);
+            }
+
+            $seniman = Seniman::where('id', $id)->where('user_id', $user->id)->first();
             if (!$seniman) {
                 Log::error('Data Seniman Tidak Ditemukan');
                 return response()->json([
@@ -125,27 +296,10 @@ class SenimanController extends Controller
                 ], 404);
             }
 
-            $validate = Validator::make($request->all(), [
-                'user_id' => 'required|string',
-                'nama_seniman' => 'required|string',
-                'tgl_lahir' => 'required|date',
-                'deskripsi_seniman' => 'required|string',
-                'alamat_seniman' => 'required|string',
-                'noTelp_seniman' => 'required|string',
-                'lama_pengalaman' => 'required|integer',
-                'status_seniman' => 'required|boolean',
-            ]);
 
-            if ($validate->fails()) {
-                Log::error('Validation error: ' . $validate->errors());
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => $validate->errors(),
-                ], 400);
-            }
-
-            $seniman->update($request->all());
+            $updateData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $updateData['tgl_lahir'])->format('Y-m-d');
+            unset($updateData['username']);
+            $seniman->update($updateData);
 
             Log::info('Data Seniman Berhasil Diupdate');
             return response()->json([
@@ -158,10 +312,11 @@ class SenimanController extends Controller
             return response()->json([
                 'data' => null,
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => 'Something went wrong. Please try again.',
             ], 500);
         }
     }
+
 
     public function destroy($id)
     {

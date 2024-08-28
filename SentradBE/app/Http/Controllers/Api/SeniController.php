@@ -45,6 +45,32 @@ class SeniController extends Controller
         }
     }
 
+    public function getSeniByKategori($kategoriNama)
+    {
+        try {
+            $kategori = KategoriSeni::where('nama_kategori', $kategoriNama)->first();
+
+            if (!$kategori) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Kategori tidak ditemukan'
+                ], 404);
+            }
+
+            $seni = Seni::where('kategori_id', $kategori->id)->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $seni
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat mengambil data seni: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function indexSeni(Request $request){
         try {
             $seni = Seni::whereNull('deleted_at')->get();

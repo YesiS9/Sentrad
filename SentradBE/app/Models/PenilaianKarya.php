@@ -13,7 +13,7 @@ class PenilaianKarya extends Model
 
 
     protected $fillable = [
-        'penilai_id',
+        'kuota_id',
         'regisIndividu_id',
         'regisKelompok_id',
         'tgl_penilaian',

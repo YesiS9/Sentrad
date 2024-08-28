@@ -23,9 +23,10 @@ class Rubrik extends Model
     {
         return $this->belongsTo(Penilai::class);
     }
-    
+
     public function rubrikPenilaians()
     {
         return $this->hasMany(RubrikPenilaian::class, 'rubrik_id', 'id');
     }
+
 }

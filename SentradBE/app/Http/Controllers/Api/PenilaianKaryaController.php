@@ -8,18 +8,54 @@ use App\Models\Penilai;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class PenilaianKaryaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $penilaianKarya = PenilaianKarya::whereNull('deleted_at')->get();
+            $user = Auth::user();
+            $id = Auth::id();
 
-            if (count($penilaianKarya) > 0) {
+            if (!$user->penilai) {
+                return response()->json([
+                    'status' => 'error',
+                    'data' => null,
+                    'message' => 'Penilai not found for the user',
+                ], 404);
+            }
+
+            $penilaiId = $user->penilai->id;
+            $perPage = $request->input('per_page', 10);
+
+            $penilaianKarya = PenilaianKarya::where('penilai_id', $penilaiId)
+                ->select(
+                    'penilaian_karya.id',
+                    'penilaian_karya.tgl_penilaian',
+                    'penilaian_karya.total_nilai',
+                    DB::raw('COALESCE(registrasi_individu.nama_seniman, registrasi_kelompok.nama_kelompok) as nama')
+                )
+                ->leftJoin('registrasi_individu', 'penilaian_karya.seniman_id', '=', 'registrasi_individu.id')
+                ->leftJoin('registrasi_kelompok', 'penilaian_karya.seniman_id', '=', 'registrasi_kelompok.id')
+                ->paginate($perPage);
+
+            if ($penilaianKarya->isNotEmpty()) {
                 Log::info('Data Penilaian Karya Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $penilaianKarya,
+                    'data' => $penilaianKarya->map(function ($item) {
+                        return [
+                            'id' => $item->id,
+                            'tgl_penilaian' => $item->tgl_penilaian,
+                            'total_nilai' => $item->total_nilai,
+                            'nama' => $item->nama ?? 'N/A',
+                        ];
+                    }),
+                    'id' => $id,
+                    'current_page' => $penilaianKarya->currentPage(),
+                    'per_page' => $penilaianKarya->perPage(),
+                    'total' => $penilaianKarya->total(),
+                    'last_page' => $penilaianKarya->lastPage(),
                     'status' => 'success',
                     'message' => 'Data Penilaian Karya Berhasil Ditampilkan',
                 ], 200);
@@ -36,10 +72,18 @@ class PenilaianKaryaController extends Controller
             return response()->json([
                 'data' => null,
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }
+
+
+
+
+
+
+
+
 
     public function store(Request $request)
     {

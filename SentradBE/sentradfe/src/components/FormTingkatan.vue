@@ -187,11 +187,11 @@
       }
 
       button[type="submit"] {
-        background-color: #4caf50;
+        background-color: #f7941e;
       }
 
       button[type="submit"]:hover {
-        background-color: #45a049;
+        background-color: #f7941e;
       }
 
       button[type="button"] {

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('kelompok_id')->nullable()->references('id')->on('registrasi_kelompoks')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignUuid('seniman_id')->nullable()->references('id')->on('seniman')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('kategori_id')->references('id')->on('kategori_senis')->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('judul_portofolio', 100);
             $table->date('tgl_dibuat');
             $table->string('deskripsi_portofolio');

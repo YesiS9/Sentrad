@@ -15,8 +15,25 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        $schedule->call(function () {
+            $penilai = Penilai::all();
+
+            foreach ($penilai as $p) {
+                $existingQuota = KuotaPenilaian::where('penilai_id', $p->id)
+                    ->where('periode_penilaian', now()->format('Y-m'))
+                    ->first();
+
+                if (!$existingQuota) {
+                    KuotaPenilaian::create([
+                        'penilai_id' => $p->id,
+                        'periode_penilaian' => now()->format('Y-m'),
+                        'kuota_terpakai' => 0,
+                    ]);
+                }
+            }
+        })->monthlyOn(1, '00:00');
     }
+
 
     /**
      * Register the commands for the application.

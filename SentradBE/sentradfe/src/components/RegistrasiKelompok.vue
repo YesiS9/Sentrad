@@ -4,13 +4,25 @@
         <div class="auth-form">
           <h3>{{ mode === 'add' ? 'Tambah Kelompok' : 'Edit Kelompok' }}</h3>
           <form @submit.prevent="handleSubmit">
-
+            <div class="form-group">
+              <label for="nama_kategori">Kategori Seni</label>
+              <Multiselect
+                v-model="formData.nama_kategori"
+                :options="kategoriOptions"
+                :searchable="true"
+                :close-on-select="true"
+                :clear-on-select="false"
+                :preserve-search="true"
+                placeholder="Pilih atau cari kategori Seni"
+                label="nama_kategori"
+                track-by="nama_kategori"
+                class="custom-multiselect"
+              ></Multiselect>
+            </div>
               <div class="form-group">
                 <label for="nama_kelompok">Nama Kelompok</label>
                 <input type="text" id="nama_kelompok" v-model="formData.nama_kelompok" placeholder="Nama Kelompok" required>
               </div>
-
-
 
               <div class="form-group">
                 <label for="tgl_terbentuk">Tanggal Terbentuk</label>
@@ -58,9 +70,9 @@
 import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../services/api.js';
-import Multiselect from '@vueform/multiselect';
-import '@vueform/multiselect/themes/default.css';
 import Swal from 'sweetalert2';
+import Multiselect from '@vueform/multiselect';
+  import '@vueform/multiselect/themes/default.css';
 
 const formData = reactive({
     nama_kelompok: '',
@@ -70,12 +82,12 @@ const formData = reactive({
     noTelp_kelompok: '',
     email_kelompok: '',
     jumlah_anggota: '',
-    status_kelompok: 1,
+    status_kelompok: 'Dalam proses',
     seniman_id: ''
 });
 
 
-
+const kategoriOptions = ref([]);
 const route = useRoute();
 const router = useRouter();
 const mode = ref('add');
@@ -84,8 +96,22 @@ const getSeniman = () => {
     const senimanId = localStorage.getItem('seniman_id');
     if (senimanId) {
       formData.seniman_id = senimanId;
+      console.log('seniman: ',senimanId);
     } else {
       console.error('Seniman ID is missing from localStorage.');
+    }
+  };
+
+  const getKategoriOptions = async () => {
+    try {
+      const response = await axios.get('/nama-kategori');
+      if (response.status === 200 && response.data.status === 'success') {
+        kategoriOptions.value = response.data.data.map(kategori => kategori.nama_kategori);
+      } else {
+        console.error('Failed to fetch kategori seni options:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching kategori seni options:', error.message);
     }
   };
 
@@ -94,6 +120,7 @@ const getKelompok = async (id) => {
         const response = await axios.get(`/registerKelompok/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
         const kelompokData = response.data.data;
+        console.log('DataKelompok: ',response.data);
         Object.assign(formData, kelompokData);
         mode.value = 'edit';
         } else {
@@ -106,7 +133,7 @@ const getKelompok = async (id) => {
 
 onMounted(async () => {
     getSeniman();
-
+    await getKategoriOptions();
     const { id } = route.params;
     if (id) {
         await getKelompok(id);
@@ -122,7 +149,7 @@ const handleSubmit = async () => {
     const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
 
     const result = await Swal.fire({
-        title: `Apakah Anda yakin ingin ${action} registrasi individu ini?`,
+        title: `Apakah Anda yakin ingin ${action} registrasi kelompok ini?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Ya',
@@ -139,9 +166,9 @@ const handleSubmit = async () => {
         };
         let response;
         if (mode.value === 'add') {
-            response = await axios.post('/registerKelompok/storeByAdmin', formattedData);
+            response = await axios.post('/registerKelompok', formattedData);
         } else if (mode.value === 'edit' && formData.id) {
-            response = await axios.put(`/kelompok/${formData.id}`, formattedData);
+            response = await axios.put(`/registerKelompok/${formData.id}`, formattedData);
         } else {
             console.error('Invalid mode or missing formData.id for edit.');
         return;
@@ -175,91 +202,101 @@ const closeForm = () => {
     formData.noTelp_kelompok = '';
     formData.email_kelompok = '';
     formData.jumlah_anggota = '';
-    formData.status_kelompok = 1;
+    formData.status_kelompok = 'Dalam proses';
     mode.value = 'add';
     router.push({ name: 'Registrasi' });
 };
 </script>
 
 <style lang="scss" scoped>
+  @import '@vueform/multiselect/themes/default.css';
+
   main {
-    background-color: #f7941e;
+      background-color: #f7941e;
   }
   .auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f7941e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f7941e;
   }
 
   .auth-form {
-    background-color: #fff;
-    width: 90vw;
-    height: 90vw;
-    max-width: 650px;
-    max-height: 700px;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+      background-color: #fff;
+      width: 90vw;
+      height: 90vw;
+      max-width: 600px;
+      max-height: 700px;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
 
-    h3 {
-      margin-bottom: 1rem;
-    }
+      h3 {
+          margin-bottom: 1rem;
+      }
 
+      .form-group {
+        width: 100%;
+        margin-bottom: 1rem;
+        text-align: left;
+      }
 
-    .form-group {
-      margin-bottom: 1rem;
-      text-align: left;
-      width: calc(50% - 0.5rem);
-    }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+      }
 
-    input[type="text"],
-    input[type="date"],
-    input[type="email"],
-    input[type="number"],
-    select {
-      width: 40vw;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
+      .custom-multiselect {
+          width: 40vw;
+      }
 
-    .form-actions {
-      margin-top: 1rem;
-      text-align: right;
-      width: 100%;
-    }
+      input[type="text"],
+      input[type="date"],
+      input[type="email"],
+      input[type="number"],
+      select {
+          width: 40vw;
+          padding: 0.5rem;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+      }
 
-    button {
-      background-color: #f7941e;
-      color: #fff;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-left: 0.5rem;
-    }
+      .form-actions {
+          margin-top: 1rem;
+          text-align: right;
+          width: 100%;
+      }
 
-    button[type="submit"] {
-      background-color: #4caf50;
-    }
+      button {
+          background-color: #f7941e;
+          color: #fff;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-left: 0.5rem;
+      }
 
-    button[type="submit"]:hover {
-      background-color: #45a049;
-    }
+      button[type="submit"] {
+          background-color: #f7941e;
+      }
 
-    button[type="button"] {
-      background-color: #f44336;
-    }
+      button[type="submit"]:hover {
+          background-color: #f7941e;
+      }
 
-    button[type="button"]:hover {
-      background-color: #da190b;
-    }
+      button[type="button"] {
+          background-color: #f44336;
+      }
+
+      button[type="button"]:hover {
+          background-color: #da190b;
+      }
   }
   </style>

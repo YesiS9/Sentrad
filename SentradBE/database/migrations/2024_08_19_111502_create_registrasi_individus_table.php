@@ -13,17 +13,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('registrasi_kelompoks', function (Blueprint $table) {
+        Schema::create('registrasi_individus', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('seniman_id')->references('id')->on('seniman')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->string('nama_kelompok', 100);
-            $table->date('tgl_terbentuk');
-            $table->string('alamat_kelompok');
-            $table->string('deskripsi_kelompok');
-            $table->string('noTelp_kelompok', 20);
-            $table->string('email_kelompok');
-            $table->integer('jumlah_anggota');
-            $table->boolean('status_kelompok');
+            $table->foreignUuid('kategori_id')->references('id')->on('kategori_senis')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->string('nama', 100);
+            $table->date('tgl_lahir');
+            $table->date('tgl_mulai');
+            $table->string('alamat');
+            $table->string('noTelp', 20);
+            $table->string('email');
+            $table->string('status_individu');
             $table->timestamps();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
         });
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('registrasi_kelompoks');
+        Schema::dropIfExists('registrasi_individus');
     }
 };

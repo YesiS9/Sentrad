@@ -13,16 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('registrasi_individus', function (Blueprint $table) {
+        Schema::create('rubrik_penilaians', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('seniman_id')->references('id')->on('seniman')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->string('nama', 100);
-            $table->date('tgl_lahir');
-            $table->date('tgl_mulai');
-            $table->string('alamat');
-            $table->string('noTelp', 20);
-            $table->string('email');
-            $table->boolean('status_individu');
+            $table->foreignUuid('rubrik_id')->references('id')->on('rubriks')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('penilaian_karya_id')->references('id')->on('penilaian_karyas')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->integer('skor');
             $table->timestamps();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
         });
@@ -35,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('registrasi_individus');
+        Schema::dropIfExists('rubrik_penilaians');
     }
 };

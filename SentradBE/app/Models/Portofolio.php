@@ -15,6 +15,7 @@ class Portofolio extends Model
     protected $fillable = [
         'kelompok_id',
         'seniman_id',
+        'kategori_id',
         'judul_portofolio',
         'tgl_dibuat',
         'deskripsi_portofolio',
@@ -30,5 +31,10 @@ class Portofolio extends Model
     public function seniman()
     {
         return $this->belongsTo(Seniman::class, 'seniman_id', 'id');
+    }
+
+    public function karyas()
+    {
+        return $this->hasMany(Karya::class);
     }
 }

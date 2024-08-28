@@ -13,13 +13,13 @@ class KategoriSeniController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = $request->input('per_page', 10); // Ambil jumlah data per halaman dari request, default 10 jika tidak diset
+            $perPage = $request->input('per_page', 10);
             $kategoriSeni = KategoriSeni::whereNull('deleted_at')->paginate($perPage);
 
             if ($kategoriSeni->count() > 0) {
                 Log::info('Data Kategori Seni Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $kategoriSeni->items(), // Ambil data dari halaman yang sedang ditampilkan
+                    'data' => $kategoriSeni->items(),
                     'current_page' => $kategoriSeni->currentPage(),
                     'per_page' => $kategoriSeni->perPage(),
                     'total' => $kategoriSeni->total(),
@@ -46,6 +46,34 @@ class KategoriSeniController extends Controller
         }
     }
 
+    public function indexKategori(Request $request){
+        try {
+            $kategori = KategoriSeni::whereNull('deleted_at')->get();
+
+            if ($kategori->isNotEmpty()) {
+                Log::info('Data Kategori Seni Berhasil Ditampilkan');
+                return response()->json([
+                    'data' => $kategori,
+                    'status' => 'success',
+                    'message' => 'Data Kategori Seni Berhasil Ditampilkan',
+                ], 200);
+            }
+
+            Log::info('Data Kategori Seni Kosong');
+            return response()->json([
+                'data' => null,
+                'status' => 'success',
+                'message' => 'Data Kategori Seni Kosong',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
     public function store(Request $request)
     {
         try {

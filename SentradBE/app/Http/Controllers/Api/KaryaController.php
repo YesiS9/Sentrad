@@ -4,18 +4,35 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Karya;
+use App\Models\Portofolio;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
 
 class KaryaController extends Controller
 {
-    public function index()
+    public function index($portofolio_id)
     {
         try {
-            $karyas = Karya::whereNull('deleted_at')->get();
+            Log::info('Received portofolio_id: ' . $portofolio_id);
 
-            if (count($karyas) > 0) {
+            if (!$portofolio_id) {
+                Log::info('portofolio_id is required but not provided');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'portofolio_id is required'
+                ], 400);
+            }
+
+
+            $karyas = Karya::whereNull('deleted_at')
+                        ->where('portofolio_id', $portofolio_id)
+                        ->get();
+
+            if ($karyas->isNotEmpty()) {
                 Log::info('Data Karya Berhasil Ditampilkan');
                 return response()->json([
                     'data' => $karyas,
@@ -40,18 +57,18 @@ class KaryaController extends Controller
         }
     }
 
+
+
     public function store(Request $request)
     {
         try {
-            $storeData = $request->all();
-
-            $validate = Validator::make($storeData, [
-                'portofolio_id' => 'required|string',
+            $validate = Validator::make($request->all(), [
+                'portofolio_id' => 'required|exists:portofolios,id',
                 'judul_karya' => 'required|string',
-                'tgl_pembuatan' => 'required|date',
+                'tgl_pembuatan' => 'required|date_format:d/m/Y',
                 'deskripsi_karya' => 'required|string',
                 'bentuk_karya' => 'required|string',
-                'media_karya' => 'required|string',
+                'media_karya.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
                 'status_karya' => 'required|boolean',
             ]);
 
@@ -64,7 +81,32 @@ class KaryaController extends Controller
                 ], 400);
             }
 
+            $portofolio = Portofolio::find($request->portofolio_id);
+            if (!$portofolio) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Portofolio not found',
+                ], 404);
+            }
+
+            $filePaths = [];
+            if ($request->hasFile('media_karya')) {
+                foreach ($request->file('media_karya') as $file) {
+                    if ($file->isValid()) {
+                        $filePaths[] = $file->store('media_karya', 'public');
+                    }
+                }
+            }
+
+            $storeData = $request->except('media_karya');
+            $storeData['tgl_pembuatan'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_pembuatan'])->format('Y-m-d');
+            $storeData['portofolio_id'] = $portofolio->id;
+            $storeData['media_karya'] = json_encode($filePaths);
+
             $karya = Karya::create($storeData);
+
+            $this->updateJumlahKarya($portofolio->id);
 
             Log::info('Data Karya Berhasil Ditambahkan');
             return response()->json([
@@ -82,10 +124,97 @@ class KaryaController extends Controller
         }
     }
 
+    public function update(Request $request, $id)
+    {
+        try {
+            $validate = Validator::make($request->all(), [
+                'portofolio_id' => 'required|exists:portofolios,id',
+                'judul_karya' => 'required|string',
+                'tgl_pembuatan' => 'required|date_format:d/m/Y',
+                'deskripsi_karya' => 'required|string',
+                'bentuk_karya' => 'required|string',
+                'media_karya.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
+                'status_karya' => 'required|boolean',
+            ]);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
+
+            $karya = Karya::find($id);
+
+            if (!$karya) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Karya not found',
+                ], 404);
+            }
+
+            $portofolio = Portofolio::find($request->portofolio_id);
+            if (!$portofolio) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Portofolio not found',
+                ], 404);
+            }
+
+            $filePaths = json_decode($karya->media_karya, true);
+            if ($request->hasFile('media_karya')) {
+                foreach ($request->file('media_karya') as $file) {
+                    if ($file->isValid()) {
+                        if ($filePaths) {
+                            foreach ($filePaths as $oldFilePath) {
+                                if (Storage::exists('public/' . $oldFilePath)) {
+                                    Storage::delete('public/' . $oldFilePath);
+                                }
+                            }
+                        }
+                        $filePaths = [];
+                        foreach ($request->file('media_karya') as $newFile) {
+                            if ($newFile->isValid()) {
+                                $filePaths[] = $newFile->store('media_karya', 'public');
+                            }
+                        }
+                    }
+                }
+            }
+
+            $updateData = $request->except('media_karya');
+            $updateData['media_karya'] = json_encode($filePaths);
+            $updateData['tgl_pembuatan'] = Carbon::createFromFormat('d/m/Y', $updateData['tgl_pembuatan'])->format('Y-m-d');
+            $updateData['portofolio_id'] = $portofolio->id;
+
+            $karya->update($updateData);
+
+            $this->updateJumlahKarya($portofolio->id);
+
+            Log::info('Data Karya Berhasil Diperbarui');
+            return response()->json([
+                'data' => $karya,
+                'status' => 'success',
+                'message' => 'Data Karya Berhasil Diperbarui',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function show($id)
     {
         try {
-            $karya = Karya::whereNull('deleted_at')->find($id);
+            $karya = Karya::with('portofolio:id,judul_portofolio')->whereNull('deleted_at')->find($id);
 
             if (!$karya) {
                 return response()->json([
@@ -95,8 +224,21 @@ class KaryaController extends Controller
                 ], 404);
             }
 
+            $judul_portofolio = $karya->portofolio ? $karya->portofolio->judul_portofolio : 'Portofolio tidak tersedia';
+
+            $data = [
+                'id' => $karya->id,
+                'judul_karya' => $karya->judul_karya,
+                'deskripsi_karya' => $karya->deskripsi_karya,
+                'tgl_pembuatan' => $karya->tgl_pembuatan,
+                'media_karya' => $karya->media_karya,
+                'bentuk_karya' => $karya->bentuk_karya,
+                'status_karya' => $karya->status_karya,
+                'judul_portofolio' => $judul_portofolio,
+            ];
+
             return response()->json([
-                'data' => $karya,
+                'data' => $data,
                 'status' => 'success',
                 'message' => 'Data Karya Berhasil Ditampilkan',
             ], 200);
@@ -110,56 +252,7 @@ class KaryaController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
-    {
-        try {
-            $karya = Karya::whereNull('deleted_at')->find($id);
 
-            if (!$karya) {
-                Log::error('Data Karya Tidak Ditemukan');
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'Data Karya Tidak Ditemukan',
-                ], 404);
-            }
-
-            $validate = Validator::make($request->all(), [
-                'portofolio_id' => 'required|string',
-                'judul_karya' => 'required|string',
-                'tgl_pembuatan' => 'required|date',
-                'deskripsi_karya' => 'required|string',
-                'bentuk_karya' => 'required|string',
-                'media_karya' => 'required|string',
-                'status_karya' => 'required|boolean',
-            ]);
-
-            if ($validate->fails()) {
-                Log::error('Validation error: ' . $validate->errors());
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => $validate->errors(),
-                ], 400);
-            }
-
-            $karya->update($request->all());
-
-            Log::info('Data Karya Berhasil Diupdate');
-            return response()->json([
-                'data' => $karya,
-                'status' => 'success',
-                'message' => 'Data Karya Berhasil Diupdate',
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Exception Error: ' . $e->getMessage());
-            return response()->json([
-                'data' => null,
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
 
     public function destroy($id)
     {
@@ -175,14 +268,29 @@ class KaryaController extends Controller
                 ], 404);
             }
 
-            if ($karya->delete()) {
-                Log::info('Data Karya Berhasil Dihapus');
-                return response()->json([
-                    'data' => $karya,
-                    'status' => 'success',
-                    'message' => 'Data Karya Berhasil Dihapus',
-                ], 200);
+            // Delete media files
+            $filePaths = json_decode($karya->media_karya, true);
+            if ($filePaths) {
+                foreach ($filePaths as $filePath) {
+                    if (Storage::exists('public/' . $filePath)) {
+                        Storage::delete('public/' . $filePath);
+                    }
+                }
             }
+
+            $karya->delete();
+
+            $portofolio = Portofolio::find($karya->portofolio_id);
+            if ($portofolio) {
+                $this->updateJumlahKarya($portofolio->id);
+            }
+
+            Log::info('Data Karya Berhasil Dihapus');
+            return response()->json([
+                'data' => null,
+                'status' => 'success',
+                'message' => 'Data Karya Berhasil Dihapus',
+            ], 200);
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
             return response()->json([
@@ -192,4 +300,14 @@ class KaryaController extends Controller
             ], 500);
         }
     }
+
+    private function updateJumlahKarya($portofolioId)
+    {
+        $jumlahKarya = Karya::where('portofolio_id', $portofolioId)
+            ->whereNull('deleted_at')
+            ->count();
+
+        Portofolio::find($portofolioId)->update(['jumlah_karya' => $jumlahKarya]);
+    }
 }
+

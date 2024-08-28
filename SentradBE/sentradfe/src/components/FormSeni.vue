@@ -40,6 +40,7 @@
   import { useRoute, useRouter } from 'vue-router';
   import axios from '../services/api.js';
   import Swal from 'sweetalert2';
+  import { useToast } from 'vue-toastification';
 
   const formData = reactive({
     nama_kategori: '',
@@ -52,6 +53,7 @@
   const route = useRoute();
   const router = useRouter();
   const mode = ref('add');
+  const toast = useToast();
 
   const getKategori = async () => {
     try {
@@ -205,11 +207,11 @@ main{
     }
 
     button[type="submit"] {
-      background-color: #4caf50;
+      background-color: #f7941e;
     }
 
     button[type="submit"]:hover {
-      background-color: #45a049;
+      background-color: #f7941e;
     }
 
     button[type="button"] {

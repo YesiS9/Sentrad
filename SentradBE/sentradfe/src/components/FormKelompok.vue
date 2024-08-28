@@ -29,47 +29,52 @@
 
             <div class="form-row">
               <div class="form-group">
+                <label for="nama_kategori">Kategori</label>
+                <Multiselect
+                  v-model="formData.nama_kategori"
+                  :options="kategoris"
+                  :searchable="true"
+                  :close-on-select="true"
+                  :clear-on-select="false"
+                  :preserve-search="true"
+                  placeholder="Pilih atau cari kategori"
+                  label="nama_kategori"
+                  track-by="nama_kategori"
+                  class="custom-multiselect"
+                ></Multiselect>
+              </div>
+
+              <div class="form-group">
                 <label for="tgl_terbentuk">Tanggal Kelompok Terbentuk</label>
                 <input type="date" id="tgl_terbentuk" v-model="formData.tgl_terbentuk" placeholder="Tanggal Terbentuk" required>
               </div>
+            </div>
 
+            <div class="form-row">
               <div class="form-group">
                 <label for="alamat_kelompok">Alamat Kelompok</label>
                 <input type="text" id="alamat_kelompok" v-model="formData.alamat_kelompok" placeholder="Alamat Kelompok" required>
               </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="deskripsi_kelompok">Deskripsi Kelompok</label>
-                <input type="text" id="deskripsi_kelompok" v-model="formData.deskripsi_kelompok" placeholder="Deskripsi Kelompok" required>
-              </div>
-
-              <div class="form-group">
-                <label for="noTelp_kelompok">No. Telp Kelompok</label>
-                <input type="text" id="noTelp_kelompok" v-model="formData.noTelp_kelompok" placeholder="No. Telp Kelompok" required>
-              </div>
-            </div>
-
-            <div class="form-row">
               <div class="form-group">
                 <label for="email_kelompok">Email Kelompok</label>
                 <input type="email" id="email_kelompok" v-model="formData.email_kelompok" placeholder="Email Kelompok" required>
               </div>
+            </div>
 
+            <div class="form-row">
+              <div class="form-group">
+                <label for="noTelp_kelompok">No. Telp Kelompok</label>
+                <input type="text" id="noTelp_kelompok" v-model="formData.noTelp_kelompok" placeholder="No. Telp Kelompok" required>
+              </div>
               <div class="form-group">
                 <label for="jumlah_anggota">Jumlah Anggota</label>
                 <input type="number" id="jumlah_anggota" v-model="formData.jumlah_anggota" placeholder="Jumlah Anggota" required>
               </div>
             </div>
-
             <div class="form-row">
-              <div class="form-group">
-                <label for="status_kelompok">Status Kelompok</label>
-                <select id="status_kelompok" v-model="formData.status_kelompok" required>
-                  <option value="1">Aktif</option>
-                  <option value="0">Tidak Aktif</option>
-                </select>
+                <div class="form-group">
+                <label for="deskripsi_kelompok">Deskripsi Kelompok</label>
+                <textarea id="deskripsi_kelompok" v-model="formData.deskripsi_kelompok" placeholder="Deskripsi Kelompok" rows="3" required></textarea>
               </div>
             </div>
 
@@ -81,7 +86,8 @@
         </div>
       </div>
     </main>
-</template>
+  </template>
+
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
@@ -100,11 +106,11 @@ const formData = reactive({
     noTelp_kelompok: '',
     email_kelompok: '',
     jumlah_anggota: '',
-    status_kelompok: 1,
+    status_kelompok: 'Dalam proses',
 });
 
 const senimans = ref([]);
-
+const kategoris = ref([]);
 const route = useRoute();
 const router = useRouter();
 const mode = ref('add');
@@ -122,12 +128,26 @@ const getSeniman = async () => {
         console.error('Error fetching seniman list:', error.message);
     }
 };
+const getKategori = async () => {
+    try {
+      const response = await axios.get('/nama-kategori');
+      if (Array.isArray(response.data.data)) {
+        kategoris.value = response.data.data.map(kategori => kategori.nama_kategori);
+      } else {
+        console.error('Unexpected response data format:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching kategori:', error.message);
+    }
+  };
+
 
 const getKelompok = async (id) => {
     try {
-        const response = await axios.get(`/registerKelompok/${id}`);
+        const response = await axios.get(`/registerIndividu/showByAdmin/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
         const kelompokData = response.data.data;
+        console.log('Kelompok response:', response.data);
         Object.assign(formData, kelompokData);
         mode.value = 'edit';
         } else {
@@ -140,6 +160,7 @@ const getKelompok = async (id) => {
 
 onMounted(async () => {
     await getSeniman();
+    await getKategori();
 
     const { id } = route.params;
     if (id) {
@@ -175,7 +196,7 @@ const handleSubmit = async () => {
         if (mode.value === 'add') {
             response = await axios.post('/registerKelompok/storeByAdmin', formattedData);
         } else if (mode.value === 'edit' && formData.id) {
-            response = await axios.put(`/registerKelompok/${formData.id}`, formattedData);
+            response = await axios.put(`/registerIndividu/updateByAdmin//${formData.id}`, formattedData);
         } else {
             console.error('Invalid mode or missing formData.id for edit.');
         return;
@@ -209,7 +230,7 @@ const closeForm = () => {
     formData.noTelp_kelompok = '';
     formData.email_kelompok = '';
     formData.jumlah_anggota = '';
-    formData.status_kelompok = 1;
+    formData.status_kelompok = 'Dalam proses';
     mode.value = 'add';
     router.push({ name: 'DataRegistrasi' });
 };
@@ -268,7 +289,7 @@ main {
   input[type='date'],
   input[type='email'],
   input[type='number'],
-  select {
+  select, textarea {
     width: 100%;
     padding: 0.5rem;
     border: 1px solid #ccc;
@@ -292,11 +313,11 @@ main {
   }
 
   button[type='submit'] {
-    background-color: #4caf50;
+    background-color: #f7941e;
   }
 
   button[type='submit']:hover {
-    background-color: #45a049;
+    background-color: #f7941e;
   }
 
   button[type='button'] {

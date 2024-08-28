@@ -16,4 +16,32 @@ class KategoriSeni extends Model
         'nama_kategori',
         'deskripsi_kategori'
     ];
+
+    public function kategoriRubrik()
+    {
+        return $this->hasMany(KategoriRubrik::class, 'kategori_id', 'id');
+    }
+
+
+    public function rubrik()
+    {
+        return $this->hasManyThrough(
+            Rubrik::class,
+            KategoriRubrik::class,
+            'kategori_id',
+            'id', 
+            'id',
+            'rubrik_id'
+        );
+    }
+
+    public function senis()
+    {
+        return $this->hasMany(Seni::class);
+    }
+
+    public function penilai()
+    {
+        return $this->hasMany(Penilai::class, 'kategori_id');
+    }
 }

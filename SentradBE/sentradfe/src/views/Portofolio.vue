@@ -14,16 +14,26 @@
                     <thead>
                         <tr>
                             <th>NO</th>
-                            <th>Nama Portofolio</th>
+                            <th>Judul Portofolio</th>
                             <th>Jumlah Karya</th>
+                            <th>Tambah Karya</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(portofolio, index) in portofolios" :key="portofolio.id">
                             <td>{{ index + 1 }}</td>
-                            <td>{{ portofolio.nama_portofolio }}</td>
+                            <td>
+                                <router-link :to="{ name: 'InfoPortofolio', params: { id: portofolio.id } }" class="portfolio-link">
+                                    {{ portofolio.judul_portofolio }}
+                                </router-link>
+                            </td>
                             <td>{{ portofolio.jumlah_karya }}</td>
+                            <td>
+                                <router-link :to="{ name: 'FormKarya', params: { portofolioId: portofolio.id } }" class="add-karya-btn">
+                                    <span class="material-icons">add_circle</span>
+                                </router-link>
+                            </td>
                             <td>
                                 <router-link :to="{ name: 'FormPortofolioEdit', params: { id: portofolio.id } }" class="edit-btn material-icons">
                                     settings
@@ -34,7 +44,7 @@
                             </td>
                         </tr>
                         <tr v-if="portofolios.length === 0">
-                            <td colspan="4" class="no-data">Portofolio kosong</td>
+                            <td colspan="5" class="no-data">Portofolio kosong</td>
                         </tr>
                     </tbody>
                 </table>
@@ -60,21 +70,21 @@ const currentPage = ref(1);
 const totalPages = ref(1);
 const perPage = 10;
 
-
 const loadPortofolios = async () => {
     try {
-        const response = await axios.get('/portofolio',{
+        const response = await axios.get('/portofolio', {
             params: {
-                    per_page: perPage,
-                    page: currentPage.value
-                }
+                per_page: perPage,
+                page: currentPage.value
+            }
         });
         if (response.status === 200 && response.data.status === 'success') {
             portofolios.value = response.data.data;
+            console.log('response:', response.data.data),
             currentPage.value = response.data.current_page;
             totalPages.value = response.data.last_page;
         } else {
-            console.error('Failed to load portofolio data:',response.data.message);
+            console.error('Failed to load portofolio data:', response.data.message);
         }
     } catch (error) {
         console.error('Error:', error.message);
@@ -82,55 +92,55 @@ const loadPortofolios = async () => {
 };
 
 const deletePortofolio = async (id) => {
-        const result = await Swal.fire({
-            title: 'Apakah Anda yakin ingin menghapus portofolio ini?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Ya',
-            cancelButtonText: 'Tidak',
-        });
+    const result = await Swal.fire({
+        title: 'Apakah Anda yakin ingin menghapus portofolio ini?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Tidak',
+    });
 
-        if (!result.isConfirmed) {
-            return;
-        }
+    if (!result.isConfirmed) {
+        return;
+    }
 
-        try {
-            const response = await axios.delete(`/portofolio/${id}`);
-            if (response.status === 200 && response.data.status === 'success') {
-                Swal.fire('Portofolio berhasil dihapus', '', 'success');
-                loadPortofolios();
-            } else {
-                Swal.fire('Gagal menghapus portofolio', response.data.message, 'error');
-                console.error('Gagal menghapus portofolio:', response.data.message);
-            }
-        } catch (error) {
-            Swal.fire('Error menghapus user', error.message, 'error');
-            console.error('Error menghapus user:', error.message);
+    try {
+        const response = await axios.delete(`/portofolio/${id}`);
+        if (response.status === 200 && response.data.status === 'success') {
+            Swal.fire('Portofolio berhasil dihapus', '', 'success');
+            loadPortofolios();
+        } else {
+            Swal.fire('Gagal menghapus portofolio', response.data.message, 'error');
+            console.error('Gagal menghapus portofolio:', response.data.message);
         }
-    };
+    } catch (error) {
+        Swal.fire('Error menghapus user', error.message, 'error');
+        console.error('Error menghapus user:', error.message);
+    }
+};
 
-    const prevPage = () => {
-        if (currentPage.value > 1) {
-            currentPage.value--;
-            loadPortofolios()
-        }
-    };
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+        loadPortofolios();
+    }
+};
 
-    const nextPage = () => {
-        if (currentPage.value < totalPages.value) {
-            currentPage.value++;
-            loadPortofolios()
-        }
-    };
+const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+        loadPortofolios();
+    }
+};
 
 onMounted(() => {
-        if (!localStorage.getItem('token')) {
-            alert('Please login first.');
-            router.push('/login');
-            return;
-        }
-        loadPortofolios();
-    });
+    if (!localStorage.getItem('token')) {
+        alert('Please login first.');
+        router.push('/login');
+        return;
+    }
+    loadPortofolios();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -140,29 +150,29 @@ onMounted(() => {
     color: #888;
 }
 .data-portofolio {
-    background-color: #f5d99d;
+        background-color: #f5d99d;
 
-    .user-management-container {
+        .user-management-container {
         background-color: #f5d99d;
         padding: 2rem;
-    }
+        }
 
-    .header {
+        .header {
         margin-bottom: 1rem;
 
         h2 {
             color: #000;
         }
-    }
+        }
 
-    .table-wrapper {
+        .table-wrapper {
         background-color: #fff;
         padding: 1rem;
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
+        }
 
-    .table-header {
+        .table-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -181,56 +191,123 @@ onMounted(() => {
             cursor: pointer;
 
             &:hover {
-                background-color: #e6830d;
+            background-color: #e6830d;
             }
         }
-    }
+        }
 
-    .user-table {
+        .user-table {
         width: 100%;
         border-collapse: collapse;
 
         th {
-            background-color: #f5d99d;
-            text-align: center;
-            border: 1px solid #ccc;
-            padding: 0.5rem;
-        }
+                background-color: #f5d99d;
+                text-align: center;
+                border: 1px solid #ccc;
+                padding: 0.5rem;
+            }
 
         td {
             border: 1px solid #ccc;
             padding: 0.5rem;
             text-align: center;
         }
-    }
 
-    .pagination {
-            display: flex;
-            justify-content: center;
+        .edit-btn, .delete-btn, .add-karya-btn, .info-btn {
+            display: inline-flex;
             align-items: center;
-            margin-top: 2rem;
+            justify-content: center;
+            background-color: #fff;
+            color: #fff;
+            border: none;
+            padding: 0.3rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.3rem;
+            height: 2rem;
+            width: 2rem;
 
-            button {
-                background-color: #f7941e;
-                color: #fff;
-                border: none;
-                padding: 0.5rem 1rem;
-                border-radius: 4px;
-                cursor: pointer;
-                margin: 0 0.5rem;
-
-                &:hover {
-                    background-color: #e6830d;
-                }
-                &:disabled {
-                    background-color: #ccc;
-                    cursor: not-allowed;
-                }
-            }
-
-            span {
-                margin: 0 0.5rem;
+            .material-icons {
+            font-size: 1.5rem;
             }
         }
-}
+        .info-btn{
+            background-color: #437ce6;
+
+            &:hover {
+            background-color: #437ce6;
+            }
+
+            .material-icons {
+            color: #fff;
+            }
+        }
+
+        .edit-btn {
+            background-color: #4caf50;
+
+            &:hover {
+            background-color: #45a049;
+            }
+
+            .material-icons {
+            color: #fff;
+            }
+        }
+
+        .delete-btn {
+            background-color: #f44336;
+
+            &:hover {
+            background-color: #e53935;
+            }
+
+            .material-icons {
+            color: #fff;
+            }
+        }
+
+        .add-karya-btn {
+            background-color: #f7941e;
+
+            &:hover {
+            background-color: #f7941e;
+            }
+            .material-icons {
+            color: #fff;
+            }
+        }
+
+
+        }
+
+        .pagination {
+        display: flex;
+        justify-content: center; /* Center align buttons */
+        align-items: center;
+        margin-top: 2rem; /* Add space above pagination */
+
+        button {
+            background-color: #f7941e;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 0.5rem;
+
+            &:hover {
+                background-color: #e6830d;
+            }
+            &:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+        }
+
+        span {
+            margin: 0 0.5rem;
+        }
+        }
+    }
 </style>

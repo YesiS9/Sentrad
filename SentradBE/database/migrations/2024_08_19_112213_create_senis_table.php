@@ -13,15 +13,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('rubrik_penilaians', function (Blueprint $table) {
+        Schema::create('senis', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('rubrik_id')->references('id')->on('rubriks')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignUuid('penilaian_karya_id')->references('id')->on('penilaian_karyas')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('kategori_id')->references('id')->on('kategori_senis')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->string('nama_seni', 100);
+            $table->string('deskripsi_seni');
+            $table->string('status_seni', 100);
             $table->timestamps();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
         });
     }
-
     /**
      * Reverse the migrations.
      *
@@ -29,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('rubrik_penilaians');
+        Schema::dropIfExists('senis');
     }
 };

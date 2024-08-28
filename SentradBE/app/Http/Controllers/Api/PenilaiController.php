@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Penilai;
-use App\Models\Seni;
+use App\Models\KategoriSeni;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -59,11 +59,13 @@ class PenilaiController extends Controller
                 'username' => 'required|exists:users,username',
                 'nama_penilai' => 'required|string|max:100',
                 'alamat_penilai' => 'required|string',
-                'noTelp_penilai' => 'required|numeric',
+                'noTelp_penilai' => 'required|regex:/^08\d{8,12}$/',
                 'nama_seni' => 'required|exists:senis,nama_seni',
+                'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'lembaga' => 'required|string|max:100',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
-                'status_penilai' => 'required|boolean',
+                'status_penilai' => 'required|string|in:aktif,tidak aktif',
+                'kuota' => 'required|numeric',
             ]);
 
             if ($validate->fails()) {
@@ -71,20 +73,14 @@ class PenilaiController extends Controller
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
-                    'message' => $validate->errors(),
+                    'message' => $validate->errors()->first(),
                 ], 400);
             }
 
             $user = User::where('username', $storeData['username'])->first();
-            if (!$user) {
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'User not found',
-                ], 404);
-            }
+            $kategori = KategoriSeni::where('nama_kategori', $storeData['nama_kategori'])->first();
 
-            // Check if the user already has a Penilai entry
+
             $existingPenilai = Penilai::where('user_id', $user->id)->first();
             if ($existingPenilai) {
                 return response()->json([
@@ -96,8 +92,10 @@ class PenilaiController extends Controller
 
             $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
             $storeData['user_id'] = $user->id;
-            $storeData['bidang_ahli'] = $storeData['nama_seni']; // Directly copy nama_seni to bidang_ahli
+            $storeData['kategori_id'] = $kategori->id;
+            $storeData['bidang_ahli'] = $storeData['nama_seni'];
             unset($storeData['username']);
+            unset($storeData['nama_kategori']);
 
             $penilai = Penilai::create($storeData);
 
@@ -116,6 +114,9 @@ class PenilaiController extends Controller
             ], 500);
         }
     }
+
+
+
 
 
 
@@ -148,7 +149,8 @@ class PenilaiController extends Controller
     }
 
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         try {
             $penilai = Penilai::whereNull('deleted_at')->find($id);
 
@@ -162,13 +164,16 @@ class PenilaiController extends Controller
             }
 
             $validate = Validator::make($request->all(), [
+                'username' => 'required|exists:users,username',
                 'nama_penilai' => 'required|string|max:100',
                 'alamat_penilai' => 'required|string',
-                'noTelp_penilai' => 'required|numeric',
+                'noTelp_penilai' => 'required|regex:/^08\d{8,12}$/',
                 'bidang_ahli' => 'required|string',
+                'nama_kategori' => 'required|exists:kategori_senis,nama_kategori', // Corrected table name here
                 'lembaga' => 'required|string|max:100',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
-                'status_penilai' => 'required|boolean',
+                'status_penilai' => 'required|string|in:aktif,tidak aktif',
+                'kuota' => 'required|numeric',
             ]);
 
             if ($validate->fails()) {
@@ -176,11 +181,12 @@ class PenilaiController extends Controller
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
-                    'message' => $validate->errors(),
+                    'message' => $validate->errors()->first(),
                 ], 400);
             }
 
             $user = User::where('username', $request->username)->first();
+            $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->first();
             if (!$user) {
                 return response()->json([
                     'data' => null,
@@ -192,6 +198,7 @@ class PenilaiController extends Controller
             $tgl_lahir = Carbon::createFromFormat('d/m/Y', $request->tgl_lahir)->format('Y-m-d');
 
             $penilai->user_id = $user->id;
+            $penilai->kategori_id = $kategori->id;
             $penilai->nama_penilai = $request->nama_penilai;
             $penilai->alamat_penilai = $request->alamat_penilai;
             $penilai->noTelp_penilai = $request->noTelp_penilai;
@@ -199,6 +206,7 @@ class PenilaiController extends Controller
             $penilai->lembaga = $request->lembaga;
             $penilai->tgl_lahir = $tgl_lahir;
             $penilai->status_penilai = $request->status_penilai;
+            $penilai->kuota = $request->kuota;
 
             $penilai->save();
 
@@ -217,6 +225,7 @@ class PenilaiController extends Controller
             ], 500);
         }
     }
+
 
 
 

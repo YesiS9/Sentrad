@@ -16,11 +16,11 @@
 		  <span class="material-icons">dashboard</span>
 		  <span class="text">Dashboard</span>
 		</router-link>
-		<router-link to="/dataUser" class="button">
+		<router-link to="/rubrik" class="button">
 		  <span class="material-icons">article</span>
 		  <span class="text">Rubrik</span>
 		</router-link>
-		<router-link to="/dataRegistrasi" class="button">
+		<router-link to="/penilaian-registrasi" class="button">
 		  <span class="material-icons">library_add</span>
 		  <span class="text">Penilaian Karya</span>
 		</router-link>

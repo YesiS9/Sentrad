@@ -6,16 +6,30 @@
           <form @submit.prevent="handleSubmit">
             <div class="form-group">
               <label for="nama">Nama</label>
-              <input type="text" id="nama" v-model="formData.nama" placeholder="Nama" required>
+              <input type="text" id="nama" :value="formData.nama" disabled placeholder="Nama">
             </div>
-
+            <div class="form-group">
+              <label for="nama_kategori">Kategori Seni</label>
+              <Multiselect
+                v-model="formData.nama_kategori"
+                :options="kategoriOptions"
+                :searchable="true"
+                :close-on-select="true"
+                :clear-on-select="false"
+                :preserve-search="true"
+                placeholder="Pilih atau cari kategori Seni"
+                label="nama_kategori"
+                track-by="nama_kategori"
+                class="custom-multiselect"
+              ></Multiselect>
+            </div>
             <div class="form-group">
               <label for="tgl_lahir">Tanggal Lahir</label>
               <input type="date" id="tgl_lahir" v-model="formData.tgl_lahir" placeholder="Tanggal Lahir" required>
             </div>
 
             <div class="form-group">
-              <label for="tgl_mulai">Tanggal Mulai</label>
+              <label for="tgl_mulai">Tanggal Mulai Berkarya</label>
               <input type="date" id="tgl_mulai" v-model="formData.tgl_mulai" placeholder="Tanggal Mulai" required>
             </div>
 
@@ -49,28 +63,55 @@
   import { useRoute, useRouter } from 'vue-router';
   import axios from '../services/api.js';
   import Swal from 'sweetalert2';
+  import Multiselect from '@vueform/multiselect';
+  import '@vueform/multiselect/themes/default.css';
 
   const formData = reactive({
+    nama_kategori: [],
     nama: '',
     tgl_lahir: '',
     tgl_mulai: '',
     alamat: '',
     email: '',
     noTelp: '',
-    status_individu: 1,
+    status_individu: 'Dalam proses',
     seniman_id: ''
   });
 
+  const kategoriOptions = ref([]);
   const route = useRoute();
   const router = useRouter();
   const mode = ref('add');
 
-  const getSeniman = () => {
+  const getSeniman = async () => {
     const senimanId = localStorage.getItem('seniman_id');
     if (senimanId) {
       formData.seniman_id = senimanId;
+      try {
+        const response = await axios.get(`/seniman/${senimanId}`);
+        if (response.status === 200 && response.data.status === 'success') {
+          formData.nama = response.data.data.nama_seniman;
+        } else {
+          console.error('Failed to fetch seniman data:', response.data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching seniman data:', error.message);
+      }
     } else {
       console.error('Seniman ID is missing from localStorage.');
+    }
+  };
+
+  const getKategoriOptions = async () => {
+    try {
+      const response = await axios.get('/nama-kategori');
+      if (response.status === 200 && response.data.status === 'success') {
+        kategoriOptions.value = response.data.data.map(kategori => kategori.nama_kategori);
+      } else {
+        console.error('Failed to fetch kategori seni options:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching kategori seni options:', error.message);
     }
   };
 
@@ -90,7 +131,8 @@
   };
 
   onMounted(async () => {
-    getSeniman();
+    await getKategoriOptions();
+    await getSeniman();
 
     const { id } = route.params;
     if (id) {
@@ -123,6 +165,7 @@
         tgl_lahir: formatDate(formData.tgl_lahir),
         tgl_mulai: formatDate(formData.tgl_mulai)
       };
+      console.log('Formatted Data:', formattedData);
       let response;
       if (mode.value === 'add') {
         response = await axios.post('/registerIndividu', formattedData);
@@ -148,104 +191,109 @@
   };
 
   const closeForm = () => {
+    formData.nama_kategori = [];
+    formData.seniman_id = '';
     formData.nama = '';
     formData.tgl_lahir = '';
     formData.tgl_mulai = '';
     formData.alamat = '';
     formData.email = '';
     formData.noTelp = '';
-    formData.status_individu = 1;
-    formData.seniman_id = '';
+    formData.status_individu = 'Dalam proses';
     mode.value = 'add';
     router.push({ name: 'Registrasi' });
   };
   </script>
 
   <style lang="scss" scoped>
+  @import '@vueform/multiselect/themes/default.css';
+
   main {
-    background-color: #f7941e;
+      background-color: #f7941e;
   }
   .auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f7941e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f7941e;
   }
 
   .auth-form {
-    background-color: #fff;
-    width: 90vw;
-    height: 90vw;
-    max-width: 650px;
-    max-height: 700px;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    h3 {
-      margin-bottom: 1rem;
-    }
-
-    .form-row {
+      background-color: #fff;
+      width: 90vw;
+      height: 90vw;
+      max-width: 600px;
+      max-height: 700px;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      width: 100%;
-    }
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
 
-    .form-group {
-      margin-bottom: 1rem;
-      text-align: left;
-      width: calc(50% - 0.5rem);
-    }
+      h3 {
+          margin-bottom: 1rem;
+      }
 
-    input[type="text"],
-    input[type="date"],
-    input[type="email"],
-    input[type="number"],
-    select {
-      width: 40vw;
-      padding: 0.5rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
+      .form-group {
+        width: 100%;
+        margin-bottom: 1rem;
+        text-align: left;
+      }
 
-    .form-actions {
-      margin-top: 1rem;
-      text-align: right;
-      width: 100%;
-    }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+      }
 
-    button {
-      background-color: #f7941e;
-      color: #fff;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-left: 0.5rem;
-    }
+      .custom-multiselect {
+          width: 40vw;
+      }
 
-    button[type="submit"] {
-      background-color: #4caf50;
-    }
+      input[type="text"],
+      input[type="date"],
+      input[type="email"],
+      input[type="number"],
+      select {
+          width: 40vw;
+          padding: 0.5rem;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+      }
 
-    button[type="submit"]:hover {
-      background-color: #45a049;
-    }
+      .form-actions {
+          margin-top: 1rem;
+          text-align: right;
+          width: 100%;
+      }
 
-    button[type="button"] {
-      background-color: #f44336;
-    }
+      button {
+          background-color: #f7941e;
+          color: #fff;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-left: 0.5rem;
+      }
 
-    button[type="button"]:hover {
-      background-color: #da190b;
-    }
+      button[type="submit"] {
+          background-color: #f7941e;
+      }
+
+      button[type="submit"]:hover {
+          background-color: #f7941e;
+      }
+
+      button[type="button"] {
+          background-color: #f44336;
+      }
+
+      button[type="button"]:hover {
+          background-color: #da190b;
+      }
   }
   </style>

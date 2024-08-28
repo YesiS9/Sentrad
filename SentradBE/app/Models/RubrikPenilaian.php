@@ -13,6 +13,9 @@ class RubrikPenilaian extends Model
 
 
     protected $fillable = [
+        'rubrik_id',
+        'penilaian_karya_id',
+        'skor',
 
     ];
 
@@ -21,7 +24,6 @@ class RubrikPenilaian extends Model
         return $this->belongsTo(Rubrik::class, 'rubrik_id', 'id');
     }
 
-    // Relationship with PenilaianKarya model
     public function penilaianKarya()
     {
         return $this->belongsTo(PenilaianKarya::class, 'penilaian_karya_id', 'id');

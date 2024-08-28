@@ -45,7 +45,6 @@ class AnggotaController extends Controller
         try {
             $validate = Validator::make($request->all(), [
                 'kelompok_id' => 'required|exists:registrasi_kelompoks,id',
-                'tingkatan_id' => 'nullable|exists:tingkatans,id',
                 'nama_anggota' => 'required|string|max:100',
                 'tgl_lahir' => 'required|date',
                 'tgl_gabung' => 'required|date',

@@ -5,6 +5,23 @@
           <h3>{{ mode === 'add' ? 'Tambah Registrasi Individu' : 'Edit Registrasi Individu' }}</h3>
           <form @submit.prevent="handleSubmit">
             <div class="form-group">
+              <label for="nama_kategori">Kategori Seni</label>
+              <Multiselect
+                v-model="formData.nama_kategori"
+                :options="kategoriOptions"
+                :searchable="true"
+                :close-on-select="true"
+                :clear-on-select="false"
+                :preserve-search="true"
+                placeholder="Pilih atau cari kategori Seni"
+                label="nama_kategori"
+                track-by="nama_kategori"
+                class="custom-multiselect"
+              ></Multiselect>
+            </div>
+
+            <!-- Seniman Input -->
+            <div class="form-group">
               <label for="nama_seniman">Seniman</label>
               <Multiselect
                 v-model="formData.nama_seniman"
@@ -69,123 +86,138 @@
   import Swal from 'sweetalert2';
 
   const formData = reactive({
-        nama_seniman: '',
-        nama: '',
-        tgl_lahir: '',
-        tgl_mulai: '',
-        alamat: '',
-        email: '',
-        noTelp: '',
-        status_individu: 1
+    nama_kategori: '',
+    nama_seniman: '',
+    nama: '',
+    tgl_lahir: '',
+    tgl_mulai: '',
+    alamat: '',
+    email: '',
+    noTelp: '',
+    status_individu: 'Dalam proses',
+    seniman_id: ''
   });
 
+  const kategoriOptions = ref([]);
   const senimans = ref([]);
-
   const route = useRoute();
   const router = useRouter();
   const mode = ref('add');
 
   const getSeniman = async () => {
-        try {
-            const response = await axios.get('/seniman');
-            console.log('Response data:', response.data);
-            if (Array.isArray(response.data.data)) {
-                senimans.value = response.data.data.map(seniman => seniman.nama_seniman);
-            } else {
-                console.error('Unexpected response data format:', response.data);
-            }
-        } catch (error) {
-            console.error('Error fetching senimans:', error.message);
-        }
-};
+    try {
+      const response = await axios.get('/seniman');
+      if (Array.isArray(response.data.data)) {
+        senimans.value = response.data.data.map(seniman => seniman.nama_seniman);
+      } else {
+        console.error('Unexpected response data format:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching senimans:', error.message);
+    }
+  };
 
+  const getKategori = async () => {
+    try {
+      const response = await axios.get('/nama-kategori');
+      if (Array.isArray(response.data.data)) {
+        kategoriOptions.value = response.data.data.map(kategori => kategori.nama_kategori);
+      } else {
+        console.error('Unexpected response data format:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching kategori:', error.message);
+    }
+  };
 
   const getIndividu = async (id) => {
-        try {
-            const response = await axios.get(`/registerIndividu/${id}`);
-            if (response.status === 200 && response.data.status === 'success') {
-                const individuData = response.data.data;
-                Object.assign(formData, individuData);
-                mode.value = 'edit';
-            } else {
-                console.error('Failed to fetch individu:', response.data.message);
-            }
-        } catch (error) {
-            console.error('Error fetching individu:', error.message);
-        }
+    try {
+      const response = await axios.get(`/registerIndividu/showByAdmin/${id}`);
+      if (response.status === 200 && response.data.status === 'success') {
+        const individuData = response.data.data;
+        Object.assign(formData, individuData);
+        mode.value = 'edit';
+      } else {
+        console.error('Failed to fetch individu:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching individu:', error.message);
+    }
   };
 
   onMounted(async () => {
-        await getSeniman();
+    await getSeniman();
+    await getKategori();
 
-        const { id } = route.params;
-        if (id) {
-            await getIndividu(id);
-        }
+    const { id } = route.params;
+    if (id) {
+      await getIndividu(id);
+    }
   });
 
   const formatDate = (date) => {
-      const [year, month, day] = date.split('-');
-      return `${day}/${month}/${year}`;
+    const [year, month, day] = date.split('-');
+    return `${day}/${month}/${year}`;
   };
 
   const handleSubmit = async () => {
-    const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
+    const action = mode.value === 'add' ? 'Tambahkan' : 'Edit';
 
     const result = await Swal.fire({
-        title: `Apakah Anda yakin ingin ${action} registrasi individu ini?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Ya',
-        cancelButtonText: 'Tidak',
+      title: `Apakah Data Registrasi individu yang anda ${action} sudah benar?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Ya',
+      cancelButtonText: 'Tidak',
     });
 
     if (!result.isConfirmed) {
-        return;
+      return;
     }
+
     try {
-        const formattedData = {
-            ...formData,
-            tgl_lahir: formatDate(formData.tgl_lahir),
-            tgl_mulai: formatDate(formData.tgl_mulai)
-        };
-        console.log('Formatted Data:', formattedData);
-        let response;
-        if (mode.value === 'add') {
-            response = await axios.post('/registerIndividu/storeByAdmin', formattedData);
-        } else if (mode.value === 'edit' && formData.id) {
-            response = await axios.put(`/registerIndividu/${formData.id}`, formattedData);
-        } else {
-            console.error('Invalid mode or missing formData.id for edit.');
-            return;
-        }
+      const formattedData = {
+        ...formData,
+        tgl_lahir: formatDate(formData.tgl_lahir),
+        tgl_mulai: formatDate(formData.tgl_mulai)
+      };
 
-        if (response.status === 200 && response.data.status === 'success') {
-            router.push({ name: 'DataRegistrasi' });
-            closeForm();
-        } else {
-            console.error(mode.value === 'add' ? 'Failed to add individu:' : 'Failed to edit individu:', response.data.message);
-        }
+      let response;
+      if (mode.value === 'add') {
+        response = await axios.post('/registerIndividu/storeByAdmin', formattedData);
+      } else if (mode.value === 'edit' && formData.id) {
+        response = await axios.put(`/registerIndividu/updateByAdmin/${formData.id}`, formattedData);
+      } else {
+        console.error('Invalid mode or missing formData.id for edit.');
+        return;
+      }
+
+      if (response.status === 200 && response.data.status === 'success') {
+        router.push({ name: 'DataRegistrasi' });
+        closeForm();
+      } else {
+        console.error(mode.value === 'add' ? 'Failed to add individu:' : 'Failed to edit individu:', response.data.message);
+      }
     } catch (error) {
-        console.error('Error saving data:', error.message);
-        if (error.response) {
-            console.error('Server response:', error.response.data);
-        }
+      console.error('Error saving data:', error.message);
+      if (error.response) {
+        console.error('Server response:', error.response.data);
+      }
     }
-};
-
+  };
 
   const closeForm = () => {
-      formData.nama_seniman = '';
-      formData.nama = '';
-      formData.tgl_lahir = '';
-      formData.tgl_mulai = '';
-      formData.alamat = '';
-      formData.email = '';
-      formData.noTelp = '';
-      formData.status_individu = 1;
-      mode.value = 'add';
-      router.push({ name: 'DataRegistrasi' });
+    formData.nama_kategori = '';
+    formData.nama_seniman = '';
+    formData.nama = '';
+    formData.tgl_lahir = '';
+    formData.tgl_mulai = '';
+    formData.alamat = '';
+    formData.email = '';
+    formData.noTelp = '';
+    formData.status_individu = 'Dalam proses';
+    mode.value = 'add';
+    router.push({ name: 'DataRegistrasi' });
   };
   </script>
 
@@ -267,11 +299,11 @@
       }
 
       button[type="submit"] {
-          background-color: #4caf50;
+          background-color: #f7941e;
       }
 
       button[type="submit"]:hover {
-          background-color: #45a049;
+          background-color: #f7941e;
       }
 
       button[type="button"] {

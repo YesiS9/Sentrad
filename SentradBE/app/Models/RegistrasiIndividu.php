@@ -13,7 +13,7 @@ class RegistrasiIndividu extends Model
 
     protected $fillable = [
         'seniman_id',
-        'penilaian_karya_id',
+        'kategori_id',
         'nama',
         'tgl_lahir',
         'tgl_mulai',
@@ -26,6 +26,11 @@ class RegistrasiIndividu extends Model
     public function seniman()
     {
         return $this->belongsTo(Seniman::class);
+    }
+
+    public function kategoriSeni()
+    {
+        return $this->belongsTo(KategoriSeni::class, 'kategori_id');
     }
 }
 

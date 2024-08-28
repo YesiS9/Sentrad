@@ -27,6 +27,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from '../services/api.js';
 import Swal from 'sweetalert2';
+import { useToast } from 'vue-toastification';
 
 const formData = reactive({
     user_id: '',
@@ -37,8 +38,8 @@ const formData = reactive({
 const route = useRoute();
 const router = useRouter();
 const mode = ref('add');
+const toast = useToast();
 
-// Fetch user_id from local storage on component mount
 onMounted(() => {
     const userId = localStorage.getItem('user_id');
     if (userId) {
@@ -68,6 +69,19 @@ const getKategori = async (id) => {
 };
 
 const handleSubmit = async () => {
+    const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
+
+    const result = await Swal.fire({
+    title: `Apakah Anda yakin ingin ${action} kategori seni ini?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Ya',
+    cancelButtonText: 'Tidak',
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
     try {
         let response;
         if (mode.value === 'add') {
@@ -77,20 +91,29 @@ const handleSubmit = async () => {
         }
 
         if (response.status === 200 && response.data.status === 'success') {
-            Swal.fire('Success', 'Data kategori seni berhasil disimpan', 'success');
-            router.push('/dataKategori'); // Redirect to kategori list page after successful save
+            toast.success(`Berhasil ${mode.value === 'add' ? 'menambahkan' : 'mengedit'} kategori seni!`);
+            router.push({ name: 'DataKategori' });
+            closeForm();
         } else {
-            console.error('Failed to save kategori:', response.data.message);
-            Swal.fire('Error', 'Gagal menyimpan data kategori seni', 'error');
+            toast.error(response.data.message || `Gagal ${mode.value === 'add' ? 'menambahkan' : 'mengedit'} kategori seni!`);
         }
     } catch (error) {
         console.error('Error saving data:', error.message);
-        Swal.fire('Error', 'Terjadi kesalahan saat menyimpan data kategori seni', 'error');
+        if (error.response) {
+            console.error('Server response:', error.response.data);
+            toast.error(error.response.data.message || 'Terjadi kesalahan saat menyimpan data!');
+        } else {
+            toast.error('Terjadi kesalahan saat menyimpan data!');
+        }
     }
 };
 
 const closeForm = () => {
-    router.push('/dataKategori'); // Navigate back to kategori list page
+    formData.user_id = '',
+    formData.nama_kategori = '',
+    formData.deskripsi_kategori = ''
+    mode.value = 'add';
+    router.push({ name: 'DataKategori' });
 };
 </script>
 
@@ -148,31 +171,37 @@ main {
     }
 
     .form-actions {
-        display: flex;
-        justify-content: space-between;
+        margin-top: 1rem;
+        text-align: right;
         width: 100%;
 
+
         button {
+            margin-left: 0.5rem;
             background-color: #f7941e;
             color: #fff;
             border: none;
             padding: 0.5rem 1rem;
             border-radius: 4px;
             cursor: pointer;
-
-            &:hover {
-                background-color: #e6830d;
-            }
-
-            &:nth-child(2) {
-                background-color: #ccc;
-                color: #333;
-
-                &:hover {
-                    background-color: #bbb;
-                }
-            }
         }
+
+        button[type="submit"] {
+        background-color: #f7941e;
+        }
+
+        button[type="submit"]:hover {
+        background-color: #f7941e;
+        }
+
+        button[type="button"] {
+        background-color: #f44336;
+        }
+
+        button[type="button"]:hover {
+        background-color: #d32f2f;
+        }
+
     }
 }
 </style>

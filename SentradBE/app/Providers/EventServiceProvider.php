@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\KaryaUpdated;
+use App\Listeners\UpdateJumlahKarya;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -24,17 +26,17 @@ protected $listen = [
     Registered::class => [
         SendEmailVerificationNotification::class,
     ],
+    KaryaUpdated::class => [
+        UpdateJumlahKarya::class,
+    ],
 ];
 
 
 
-    /**
-     * Register any events for your application.
-     *
-     * @return void
-     */
-    public function boot()
-    {
-        //
-    }
+
+
+public function boot()
+{
+    parent::boot();
+}
 }

@@ -46,7 +46,8 @@ class ProyekController extends Controller
             $storeData = $request->all();
 
             $validate = Validator::make($storeData, [
-                'seniman_id' => 'required|string',
+                'seniman_id' => 'required|exists:seniman,id',
+                'kategori_id' => 'required|exists:kategori_senis,id',
                 'judul_proyek' => 'required|string|max:100',
                 'deskripsi_proyek' => 'required|string',
                 'waktu_mulai' => 'required|date',
@@ -126,7 +127,8 @@ class ProyekController extends Controller
             }
 
             $validate = Validator::make($request->all(), [
-                'seniman_id' => 'required|string',
+                'seniman_id' => 'required|exists:seniman,id',
+                'kategori_id' => 'required|exists:kategori_senis,id',
                 'judul_proyek' => 'required|string|max:100',
                 'deskripsi_proyek' => 'required|string',
                 'waktu_mulai' => 'required|date',

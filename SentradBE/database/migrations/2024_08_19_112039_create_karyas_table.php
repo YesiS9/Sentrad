@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('deskripsi_karya');
             $table->string('bentuk_karya');
             $table->string('media_karya');
-            $table->boolean('status_karya');
+            $table->string('status_karya');
             $table->timestamps();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
         });

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\KaryaUpdated;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,21 @@ class Karya extends Model
 
     public function portofolio()
     {
-        return $this->belongsTo(Portofolio::class, 'portofolio_id', 'id');
+        return $this->belongsTo(Portofolio::class, 'portofolio_id');
     }
+
+
+
+
+    protected static function booted()
+    {
+        static::created(function ($karya) {
+            event(new KaryaUpdated($karya->portofolio_id));
+        });
+
+        static::deleted(function ($karya) {
+            event(new KaryaUpdated($karya->portofolio_id));
+        });
+    }
+
 }

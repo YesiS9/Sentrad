@@ -16,7 +16,6 @@ return new class extends Migration
         Schema::create('anggotas', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('kelompok_id')->references('id')->on('registrasi_kelompoks')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignUuid('tingkatan_id')->nullable()->references('id')->on('tingkatans')->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('nama_anggota', 100);
             $table->date('tgl_lahir');
             $table->date('tgl_gabung');
@@ -24,7 +23,7 @@ return new class extends Migration
             $table->string('noTelp_anggota', 20);
             $table->string('tingkat_skill', 100);
             $table->string('peran_anggota', 100);
-            $table->boolean('status_anggota');
+            $table->string('status_anggota');
             $table->timestamps();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
         });

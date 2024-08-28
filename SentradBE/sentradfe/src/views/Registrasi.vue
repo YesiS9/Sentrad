@@ -28,10 +28,7 @@
                             <td>{{ index + 1 }}</td>
                             <td>{{ individu.nama }}</td>
                             <td>{{ formatDate(individu.created_at) }}</td>
-                            <td>
-                                <span v-if="individu.status_individu === 1" class="status-active">Aktif</span>
-                                <span v-else class="status-inactive">Nonaktif</span>
-                            </td>
+                            <td>{{ individu.status_individu }}</td>
                             <td>
                                 <router-link :to="{ name: 'IndividuEdit', params: { id: individu.id } }" class="edit-btn material-icons">
                                     settings
@@ -75,10 +72,7 @@
                             <td>{{ index + 1 }}</td>
                             <td>{{ kelompok.nama_kelompok }}</td>
                             <td>{{ formatDate(kelompok.created_at) }}</td>
-                            <td>
-                                <span v-if="kelompok.status_kelompok === 1" class="status-active">Aktif</span>
-                                <span v-else class="status-inactive">Nonaktif</span>
-                            </td>
+                            <td>{{ kelompok.status_kelompok }}</td>
                             <td>
                                 <router-link :to="{ name: 'KelompokEdit', params: { id: kelompok.id } }" class="edit-btn material-icons">
                                     settings
@@ -105,8 +99,6 @@ import { ref, onMounted } from 'vue';
 import axios from '../services/api.js';
 import Sidebar from '../components/SidebarSeniman.vue';
 import Swal from 'sweetalert2';
-import { format } from 'date-fns';
-
 
 const userName = ref(localStorage.getItem('username') || '');
 const registrasi_individus = ref([]);
@@ -118,10 +110,11 @@ const totalKelompokPages = ref(1);
 const perPage = 10;
 
 const formatDate = (dateString) => {
-    return format(new Date(dateString), 'dd/MM/yyyy');
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', options);
 };
 
-// Function to load individu data
 const loadIndividus = async () => {
     try {
         const response = await axios.get('/registerIndividuUser', {
@@ -130,13 +123,14 @@ const loadIndividus = async () => {
                 page: currentIndividuPage.value
             }
         });
-        console.log('Individu response:', response); // Log respons server untuk debugging
 
-        // Periksa apakah response.data ada dan sesuai
+        console.log('Individu response:', response);
+
         if (response.status === 200 && response.data && response.data.status === 'success') {
-            registrasi_individus.value = response.data.data || []; // Tangani jika data tidak ada
-            currentIndividuPage.value = response.data.current_page || 1; // Tangani jika current_page tidak ada
-            totalIndividuPages.value = response.data.last_page || 1; // Tangani jika last_page tidak ada
+            registrasi_individus.value = response.data.data || [];
+            console.log('Response:', response.data.data);
+            currentIndividuPage.value = response.data.current_page || 1;
+            totalIndividuPages.value = response.data.last_page || 1;
         } else {
             console.error('Failed to load individus data.');
         }
@@ -146,7 +140,6 @@ const loadIndividus = async () => {
     }
 };
 
-// Function to load kelompok data
 const loadKelompoks = async () => {
     try {
         const response = await axios.get('/registerKelompokUser', {
@@ -155,13 +148,13 @@ const loadKelompoks = async () => {
                 page: currentKelompokPage.value
             }
         });
-        console.log('Kelompok response:', response); // Log respons server untuk debugging
+        console.log('Kelompok response:', response);
 
-   
         if (response.status === 200 && response.data && response.data.status === 'success') {
-            registrasi_kelompoks.value = response.data.data || []; // Tangani jika data tidak ada
-            currentKelompokPage.value = response.data.current_page || 1; // Tangani jika current_page tidak ada
-            totalKelompokPages.value = response.data.last_page || 1; // Tangani jika last_page tidak ada
+            registrasi_kelompoks.value = response.data.data || [];
+            console.log(' Response:', response.data.data);
+            currentKelompokPage.value = response.data.current_page || 1;
+            totalKelompokPages.value = response.data.last_page || 1;
         } else {
             console.error('Failed to load kelompoks data.');
         }
@@ -171,7 +164,6 @@ const loadKelompoks = async () => {
     }
 };
 
-// Function to delete individu
 const deleteIndividu = async (id) => {
     console.log("Deleting individu with id:", id);
     const result = await Swal.fire({
@@ -189,7 +181,7 @@ const deleteIndividu = async (id) => {
         const response = await axios.delete(`/registerIndividu/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
             Swal.fire('Registrasi individu berhasil dihapus', '', 'success');
-            loadIndividus(); // Refresh data setelah hapus
+            loadIndividus();
         } else {
             Swal.fire('Gagal menghapus registrasi individu', response.data.message, 'error');
             console.error('Gagal menghapus registrasi individu:', response.data.message);
@@ -200,7 +192,6 @@ const deleteIndividu = async (id) => {
     }
 };
 
-// Function to delete kelompok
 const deleteKelompok = async (id) => {
     const result = await Swal.fire({
         title: 'Apakah Anda yakin ingin menghapus registrasi kelompok ini?',
@@ -218,7 +209,7 @@ const deleteKelompok = async (id) => {
         const response = await axios.delete(`/registerKelompok/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
             Swal.fire('Registrasi kelompok berhasil dihapus', '', 'success');
-            loadKelompoks(); // Refresh data setelah hapus
+            loadKelompoks();
         } else {
             Swal.fire('Gagal menghapus registrasi kelompok', response.data.message, 'error');
             console.error('Gagal menghapus registrasi kelompok:', response.data.message);
@@ -229,41 +220,40 @@ const deleteKelompok = async (id) => {
     }
 };
 
-// Pagination functions
-const nextIndividuPage = () => {
-    if (currentIndividuPage.value < totalIndividuPages.value) {
-        currentIndividuPage.value += 1;
-        loadIndividus();
-    }
-};
-
 const prevIndividuPage = () => {
     if (currentIndividuPage.value > 1) {
-        currentIndividuPage.value -= 1;
+        currentIndividuPage.value--;
         loadIndividus();
     }
 };
 
-const nextKelompokPage = () => {
-    if (currentKelompokPage.value < totalKelompokPages.value) {
-        currentKelompokPage.value += 1;
-        loadKelompoks();
+const nextIndividuPage = () => {
+    if (currentIndividuPage.value < totalIndividuPages.value) {
+        currentIndividuPage.value++;
+        loadIndividus();
     }
 };
 
 const prevKelompokPage = () => {
     if (currentKelompokPage.value > 1) {
-        currentKelompokPage.value -= 1;
+        currentKelompokPage.value--;
         loadKelompoks();
     }
 };
 
-// Load data on component mount
+const nextKelompokPage = () => {
+    if (currentKelompokPage.value < totalKelompokPages.value) {
+        currentKelompokPage.value++;
+        loadKelompoks();
+    }
+};
+
 onMounted(() => {
     loadIndividus();
     loadKelompoks();
 });
 </script>
+
 <style lang="scss" scoped>
     .data-registrasi {
         background-color: #f5d99d;

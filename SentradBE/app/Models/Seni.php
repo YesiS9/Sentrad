@@ -18,4 +18,9 @@ class Seni extends Model
         'deskripsi_seni',
         'status_seni',
     ];
+
+    public function kategori()
+    {
+        return $this->belongsTo(KategoriSeni::class);
+    }
 }

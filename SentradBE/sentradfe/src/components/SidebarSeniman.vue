@@ -24,11 +24,11 @@
 		  <span class="material-icons">app_registration</span>
 		  <span class="text">Registrasi</span>
 		</router-link>
-		<router-link to="/dataPenilai" class="button">
+		<router-link to="/forum" class="button">
 		  <span class="material-icons">forum</span>
 		  <span class="text">Forum</span>
 		</router-link>
-        <router-link to="/dataSeni" class="button">
+        <router-link to="/proyek" class="button">
 		  <span class="material-icons">event</span>
 		  <span class="text">Event</span>
 		</router-link>

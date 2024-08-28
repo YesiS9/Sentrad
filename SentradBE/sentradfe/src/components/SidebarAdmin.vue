@@ -17,24 +17,28 @@
 		  <span class="text">Dashboard</span>
 		</router-link>
 		<router-link to="/dataUser" class="button">
-		  <span class="material-icons">group</span>
+		  <span class="material-icons">account_circle</span>
 		  <span class="text">Data User</span>
+		</router-link>
+        <router-link to="/dataPenilai" class="button">
+		  <span class="material-icons">supervisor_account</span>
+		  <span class="text">Data Penilai</span>
+		</router-link>
+        <router-link to="/dataSeniman" class="button">
+		  <span class="material-icons">person</span>
+		  <span class="text">Data Seniman</span>
 		</router-link>
 		<router-link to="/dataRegistrasi" class="button">
 		  <span class="material-icons">app_registration</span>
 		  <span class="text">Data Register</span>
 		</router-link>
-		<router-link to="/dataPenilai" class="button">
-		  <span class="material-icons">group</span>
-		  <span class="text">Data Penilai</span>
+        <router-link to="/dataKategori" class="button">
+		  <span class="material-icons">sort</span>
+		  <span class="text">Data Kategori Seni</span>
 		</router-link>
         <router-link to="/dataSeni" class="button">
 		  <span class="material-icons">palette</span>
 		  <span class="text">Data Profil Seni</span>
-		</router-link>
-        <router-link to="/dataKategori" class="button">
-		  <span class="material-icons">sort</span>
-		  <span class="text">Data Kategori Seni</span>
 		</router-link>
         <router-link to="/dataTingkatan" class="button">
 		  <span class="material-icons">filter_list</span>
