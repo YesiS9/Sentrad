@@ -2,26 +2,56 @@
     <Sidebar />
     <main class="data-portofolio">
         <div class="user-management-container">
-            <div v-if="registrasiIndividu" class="registration-info">
-                <h3>Detail Registrasi Individu</h3>
-                <p><strong>Nama Seniman:</strong> {{ registrasiIndividu.nama }}</p>
-                <p><strong>Tanggal Lahir:</strong> {{ registrasiIndividu.tgl_lahir }}</p>
-                <p><strong>Tanggal Mulai Berkarya:</strong> {{ registrasiIndividu.tgl_mulai }}</p>
-                <p><strong>Alamat:</strong> {{ registrasiIndividu.alamat }}</p>
-                <p><strong>Kategori Seni:</strong> {{ registrasiIndividu.kategori_seni.nama_kategori }}</p>
+            <div v-if="registrasiKelompok" class="registration-info">
+                <h3>Data Registrasi Kelompok</h3>
+                <p><strong>Nama Kelompok:</strong> {{ registrasiKelompok.nama_kelompok }}</p>
+                <p><strong>Tanggal Terbentuk:</strong> {{ registrasiKelompok.tgl_terbentuk }}</p>
+                <p><strong>Alamat Kelompok:</strong> {{ registrasiKelompok.alamat_kelompok }}</p>
+                <p><strong>Jumlah Anggota:</strong> {{ registrasiKelompok.jumlah_anggota }}</p>
+                <p><strong>Kategori Seni:</strong> {{ registrasiKelompok.kategori_seni.nama_kategori }}</p>
+            </div>
+            <div v-if="anggotaKelompok.length > 0" class="table-wrapper">
+                <div class="table-header">
+                    <h3>Data Anggota Kelompok</h3>
+                </div>
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>Nama Anggota</th>
+                            <th>Tanggal Lahir</th>
+                            <th>Tanggal Bergabung</th>
+                            <th>Tingkat Skill</th>
+                            <th>Peran Anggota</th>
+                            <th>Status Anggota</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(anggota, index) in anggotaKelompok" :key="anggota.id">
+                            <td>{{ index + 1 }}</td>
+                            <td>{{ anggota.nama_anggota }}</td>
+                            <td>{{ anggota.tgl_lahir }}</td>
+                            <td>{{ anggota.tgl_gabung }}</td>
+                            <td>{{ anggota.tingkat_skill }}</td>
+                            <td>{{ anggota.peran_anggota }}</td>
+                            <td>{{ anggota.status_anggota }}</td>
+                        </tr>
+                        <tr v-if="anggotaKelompok.length === 0">
+                            <td colspan="7" class="no-data">Tidak ada anggota yang terdaftar</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <!-- Portfolio Data Display -->
             <div class="table-wrapper">
                 <div class="table-header">
-                    <h3>Portofolio Individu</h3>
+                    <h3>Portofolio Kelompok</h3>
                     <button @click="goBack" class="back-button">Back</button>
                 </div>
                 <table class="user-table">
                     <thead>
                         <tr>
                             <th>NO</th>
-                            <th>Nama Seniman</th>
                             <th>Judul Portofolio</th>
                             <th>Jumlah Karya</th>
                         </tr>
@@ -29,16 +59,15 @@
                     <tbody>
                         <tr v-for="(portofolio, index) in portofolios" :key="portofolio.id">
                             <td>{{ index + 1 }}</td>
-                            <td>{{ portofolio.seniman.nama_seniman }}</td>
                             <td>
-                                <router-link :to="{ name: 'InfoPortofolioPenilai', params: { id: portofolio.id }, query: { individuId } }" class="portfolio-link">
+                                <router-link :to="{ name: 'InfoPortoKelompok', params: { id: portofolio.id }, query: { kelompokId: props.kelompokId } }" class="portfolio-link">
                                     {{ portofolio.judul_portofolio }}
                                 </router-link>
                             </td>
                             <td>{{ portofolio.jumlah_karya }}</td>
                         </tr>
                         <tr v-if="portofolios.length === 0">
-                            <td colspan="4" class="no-data">Portofolio kosong</td>
+                            <td colspan="3" class="no-data">Portofolio kosong</td>
                         </tr>
                     </tbody>
                 </table>
@@ -56,40 +85,46 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '../services/api.js';
-import Sidebar from '../components/SidebarPenilai.vue';
+import Sidebar from './SidebarPenilai.vue';
 
 const props = defineProps({
-    individuId: String,
+  kelompokId: String,
 });
 
 const portofolios = ref([]);
-const registrasiIndividu = ref(null);
+const registrasiKelompok = ref(null);
+const anggotaKelompok = ref([]);
 const currentPage = ref(1);
 const totalPages = ref(1);
 const perPage = 10;
 const router = useRouter();
 
 onMounted(() => {
-    if (props.individuId) {
-        loadRegistrasiIndividu();
-        loadPortofolios('/registrasi-portofolio/individu', { individu_id: props.individuId });
+    console.log('Kelompok ID:', props.kelompokId);
+    if (props.kelompokId) {
+        loadRegistrasiKelompok();
+        loadPortofolios();
+        loadAnggotaKelompok();
+    } else {
+        router.push({ name: 'PenilaianKarya' });
+        console.error('No kelompokId provided');
     }
 });
 
-const loadRegistrasiIndividu = async () => {
+const loadRegistrasiKelompok = async () => {
     try {
-        const response = await axios.get(`/registerIndividu/${props.individuId}`);
+        const response = await axios.get(`/registerKelompok/${props.kelompokId}`); // Use props.kelompokId here
         if (response.data.status === 'success') {
-            registrasiIndividu.value = response.data.data;
+            registrasiKelompok.value = response.data.data;
         }
     } catch (error) {
-        console.error('Error fetching individual registration data:', error.message);
+        console.error('Error fetching group registration data:', error.message);
     }
 };
 
-const loadPortofolios = async (endpoint, params) => {
+const loadPortofolios = async () => {
     try {
-        const response = await axios.get(endpoint, { params: { ...params, per_page: perPage, page: currentPage.value } });
+        const response = await axios.get('/registrasi-portofolio/kelompok', { params: { kelompok_id: props.kelompokId, per_page: perPage, page: currentPage.value } }); // Use props.kelompokId here
         if (response.status === 200 && response.data.status === 'success') {
             portofolios.value = response.data.data;
             currentPage.value = response.data.current_page;
@@ -102,17 +137,30 @@ const loadPortofolios = async (endpoint, params) => {
     }
 };
 
+const loadAnggotaKelompok = async () => {
+    try {
+        const response = await axios.get(`/anggota/kelompok/${props.kelompokId}`); // Use props.kelompokId here
+        if (response.status === 200 && response.data.status === 'success') {
+            anggotaKelompok.value = response.data.data;
+        } else {
+            console.error('Failed to load anggota kelompok:', response.data.message);
+        }
+    } catch (error) {
+        console.error('Error fetching anggota kelompok data:', error.message);
+    }
+};
+
 const prevPage = () => {
     if (currentPage.value > 1) {
         currentPage.value--;
-        loadPortofolios('/registrasi-portofolio/individu', { individu_id: props.individuId });
+        loadPortofolios();
     }
 };
 
 const nextPage = () => {
     if (currentPage.value < totalPages.value) {
         currentPage.value++;
-        loadPortofolios('/registrasi-portofolio/individu', { individu_id: props.individuId });
+        loadPortofolios();
     }
 };
 
@@ -159,6 +207,7 @@ const goBack = () => {
         padding: 1rem;
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;  // Add margin between cards
     }
 
     .table-header {
@@ -169,20 +218,6 @@ const goBack = () => {
 
         h3 {
             margin: 0;
-        }
-
-        .back-button {
-            background-color: #f7941e;
-            color: #fff;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            display: inline-block;
-
-            &:hover {
-                background-color: #e6830d;
-            }
         }
     }
 
@@ -206,9 +241,9 @@ const goBack = () => {
 
     .pagination {
         display: flex;
-        justify-content: center;
+        justify-content: center; /* Center align buttons */
         align-items: center;
-        margin-top: 2rem;
+        margin-top: 2rem; /* Add space above pagination */
 
         button {
             background-color: #f7941e;
@@ -222,7 +257,6 @@ const goBack = () => {
             &:hover {
                 background-color: #e6830d;
             }
-
             &:disabled {
                 background-color: #ccc;
                 cursor: not-allowed;
@@ -232,6 +266,6 @@ const goBack = () => {
         span {
             margin: 0 0.5rem;
         }
-    }
+        }
 }
 </style>

@@ -16,4 +16,9 @@ class KuotaPenilai extends Model
         'periode_bulan',
         'kuota_terpakai'
     ];
+
+    public function penilai()
+    {
+        return $this->belongsTo(Penilai::class, 'penilai_id');
+    }
 }

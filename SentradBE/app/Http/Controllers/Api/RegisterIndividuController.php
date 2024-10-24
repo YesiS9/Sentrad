@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\RegistrasiIndividu;
 use App\Models\Seniman;
+use App\Models\Penilai;
 use App\Models\KategoriSeni;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -95,13 +96,57 @@ class RegisterIndividuController extends Controller
         }
     }
 
-    public function indexForPenilai(Request $request)
+    public function indexForPorto($individu_id)
+    {
+
+        $registrasiIndividu = RegistrasiIndividu::where('individu_id', $individu_id)->first();
+
+        if (!$registrasiIndividu) {
+            return response()->json(['message' => 'Data Registrasi Individu tidak ditemukan'], 404);
+        }
+
+        $seniman = $registrasiIndividu->seniman;
+
+        if (!$seniman) {
+            return response()->json(['message' => 'Seniman tidak ditemukan'], 404);
+        }
+
+        $portofolios = $seniman->portofolios;
+
+        return response()->json([
+            'registrasi' => $registrasiIndividu,
+            'portofolios' => $portofolios
+        ]);
+    }
+
+    public function indexForPenilai(Request $request, $penilai_id)
     {
         try {
             $perPage = $request->input('per_page', 10);
 
-            $register = RegistrasiIndividu::where('status_individu', 1)
+            $penilai = Penilai::find($penilai_id);
+            if (!$penilai) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Penilai tidak ditemukan',
+                ], 404);
+            }
+
+            $kategoriIdPenilai = $penilai->kategori_id;
+            if (!$kategoriIdPenilai) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Penilai tidak memiliki kategori ID',
+                ], 404);
+            }
+
+            $register = RegistrasiIndividu::where('status_individu', 'Dalam proses')
                 ->whereNull('deleted_at')
+                ->whereHas('seniman', function ($query) use ($kategoriIdPenilai) {
+                    $query->where('kategori_id', $kategoriIdPenilai);
+                })
                 ->with('seniman:id,nama_seniman')
                 ->paginate($perPage);
 
@@ -135,12 +180,14 @@ class RegisterIndividuController extends Controller
         }
     }
 
+
     public function store(Request $request)
     {
         try {
             $user = Auth::user();
             $storeData = $request->all();
 
+            // Validate incoming request
             $validate = Validator::make($storeData, [
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
@@ -160,6 +207,7 @@ class RegisterIndividuController extends Controller
                 ], 400);
             }
 
+            // Retrieve the Seniman for the logged-in user
             $seniman = $user->seniman;
             if (!$seniman) {
                 Log::error('Seniman not logged in');
@@ -170,6 +218,18 @@ class RegisterIndividuController extends Controller
                 ], 401);
             }
 
+            // Check if the user has already registered
+            $existingRegistration = RegistrasiIndividu::where('seniman_id', $seniman->id)->first();
+            if ($existingRegistration) {
+                Log::error('User has already registered an individual: ' . $existingRegistration->id);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'You can only register once for an individual.',
+                ], 400);
+            }
+
+            // Retrieve the KategoriSeni
             $kategori = KategoriSeni::where('nama_kategori', $storeData['nama_kategori'])->first();
             if (!$kategori) {
                 Log::error('Kategori Seni not found with nama_kategori: ' . $storeData['nama_kategori']);
@@ -180,7 +240,7 @@ class RegisterIndividuController extends Controller
                 ], 404);
             }
 
-
+            // Prepare data for registration
             $storeData['nama'] = $seniman->nama_seniman;
             $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
             $storeData['tgl_mulai'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_mulai'])->format('Y-m-d');
@@ -188,6 +248,7 @@ class RegisterIndividuController extends Controller
             $storeData['kategori_id'] = $kategori->id;
             unset($storeData['nama_kategori']);
 
+            // Create the registration
             $register = RegistrasiIndividu::create($storeData);
 
             Log::info('Data Registrasi Individu Berhasil Ditambahkan');
@@ -205,6 +266,7 @@ class RegisterIndividuController extends Controller
             ], 500);
         }
     }
+
 
 
     public function storebyAdmin(Request $request)
@@ -291,32 +353,24 @@ class RegisterIndividuController extends Controller
 
     public function show($id)
     {
-        try {
-            $register = RegistrasiIndividu::find($id);
-            if ($register) {
-                Log::info('Data Registrasi Individu Berhasil Ditampilkan');
-                return response()->json([
-                    'data' => $register,
-                    'status' => 'success',
-                    'message' => 'Data Registrasi Individu Berhasil Ditampilkan',
-                ], 200);
-            }
+        $registrasiIndividu = RegistrasiIndividu::with('kategoriSeni')
+            ->where('id', $id)
+            ->whereNull('deleted_at')
+            ->find($id);
 
-            Log::info('Data Registrasi Individu tidak ditemukan');
+        if ($registrasiIndividu) {
             return response()->json([
-                'data' => null,
                 'status' => 'success',
-                'message' => 'Data Registrasi Individu tidak ditemukan',
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Exception Error: ' . $e->getMessage());
-            return response()->json([
-                'data' => null,
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+                'data' => $registrasiIndividu
+            ]);
         }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Data not found'
+        ], 404);
     }
+
 
     public function showByAdmin($id)
     {

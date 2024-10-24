@@ -299,11 +299,11 @@
       }
 
       button[type="submit"] {
-          background-color: #f7941e;
+          background-color: #45a049;
       }
 
       button[type="submit"]:hover {
-          background-color: #f7941e;
+          background-color: #45a049;
       }
 
       button[type="button"] {

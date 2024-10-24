@@ -2,63 +2,67 @@
     <Sidebar />
     <main class="proyek-page">
       <div class="content">
-        <!-- Search Bar -->
         <div class="search-bar">
           <input type="text" v-model="searchQuery" placeholder="Search proyek..." />
         </div>
 
-        <!-- Proyek Created by the User -->
         <div class="section">
-          <h2>Proyek Saya</h2>
+          <h2>Event Saya</h2>
           <div class="proyek-list">
             <div class="proyek-card add-proyek" @click="goToAddProyek">
               <div class="proyek-info">
                 <span class="add-icon">+</span>
               </div>
             </div>
-            <div class="proyek-card" v-for="proyek in myProyeks" :key="proyek.id">
+            <div
+              class="proyek-card"
+              v-for="proyek in filteredMyProyeks"
+              :key="proyek.id"
+              @click="goToProyekDetail(proyek.id)"
+            >
               <div class="proyek-info">
-                <h3>{{ proyek.title }}</h3>
-                <p>{{ proyek.content }}</p>
+                <h3>{{ proyek.judul_proyek }}</h3>
+                <p>Waktu Mulai: {{ formatDate(proyek.waktu_mulai) }}</p>
+                <p>Waktu Selesai: {{ formatDate(proyek.waktu_selesai) }}</p>
+                <p>Likes: <span class="likes-count">{{ proyek.jumlah_like }}</span></p>
               </div>
               <div class="proyek-actions">
-                <button @click="editProyek(proyek.id)">Edit</button>
-                <button @click="deleteProyek(proyek.id)">Hapus</button>
+                <button class="edit-btn" @click.stop="editProyek(proyek.id)">Edit</button>
+                <button class="delete-btn" @click.stop="deleteProyek(proyek.id)">Hapus</button>
               </div>
-              <!-- Social Media Style Actions -->
               <div class="social-actions">
-                <button @click="likeProyek(proyek.id)">Like ({{ proyek.likes }})</button>
-                <button @click="shareProyek(proyek.id)">Share</button>
-                <div class="comments">
-                  <div v-for="comment in proyek.comments" :key="comment.id" class="comment">
-                    <strong>{{ comment.user.name }}:</strong> {{ comment.text }}
-                  </div>
-                  <input v-model="newComment" placeholder="Add a comment..." @keyup.enter="addComment(proyek.id)" />
-                </div>
+                <button @click.stop="likeProyek(proyek.id)">
+                  <span class="heart-icon">❤️</span> Like ({{ proyek.jumlah_like }})
+                </button>
+                <button @click.stop="shareProyek(proyek.id)">
+                  <span class="share-icon">🔗</span> Share
+                </button>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- Other Proyeks -->
         <div class="section">
-          <h2>Proyek Lainnya</h2>
+          <h2>Event Lainnya</h2>
           <div class="proyek-list">
-            <div class="proyek-card" v-for="proyek in otherProyeks" :key="proyek.id">
+            <div
+              class="proyek-card"
+              v-for="proyek in filteredProyeks"
+              :key="proyek.id"
+              @click="goToProyekDetail(proyek.id)"
+            >
               <div class="proyek-info">
-                <h3>{{ proyek.title }}</h3>
-                <p>{{ proyek.content }}</p>
+                <h3>{{ proyek.judul_proyek }}</h3>
+                <p>Waktu Mulai: {{ formatDate(proyek.waktu_mulai) }}</p>
+                <p>Waktu Selesai: {{ formatDate(proyek.waktu_selesai) }}</p>
+                <p>Likes: <span class="likes-count">{{ proyek.jumlah_like }}</span></p>
               </div>
-              <!-- Social Media Style Actions -->
               <div class="social-actions">
-                <button @click="likeProyek(proyek.id)">Like ({{ proyek.likes }})</button>
-                <button @click="shareProyek(proyek.id)">Share</button>
-                <div class="comments">
-                  <div v-for="comment in proyek.comments" :key="comment.id" class="comment">
-                    <strong>{{ comment.user.name }}:</strong> {{ comment.text }}
-                  </div>
-                  <input v-model="newComment" placeholder="Add a comment..." @keyup.enter="addComment(proyek.id)" />
-                </div>
+                <button @click.stop="toggleLikeProyek(proyek)">
+                  <span class="heart-icon" :class="{ liked: proyek.liked }">❤️</span> Like ({{ proyek.jumlah_like }})
+                </button>
+                <button @click.stop="shareProyek(proyek.id)">
+                  <span class="share-icon">🔗</span> Share
+                </button>
               </div>
             </div>
           </div>
@@ -68,52 +72,171 @@
   </template>
 
   <script>
-  import Sidebar from '../components/SidebarSeniman.vue';
+  import { ref, onMounted, computed } from "vue";
+  import { useRouter } from "vue-router";
+  import axios from "../services/api.js";
+  import Sidebar from "../components/SidebarSeniman.vue";
+  import Swal from "sweetalert2";
 
   export default {
     name: "ProyekPage",
     components: {
-      Sidebar
+      Sidebar,
     },
-    data() {
+    setup() {
+      const searchQuery = ref("");
+      const myProyeks = ref([]);
+      const proyek = ref([]);
+      const router = useRouter();
+
+      const formatDate = (dateString) => {
+        const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta', hour12: false };
+        const date = new Date(dateString);
+        return date.toLocaleString('id-ID', options).replace(',', '').replace( ',  ');
+      };
+
+      const fetchMyProyeks = async () => {
+            try {
+                const token = localStorage.getItem("authToken");
+                const senimanId = localStorage.getItem("seniman_id");
+                const response = await axios.get(
+                `/index-proyek?seniman_id=${senimanId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+                );
+                if (response.data && response.data.data) {
+                myProyeks.value = response.data.data.map((p) => ({
+                    ...p,
+                    liked: p.is_liked || false,
+                }));
+                } else {
+                myProyeks.value = [];
+                }
+            } catch (error) {
+                console.error("Failed to fetch your projects:", error);
+                myProyeks.value = [];
+            }
+        };
+
+        const fetchProyeks = async () => {
+        try {
+            const token = localStorage.getItem("authToken");
+            const response = await axios.get("/proyek", {
+            headers: { Authorization: `Bearer ${token}` },
+            });
+            if (response.data && response.data.data) {
+            proyek.value = response.data.data.map((p) => ({
+                ...p,
+                liked: p.is_liked,
+            }));
+            } else {
+            proyek.value = []; // Initialize to empty array if no data is returned
+            }
+        } catch (error) {
+            console.error("Failed to fetch projects:", error);
+            proyek.value = []; // Ensure proyek is an array even on error
+        }
+        };
+
+
+      onMounted(() => {
+        fetchMyProyeks();
+        fetchProyeks();
+      });
+
+      const goToAddProyek = () => {
+        router.push("/form-proyek");
+      };
+
+      const goToProyekDetail = (id) => {
+        router.push(`/detail-proyek/${id}`);
+      };
+
+      const editProyek = (id) => {
+        router.push({ name: 'FormProyekEdit', params: { id } });
+      };
+
+      const deleteProyek = async (proyekId) => {
+        Swal.fire({
+          title: "Apakah Anda yakin ingin menghapus portofolio ini?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Ya",
+          cancelButtonText: "Tidak",
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            try {
+              const token = localStorage.getItem("authToken");
+              await axios.delete(`/proyek/${proyekId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              Swal.fire("Deleted!", "The project has been deleted.", "success");
+              fetchMyProyeks();
+            } catch (error) {
+              console.error("Failed to delete project:", error);
+              Swal.fire(
+                "Error",
+                "There was a problem deleting the project. Please try again later.",
+                "error"
+              );
+            }
+          }
+        });
+      };
+
+      const toggleLikeProyek = async (proyek) => {
+        try {
+          const token = localStorage.getItem("authToken");
+          if (proyek.liked) {
+            await axios.post(`/proyek/${proyek.id}/unlike`, {}, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            proyek.jumlah_like--;
+          } else {
+            await axios.post(`/proyek/${proyek.id}/like`, {}, {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            proyek.jumlah_like++;
+          }
+          proyek.liked = !proyek.liked;
+        } catch (error) {
+          console.error("Failed to toggle like:", error);
+          Swal.fire("Error", "Failed to toggle like. Please try again later.", "error");
+        }
+      };
+
+      const shareProyek = (proyekId) => {
+        // share proyek
+      };
+
+      const filteredMyProyeks = computed(() =>
+        myProyeks.value.filter((proyek) =>
+          proyek.judul_proyek.toLowerCase().includes(searchQuery.value.toLowerCase())
+        )
+      );
+
+      const filteredProyeks = computed(() =>
+        proyek.value.filter((proyek) =>
+          proyek.judul_proyek.toLowerCase().includes(searchQuery.value.toLowerCase())
+        )
+      );
+
       return {
-        searchQuery: '',
-        myProyeks: [
-          // Array of proyeks created by the logged-in user
-        ],
-        otherProyeks: [
-          // Array of other proyeks available to view
-        ],
-        newComment: '',
+        searchQuery,
+        filteredMyProyeks,
+        filteredProyeks,
+        myProyeks,
+        proyek,
+        goToAddProyek,
+        goToProyekDetail,
+        editProyek,
+        deleteProyek,
+        toggleLikeProyek,
+        shareProyek,
+        formatDate,
       };
     },
-    methods: {
-      goToAddProyek() {
-        this.$router.push('/form-proyek'); // Redirect to add proyek form
-      },
-      editProyek(proyekId) {
-        // Handle edit proyek
-      },
-      deleteProyek(proyekId) {
-        // Handle delete proyek
-      },
-      likeProyek(proyekId) {
-        // Handle like proyek
-      },
-      shareProyek(proyekId) {
-        // Handle share proyek
-      },
-      addComment(proyekId) {
-        if (this.newComment.trim() === '') return;
-
-        const proyek = this.myProyeks.concat(this.otherProyeks).find(proyek => proyek.id === proyekId);
-        proyek.comments.push({
-          user: { name: 'Logged-in User' },
-          text: this.newComment,
-        });
-        this.newComment = '';
-      }
-    }
   };
   </script>
 
@@ -174,21 +297,56 @@
     margin-bottom: 10px;
   }
   .proyek-actions {
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
+
+  .edit-btn {
+    background-color: #f7941e;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: darkorange;
+    }
   }
+
+  .delete-btn {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: darkred;
+    }
+  }
+}
+
   .social-actions {
     margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
   }
   button {
     padding: 5px 10px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
   }
-  .comments {
-    margin-top: 10px;
+  .heart-icon {
+    margin-right: 5px;
   }
-  .comment {
-    margin-bottom: 5px;
+  .share-icon {
+    margin-right: 5px;
+  }
+  .likes-count {
+    font-weight: bold;
   }
   input {
     width: 100%;

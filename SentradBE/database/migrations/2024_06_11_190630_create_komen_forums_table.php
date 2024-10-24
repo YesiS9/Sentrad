@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('komen_forums', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('forum_id')->references('id')->on('forums')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('seniman_id')->references('id')->on('seniman')->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('isi_komenForum');
             $table->datetime('waktu_komenForum');
             $table->timestamps();

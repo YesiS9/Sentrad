@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('komen_proyeks', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('proyek_id')->references('id')->on('proyeks')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('seniman_id')->references('id')->on('seniman')->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('isi_komenProyek');
             $table->datetime('waktu_komenProyek');
             $table->timestamps();

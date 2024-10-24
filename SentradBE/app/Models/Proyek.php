@@ -21,6 +21,7 @@ class Proyek extends Model
         'lokasi_proyek',
         'tautan_proyek',
         'status_proyek',
+        'jumlah_like'
     ];
 
 

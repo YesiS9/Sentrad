@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Forum;
+use App\Models\KategoriSeni;
+use App\Models\AnggotaForum;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +17,10 @@ class ForumController extends Controller
     public function index()
     {
         try {
-            $forum = Forum::whereNull('deleted_at')->get();
+            // Get all forums and count the number of anggota for each forum
+            $forum = Forum::whereNull('deleted_at')
+                ->withCount('anggotaForums') // Add anggota count
+                ->get();
 
             if (count($forum) > 0) {
                 Log::info('Data Forum Berhasil Ditampilkan');
@@ -37,66 +42,120 @@ class ForumController extends Controller
             return response()->json([
                 'data' => null,
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
 
-    public function indexForum()
+
+    public function indexFollowForum()
     {
         try {
-            $userId = Auth::id();
-
-
-            if (!$userId) {
+            $user = Auth::user();
+            $id = Auth::id();
+            if (!$user->seniman) {
                 return response()->json([
-                    'data' => null,
                     'status' => 'error',
-                    'message' => 'Pengguna tidak terautentikasi',
-                ], 401);
+                    'data' => null,
+                    'message' => 'Seniman not found for the user',
+                ], 404);
             }
 
-            $forum = Forum::where('seniman_id', $userId)
-                          ->whereNull('deleted_at')
-                          ->get();
+            $senimanId = $user->seniman->id;
+            $forums = Forum::whereNull('deleted_at')
+                ->whereHas('anggotaForums', function($query) use ($senimanId) {
+                    $query->where('anggota_id', $senimanId)
+                        ->where('role', 'anggota');
+                })
+                ->withCount('anggotaForums')
+                ->get();
 
-            if (count($forum) > 0) {
-                Log::info('Data Forum Pengguna Berhasil Ditampilkan');
+            if ($forums->count() > 0) {
+                Log::info('Data Forum Aktif Berhasil Ditampilkan');
                 return response()->json([
-                    'data' => $forum,
+                    'data' => $forums,
                     'status' => 'success',
-                    'message' => 'Data Forum Pengguna Berhasil Ditampilkan',
+                    'message' => 'Data Forum Aktif Berhasil Ditampilkan',
                 ], 200);
             }
 
-            Log::info('Data Forum Pengguna Kosong');
+            Log::info('Data Forum Aktif Kosong');
             return response()->json([
                 'data' => null,
                 'status' => 'success',
-                'message' => 'Data Forum Pengguna Kosong',
+                'message' => 'Data Forum Aktif Kosong',
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function indexByUser(Request $request)
+    {
+        try {
+            $seniman_id = $request->input('seniman_id');
+
+            if (!$seniman_id) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Seniman ID tidak ditemukan',
+                ], 400);
+            }
+
+            // Get forums by seniman_id and count the number of anggota for each forum
+            $forums = Forum::where('seniman_id', $seniman_id)
+                ->whereNull('deleted_at')
+                ->withCount('anggotaForums') // Add anggota count
+                ->get();
+
+            if ($forums->count() > 0) {
+                Log::info('Data Forum untuk Seniman dengan ID ' . $seniman_id . ' Berhasil Ditampilkan');
+                return response()->json([
+                    'seniman_id' => $seniman_id,
+                    'data' => $forums,
+                    'status' => 'success',
+                    'message' => 'Data Forum untuk Seniman Berhasil Ditampilkan',
+                ], 200);
+            }
+
+            Log::info('Data Forum untuk Seniman dengan ID ' . $seniman_id . ' Kosong');
+            return response()->json([
+                'seniman_id' => $seniman_id,
+                'data' => null,
+                'status' => 'success',
+                'message' => 'Data Forum Kosong',
             ], 200);
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
             return response()->json([
                 'data' => null,
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
 
-    public function store(Request $request){
-        try {
 
+
+
+    public function store(Request $request)
+    {
+        try {
             $storeData = $request->all();
 
             $validate = Validator::make($storeData, [
                 'seniman_id' => 'required|exists:seniman,id',
-                'kategori_id' => 'required|exists:kategori_senis,id',
+                'nama_kategori' => 'required|string|exists:kategori_senis,nama_kategori',
                 'judul_forum' => 'required|string|max:100',
                 'status_forum' => 'required|boolean',
             ]);
-
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -107,48 +166,40 @@ class ForumController extends Controller
                 ], 400);
             }
 
-            $forum = Forum::create($storeData);
+            $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->first();
 
-            Log::info('Data Forum Berhasil Ditambahakan');
-            return response()->json([
-                'data' => $forum,
-                'status' => 'success',
-                'message' => 'Data Forum Berhasil Ditambahakan',
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Exception Error: ' . $e->getMessage());
-            return response()->json([
-                'data' => null,
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-
-    public function show($id){
-        try {
-            $forum = Forum::whereNull('deleted_at')->find($id);
-
-            if (!$forum) {
+            if (!$kategori) {
+                Log::error('Kategori tidak ditemukan dengan nama_kategori: ' . $request->nama_kategori);
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
-                    'message' => 'Data Forum tidak ditemukan',
+                    'message' => 'Kategori Seni tidak ditemukan',
                 ], 404);
             }
 
+            $storeData['kategori_id'] = $kategori->id;
+            $forum = Forum::create($storeData);
+
+            AnggotaForum::create([
+                'anggota_id' => $storeData['seniman_id'],
+                'forum_id' => $forum->id,
+                'tgl_join' => now(),
+                'role' => 'Pemilik',
+            ]);
+
+            Log::info('Data Forum Berhasil Ditambahkan dan Seniman ditambahkan sebagai anggota forum');
             return response()->json([
                 'data' => $forum,
                 'status' => 'success',
-                'message' => 'Data Forum Berhasil Ditampilkan',
+                'message' => 'Data Forum Berhasil Ditambahkan dan Seniman menjadi anggota forum',
             ], 200);
+
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
             return response()->json([
                 'data' => null,
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -167,10 +218,9 @@ class ForumController extends Controller
                     'message' => 'Data Forum Tidak Ditemukan',
                 ], 404);
             }
-
             $validate = Validator::make($request->all(), [
                 'seniman_id' => 'required|exists:seniman,id',
-                'kategori_id' => 'required|exists:kategori_senis,id',
+                'nama_kategori' => 'required|string|exists:kategori_senis,nama_kategori',
                 'judul_forum' => 'required|string|max:100',
                 'status_forum' => 'required|boolean',
             ]);
@@ -184,8 +234,21 @@ class ForumController extends Controller
                 ], 400);
             }
 
+            // Ambil kategori_id berdasarkan nama_kategori
+            $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->first();
+
+            if (!$kategori) {
+                Log::error('Kategori tidak ditemukan dengan nama_kategori: ' . $request->nama_kategori);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Kategori Seni tidak ditemukan',
+                ], 404);
+            }
+
+            // Update data forum
             $forum->seniman_id = $request->seniman_id;
-            $forum->kategori_id = $request->kategori_id;
+            $forum->kategori_id = $kategori->id; // Set kategori_id berdasarkan nama_kategori
             $forum->judul_forum = $request->judul_forum;
             $forum->status_forum = $request->status_forum;
 
@@ -196,6 +259,36 @@ class ForumController extends Controller
                 'data' => $forum,
                 'status' => 'success',
                 'message' => 'Data Forum Berhasil Diupdate',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    public function show($id){
+        try {
+            $forum = Forum::whereNull('deleted_at')
+            ->withCount('anggotaForums')
+            ->find($id);
+
+            if (!$forum) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Data Forum tidak ditemukan',
+                ], 404);
+            }
+
+            return response()->json([
+                'data' => $forum,
+                'status' => 'success',
+                'message' => 'Data Forum Berhasil Ditampilkan',
             ], 200);
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());

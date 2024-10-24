@@ -5,10 +5,9 @@
             <header class="header">
                 <h2>Penilaian Karya Management</h2>
             </header>
+
             <div class="table-wrapper">
-                <div class="table-header">
-                    <h3>Daftar Penilaian Karya</h3>
-                </div>
+                <h3>Daftar Penilaian Karya</h3>
                 <table class="penilaian-table">
                     <thead>
                         <tr>
@@ -23,10 +22,10 @@
                         <tr v-for="(penilaian, index) in penilaians" :key="penilaian.id">
                             <td>{{ index + 1 }}</td>
                             <td>{{ formatDate(penilaian.tgl_penilaian) }}</td>
-                            <td>{{ penilaian.nama_seniman || penilaian.nama_kelompok }}</td>
+                            <td>{{ penilaian.registrasi_individu?.nama || penilaian.registrasi_kelompok?.nama_kelompok || 'Tidak Diketahui' }}</td>
                             <td>{{ penilaian.total_nilai }}</td>
                             <td>
-                                <router-link :to="{ name: 'editPenilaian', params: { id: penilaian.id } }" class="edit-btn material-icons">
+                                <router-link :to="{ name: 'DetailPenilaian', params: { id: penilaian.id } }" class="edit-btn material-icons">
                                     settings
                                 </router-link>
                                 <button @click="deletePenilaian(penilaian.id)" class="delete-btn">
@@ -39,63 +38,60 @@
                         </tr>
                     </tbody>
                 </table>
-                <div class="pagination" v-if="penilaians.length > 0">
-                    <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-                    <span>{{ currentPage }} / {{ totalPages }}</span>
-                    <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+                <div class="pagination">
+                    <button @click="prevPage" :disabled="currentPenilaianPage === 1">Previous</button>
+                    <span>{{ currentPenilaianPage }} / {{ totalPenilaianPages }}</span>
+                    <button @click="nextPage" :disabled="currentPenilaianPage === totalPenilaianPages">Next</button>
                 </div>
             </div>
 
             <div class="table-wrapper">
-                <div class="table-header">
-                    <h3>Daftar Registrasi Individu</h3>
-                </div>
-                <!-- Registrasi Individu Table -->
+                <h3>Daftar Registrasi Individu</h3>
                 <table class="registrasi-individu-table">
                     <thead>
                         <tr>
                             <th>NO</th>
                             <th>Nama Seniman</th>
                             <th>Nama Karya</th>
-                            <th>Info Karya</th> <!-- New Column -->
+                            <th>Status Penilaian</th>
+                            <th>Info Karya</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="(individu, index) in registrasiIndividu" :key="individu.id">
                             <td>{{ index + 1 }}</td>
-                            <td>{{ individu.seniman.nama_seniman }}</td>
-                            <td>{{ individu.nama_karya }}</td>
+                            <td>{{ individu.nama }}</td>
+                            <td>{{ individu.email }}</td>
+                            <td>{{ individu.status_individu }}</td>
                             <td>
-                                <router-link :to="{ name: 'PortofolioSeniman', params: { id: individu.portofolio_id } }" class="button">Lihat Karya</router-link>
+                                <router-link :to="{ name: 'PortofolioIndividu', params: { individuId: individu.id } }" class="button">Lihat Karya</router-link>
                             </td>
                             <td>
-                                <router-link :to="{ name: '' }" class="button">Tambah</router-link>
+                                <router-link :to="{ name: 'FormPenilaianIndividu', params: { individuId: individu.id } }" class="button">Berikan Penilaian</router-link>
                             </td>
                         </tr>
                         <tr v-if="registrasiIndividu.length === 0">
-                            <td colspan="5" class="no-data">Data Registrasi Individu Kosong</td>
+                            <td colspan="6" class="no-data">Data Registrasi Individu Kosong</td>
                         </tr>
                     </tbody>
                 </table>
-
-                <div class="pagination" v-if="registrasiIndividu.length > 0">
-                    <button @click="prevIndividuPage" :disabled="individuCurrentPage === 1">Previous</button>
-                    <span>{{ individuCurrentPage }} / {{ individuTotalPages }}</span>
-                    <button @click="nextIndividuPage" :disabled="individuCurrentPage === individuTotalPages">Next</button>
+                <div class="pagination">
+                    <button @click="prevIndividuPage" :disabled="currentIndividuPage === 1">Previous</button>
+                    <span>{{ currentIndividuPage }} / {{ totalIndividuPages }}</span>
+                    <button @click="nextIndividuPage" :disabled="currentIndividuPage === totalIndividuPages">Next</button>
                 </div>
             </div>
+
             <div class="table-wrapper">
-                <div class="table-header">
-                    <h3>Daftar Registrasi Kelompok</h3>
-                </div>
-                <!-- Registrasi Kelompok Table -->
+                <h3>Daftar Registrasi Kelompok</h3>
                 <table class="registrasi-kelompok-table">
                     <thead>
                         <tr>
                             <th>NO</th>
                             <th>Nama Seniman</th>
                             <th>Nama Kelompok</th>
+                            <th>Status Penilaian</th>
                             <th>Info Karya</th>
                             <th>Action</th>
                         </tr>
@@ -105,87 +101,99 @@
                             <td>{{ index + 1 }}</td>
                             <td>{{ kelompok.seniman.nama_seniman }}</td>
                             <td>{{ kelompok.nama_kelompok }}</td>
+                            <td>{{ kelompok.status_kelompok }}</td>
                             <td>
-                                <router-link :to="{ name: 'PortofolioSeniman', params: { id: kelompok.portofolio_id } }" class="button">Lihat Karya</router-link>
+                                <router-link :to="{ name: 'PortofolioKelompok', params: { kelompokId: kelompok.id } }" class="button">Lihat Karya</router-link>
                             </td>
                             <td>
-                                <router-link :to="{ name: '' }" class="button">Tambah</router-link>
+                                <router-link :to="{ name: 'FormPenilaianKelompok', params: { kelompokId: kelompok.id } }" class="button">Berikan Penilaian</router-link>
                             </td>
                         </tr>
                         <tr v-if="registrasiKelompok.length === 0">
-                            <td colspan="5" class="no-data">Data Registrasi Kelompok Kosong</td>
+                            <td colspan="6" class="no-data">Data Registrasi Kelompok Kosong</td>
                         </tr>
                     </tbody>
                 </table>
-
-                <div class="pagination" v-if="registrasiKelompok.length > 0">
-                    <button @click="prevKelompokPage" :disabled="kelompokCurrentPage === 1">Previous</button>
-                    <span>{{ kelompokCurrentPage }} / {{ kelompokTotalPages }}</span>
-                    <button @click="nextKelompokPage" :disabled="kelompokCurrentPage === kelompokTotalPages">Next</button>
+                <div class="pagination">
+                    <button @click="prevKelompokPage" :disabled="currentKelompokPage === 1">Previous</button>
+                    <span>{{ currentKelompokPage }} / {{ totalKelompokPages }}</span>
+                    <button @click="nextKelompokPage" :disabled="currentKelompokPage === totalKelompokPages">Next</button>
                 </div>
             </div>
         </div>
     </main>
 </template>
 
-
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from '../services/api.js';
 import Sidebar from '../components/SidebarPenilai.vue';
+
 import Swal from 'sweetalert2';
 
-
 const penilaians = ref([]);
-const currentPage = ref(1);
-const totalPages = ref(1);
+const currentPenilaianPage = ref(1);
+const totalPenilaianPages = ref(1);
 const perPage = 10;
 
-
 const registrasiIndividu = ref([]);
-const individuCurrentPage = ref(1);
-const individuTotalPages = ref(1);
+const currentIndividuPage = ref(1);
+const totalIndividuPages = ref(1);
 
 const registrasiKelompok = ref([]);
-const kelompokCurrentPage = ref(1);
-const kelompokTotalPages = ref(1);
+const currentKelompokPage = ref(1);
+const totalKelompokPages = ref(1);
 
 const router = useRouter();
 
+const formatDate = (dateString) => {
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', options);
+};
+
 const fetchPenilaians = async () => {
     try {
-        const response = await axios.get('/penilaian', {
+        const penilaiId = localStorage.getItem('penilai_id');
+        const response = await axios.get(`/penilaianKarya?penilai_id=${penilaiId}`, {
             params: {
                 per_page: perPage,
-                page: currentPage.value
+                page: currentPenilaianPage.value
             }
         });
+
         if (response.status === 200 && response.data.status === 'success') {
-            penilaians.value = response.data.data;
-            currentPage.value = response.data.current_page;
-            totalPages.value = response.data.last_page;
+            penilaians.value = response.data.data || [];
+            currentPenilaianPage.value = response.data.current_page;
+            totalPenilaianPages.value = response.data.last_page;
         } else {
             console.error('Failed to fetch penilaian karya:', response.data.message);
         }
     } catch (error) {
-        console.error('Error fetching penilaian karya:', error.message);
+        console.error('Error fetching penilaian karya:', error);
     }
 };
 
-
 const fetchRegistrasiIndividu = async () => {
     try {
-        const response = await axios.get('/registerIndividuPenilai', {
+        const penilaiId = localStorage.getItem('penilai_id');
+
+        if (!penilaiId) {
+            console.error('penilai_id not found in localStorage');
+            return;
+        }
+        const response = await axios.get(`/registerIndividuPenilai/${penilaiId}`, {
             params: {
                 per_page: perPage,
-                page: individuCurrentPage.value
+                page: currentIndividuPage.value
             }
         });
+
         if (response.status === 200 && response.data.status === 'success') {
             registrasiIndividu.value = response.data.data;
-            individuCurrentPage.value = response.data.current_page;
-            individuTotalPages.value = response.data.last_page;
+            currentIndividuPage.value = response.data.current_page;
+            totalIndividuPages.value = response.data.last_page;
         } else {
             console.error('Failed to fetch registrasi individu:', response.data.message);
         }
@@ -194,19 +202,25 @@ const fetchRegistrasiIndividu = async () => {
     }
 };
 
-
 const fetchRegistrasiKelompok = async () => {
     try {
-        const response = await axios.get('/registerKelompokPenilai', {
+        const penilaiId = localStorage.getItem('penilai_id');
+
+        if (!penilaiId) {
+            console.error('penilai_id not found in localStorage');
+            return;
+        }
+        const response = await axios.get(`/registerKelompokPenilai/${penilaiId}`, {
             params: {
                 per_page: perPage,
-                page: kelompokCurrentPage.value
+                page: currentKelompokPage.value
             }
         });
+
         if (response.status === 200 && response.data.status === 'success') {
             registrasiKelompok.value = response.data.data;
-            kelompokCurrentPage.value = response.data.current_page;
-            kelompokTotalPages.value = response.data.last_page;
+            currentKelompokPage.value = response.data.current_page;
+            totalKelompokPages.value = response.data.last_page;
         } else {
             console.error('Failed to fetch registrasi kelompok:', response.data.message);
         }
@@ -215,74 +229,69 @@ const fetchRegistrasiKelompok = async () => {
     }
 };
 
-
 const deletePenilaian = async (id) => {
     const result = await Swal.fire({
         title: 'Apakah Anda yakin ingin menghapus penilaian ini?',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Ya',
-        cancelButtonText: 'Tidak',
+        cancelButtonText: 'Batal'
     });
 
-    if (!result.isConfirmed) {
-        return;
-    }
-
-    try {
-        const response = await axios.delete(`/penilaian-karya/${id}`);
-        if (response.status === 200 && response.data.status === 'success') {
-            Swal.fire('Penilaian berhasil dihapus', '', 'success');
-            fetchPenilaians();
-        } else {
-            Swal.fire('Gagal menghapus penilaian', response.data.message, 'error');
-            console.error('Gagal menghapus penilaian:', response.data.message);
+    if (result.isConfirmed) {
+        try {
+            const response = await axios.delete(`/penilaianKarya/${id}`);
+            if (response.status === 200 && response.data.status === 'success') {
+                Swal.fire('Dihapus!', 'Penilaian berhasil dihapus.', 'success');
+                fetchPenilaians();
+            } else {
+                Swal.fire('Gagal!', response.data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting penilaian:', error);
+            Swal.fire('Error!', 'Terjadi kesalahan saat menghapus penilaian.', 'error');
         }
-    } catch (error) {
-        Swal.fire('Error menghapus penilaian', error.message, 'error');
-        console.error('Error menghapus penilaian:', error.message);
     }
 };
 
-
 const prevPage = () => {
-    if (currentPage.value > 1) {
-        currentPage.value--;
+    if (currentPenilaianPage.value > 1) {
+        currentPenilaianPage.value--;
         fetchPenilaians();
     }
 };
 
 const nextPage = () => {
-    if (currentPage.value < totalPages.value) {
-        currentPage.value++;
+    if (currentPenilaianPage.value < totalPenilaianPages.value) {
+        currentPenilaianPage.value++;
         fetchPenilaians();
     }
 };
 
 const prevIndividuPage = () => {
-    if (individuCurrentPage.value > 1) {
-        individuCurrentPage.value--;
+    if (currentIndividuPage.value > 1) {
+        currentIndividuPage.value--;
         fetchRegistrasiIndividu();
     }
 };
 
 const nextIndividuPage = () => {
-    if (individuCurrentPage.value < individuTotalPages.value) {
-        individuCurrentPage.value++;
+    if (currentIndividuPage.value < totalIndividuPages.value) {
+        currentIndividuPage.value++;
         fetchRegistrasiIndividu();
     }
 };
 
 const prevKelompokPage = () => {
-    if (kelompokCurrentPage.value > 1) {
-        kelompokCurrentPage.value--;
+    if (currentKelompokPage.value > 1) {
+        currentKelompokPage.value--;
         fetchRegistrasiKelompok();
     }
 };
 
 const nextKelompokPage = () => {
-    if (kelompokCurrentPage.value < kelompokTotalPages.value) {
-        kelompokCurrentPage.value++;
+    if (currentKelompokPage.value < totalKelompokPages.value) {
+        currentKelompokPage.value++;
         fetchRegistrasiKelompok();
     }
 };
@@ -294,6 +303,7 @@ onMounted(() => {
     fetchRegistrasiKelompok();
 });
 </script>
+
 
 <style lang="scss" scoped>
     .data-penilaian-karya {
@@ -382,10 +392,10 @@ onMounted(() => {
             }
 
             .edit-btn {
-                background-color: #4caf50;
+                background-color: #f7941e;
 
                 &:hover {
-                    background-color: #45a049;
+                    background-color: #f7941e;
                 }
 
                 .material-icons {

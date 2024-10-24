@@ -18,5 +18,11 @@ class Forum extends Model
         'status_forum'
     ];
 
+    public function anggotaForums()
+{
+    return $this->hasMany(AnggotaForum::class, 'forum_id');
+}
+
+
 
 }

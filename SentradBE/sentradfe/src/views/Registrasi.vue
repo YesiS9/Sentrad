@@ -8,7 +8,7 @@
             <div class="table-wrapper">
                 <div class="table-header">
                     <h3>Registrasi Individu</h3>
-                    <router-link :to="{ name: 'IndividuAdd' }" class="button">Tambah</router-link>
+                    <button @click="checkPortfolioAndAddIndividu" class="button">Tambah</button>
                 </div>
                 <table class="user-table">
                     <thead>
@@ -99,6 +99,9 @@ import { ref, onMounted } from 'vue';
 import axios from '../services/api.js';
 import Sidebar from '../components/SidebarSeniman.vue';
 import Swal from 'sweetalert2';
+import { useRouter } from 'vue-router'; // Import useRouter
+
+const router = useRouter(); // Define router
 
 const userName = ref(localStorage.getItem('username') || '');
 const registrasi_individus = ref([]);
@@ -115,6 +118,27 @@ const formatDate = (dateString) => {
     return date.toLocaleDateString('en-GB', options);
 };
 
+const checkPortfolioAndAddIndividu = async () => {
+    try {
+        const response = await axios.get('/portofolio');
+        const individuResponse = await axios.get('/registerIndividuUser'); // Check if the user already has an individual registration
+
+        if (individuResponse.status === 200 && individuResponse.data.data.length > 0) {
+            Swal.fire('Error', 'Anda sudah memiliki registrasi individu. Tidak dapat menambah lagi.', 'error');
+            return; // Prevent adding another individual registration
+        }
+
+        if (response.status === 200 && response.data.data.length > 0) {
+            router.push({ name: 'IndividuAdd' });
+        } else {
+            Swal.fire('Error', 'Portofolio tidak ditemukan. Silakan buat portofolio terlebih dahulu.', 'error');
+        }
+    } catch (error) {
+        console.log(error);
+        Swal.fire('Error', 'Gagal memeriksa data portofolio', 'error');
+    }
+};
+
 const loadIndividus = async () => {
     try {
         const response = await axios.get('/registerIndividuUser', {
@@ -124,11 +148,8 @@ const loadIndividus = async () => {
             }
         });
 
-        console.log('Individu response:', response);
-
         if (response.status === 200 && response.data && response.data.status === 'success') {
             registrasi_individus.value = response.data.data || [];
-            console.log('Response:', response.data.data);
             currentIndividuPage.value = response.data.current_page || 1;
             totalIndividuPages.value = response.data.last_page || 1;
         } else {
@@ -148,11 +169,9 @@ const loadKelompoks = async () => {
                 page: currentKelompokPage.value
             }
         });
-        console.log('Kelompok response:', response);
 
         if (response.status === 200 && response.data && response.data.status === 'success') {
             registrasi_kelompoks.value = response.data.data || [];
-            console.log(' Response:', response.data.data);
             currentKelompokPage.value = response.data.current_page || 1;
             totalKelompokPages.value = response.data.last_page || 1;
         } else {
@@ -164,8 +183,8 @@ const loadKelompoks = async () => {
     }
 };
 
+// Fungsi untuk menghapus data individu
 const deleteIndividu = async (id) => {
-    console.log("Deleting individu with id:", id);
     const result = await Swal.fire({
         title: 'Apakah Anda yakin ingin menghapus registrasi individu ini?',
         icon: 'warning',
@@ -184,14 +203,13 @@ const deleteIndividu = async (id) => {
             loadIndividus();
         } else {
             Swal.fire('Gagal menghapus registrasi individu', response.data.message, 'error');
-            console.error('Gagal menghapus registrasi individu:', response.data.message);
         }
     } catch (error) {
         Swal.fire('Error menghapus registrasi individu', error.message, 'error');
-        console.error('Error menghapus registrasi individu:', error.message);
     }
 };
 
+// Fungsi untuk menghapus data kelompok
 const deleteKelompok = async (id) => {
     const result = await Swal.fire({
         title: 'Apakah Anda yakin ingin menghapus registrasi kelompok ini?',
@@ -204,7 +222,6 @@ const deleteKelompok = async (id) => {
     if (!result.isConfirmed) {
         return;
     }
-
     try {
         const response = await axios.delete(`/registerKelompok/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
@@ -212,11 +229,17 @@ const deleteKelompok = async (id) => {
             loadKelompoks();
         } else {
             Swal.fire('Gagal menghapus registrasi kelompok', response.data.message, 'error');
-            console.error('Gagal menghapus registrasi kelompok:', response.data.message);
         }
     } catch (error) {
         Swal.fire('Error menghapus registrasi kelompok', error.message, 'error');
-        console.error('Error menghapus registrasi kelompok:', error.message);
+    }
+};
+
+// Pagination functions
+const nextIndividuPage = () => {
+    if (currentIndividuPage.value < totalIndividuPages.value) {
+        currentIndividuPage.value++;
+        loadIndividus();
     }
 };
 
@@ -227,10 +250,10 @@ const prevIndividuPage = () => {
     }
 };
 
-const nextIndividuPage = () => {
-    if (currentIndividuPage.value < totalIndividuPages.value) {
-        currentIndividuPage.value++;
-        loadIndividus();
+const nextKelompokPage = () => {
+    if (currentKelompokPage.value < totalKelompokPages.value) {
+        currentKelompokPage.value++;
+        loadKelompoks();
     }
 };
 
@@ -241,18 +264,13 @@ const prevKelompokPage = () => {
     }
 };
 
-const nextKelompokPage = () => {
-    if (currentKelompokPage.value < totalKelompokPages.value) {
-        currentKelompokPage.value++;
-        loadKelompoks();
-    }
-};
-
 onMounted(() => {
     loadIndividus();
     loadKelompoks();
 });
 </script>
+
+
 
 <style lang="scss" scoped>
     .data-registrasi {

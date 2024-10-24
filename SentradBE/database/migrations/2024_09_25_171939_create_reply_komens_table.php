@@ -13,18 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('proyeks', function (Blueprint $table) {
+        Schema::create('reply_komens', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->foreignUuid('komenProyek_id')->references('id')->on('komen_proyeks')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('komenForum_id')->references('id')->on('komen_forums')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignUuid('seniman_id')->references('id')->on('seniman')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignUuid('kategori_id')->references('id')->on('kategori_senis')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->string('judul_proyek', 100);
-            $table->string('deskripsi_proyek');
-            $table->datetime('waktu_mulai');
-            $table->datetime('waktu_selesai');
-            $table->string('lokasi_proyek');
-            $table->string('tautan_proyek');
-            $table->boolean('status_proyek');
-            $table->integer('jumlah_like');
+            $table->string('isi_reply');
             $table->timestamps();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
         });
@@ -37,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('proyeks');
+        Schema::dropIfExists('reply_komens');
     }
 };

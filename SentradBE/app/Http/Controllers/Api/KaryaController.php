@@ -68,7 +68,7 @@ class KaryaController extends Controller
                 'tgl_pembuatan' => 'required|date_format:d/m/Y',
                 'deskripsi_karya' => 'required|string',
                 'bentuk_karya' => 'required|string',
-                'media_karya.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
+                'media_karya.*' => 'required|file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
                 'status_karya' => 'required|boolean',
             ]);
 
@@ -268,7 +268,6 @@ class KaryaController extends Controller
                 ], 404);
             }
 
-            // Delete media files
             $filePaths = json_decode($karya->media_karya, true);
             if ($filePaths) {
                 foreach ($filePaths as $filePath) {

@@ -71,31 +71,37 @@ const getKategori = async (id) => {
 const handleSubmit = async () => {
     const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
 
-    const result = await Swal.fire({
-    title: `Apakah Anda yakin ingin ${action} kategori seni ini?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Ya',
-    cancelButtonText: 'Tidak',
-    });
+    if (mode.value === 'edit') {
+        const result = await Swal.fire({
+            title: `Apakah Anda yakin ingin ${action} kategori seni ini?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
 
-    if (!result.isConfirmed) {
-        return;
+        if (!result.isConfirmed) {
+            return;
+        }
     }
+
     try {
         let response;
+
+        // Perform the add or edit operation based on the mode
         if (mode.value === 'add') {
             response = await axios.post('/kategoriSeni', formData);
         } else {
             response = await axios.put(`/kategoriSeni/${formData.id}`, formData);
         }
 
+        // Handle the response
         if (response.status === 200 && response.data.status === 'success') {
-            toast.success(`Berhasil ${mode.value === 'add' ? 'menambahkan' : 'mengedit'} kategori seni!`);
+            toast.success(`Berhasil ${action} kategori seni!`);
             router.push({ name: 'DataKategori' });
             closeForm();
         } else {
-            toast.error(response.data.message || `Gagal ${mode.value === 'add' ? 'menambahkan' : 'mengedit'} kategori seni!`);
+            toast.error(response.data.message || `Gagal ${action} kategori seni!`);
         }
     } catch (error) {
         console.error('Error saving data:', error.message);
@@ -107,6 +113,7 @@ const handleSubmit = async () => {
         }
     }
 };
+
 
 const closeForm = () => {
     formData.user_id = '',
@@ -187,11 +194,11 @@ main {
         }
 
         button[type="submit"] {
-        background-color: #f7941e;
+        background-color: #45a049;
         }
 
         button[type="submit"]:hover {
-        background-color: #f7941e;
+        background-color: #45a049;
         }
 
         button[type="button"] {

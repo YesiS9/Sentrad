@@ -20,6 +20,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'email_verified_at',
+        'foto',
     ];
 
 
@@ -56,6 +57,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function penilai()
     {
-        return $this->hasMany(Penilai::class);
+        return $this->hasOne(Penilai::class);
     }
 }

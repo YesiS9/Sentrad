@@ -14,6 +14,7 @@ class PenilaianKarya extends Model
 
     protected $fillable = [
         'kuota_id',
+        'tingkatan_id',
         'regisIndividu_id',
         'regisKelompok_id',
         'tgl_penilaian',
@@ -26,9 +27,9 @@ class PenilaianKarya extends Model
         return $this->hasMany(RubrikPenilaian::class, 'penilaian_karya_id', 'id');
     }
 
-    public function penilai()
+    public function kuota()
     {
-        return $this->belongsTo(Penilai::class, 'penilai_id', 'id');
+        return $this->belongsTo(kuota::class, 'kuota_id', 'id');
     }
 
     public function registrasiIndividu()

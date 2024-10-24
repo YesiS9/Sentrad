@@ -76,7 +76,7 @@
 
   const getPortofolio = async (id) => {
     try {
-      const response = await axios.get(`/portofolio/data/${id}`);
+      const response = await axios.get(`/portofolio/${id}`);
       if (response.status === 200 && response.data.status === 'success') {
         const portofolioData = response.data.data;
         formData.id = portofolioData.id;
@@ -126,12 +126,10 @@
       console.error('Invalid mode or missing formData.id for edit.');
       return;
     }
-
-    // Log the entire response for debugging
     console.log('Server response:', response);
 
     if (response.status === 200 && response.data.status === 'success') {
-      router.push({ name: 'Portofolio' });
+      router.push({ name: 'Registrasi' });
     } else {
       console.error(mode.value === 'add' ? 'Failed to add portofolio:' : 'Failed to edit portofolio:', response.data.message);
       Swal.fire('Error', response.data.message || 'Failed to save portofolio', 'error');
@@ -147,7 +145,7 @@
 
 
   const closeForm = () => {
-    router.push({ name: 'Portofolio' });
+    router.push({ name: 'Registrasi' });
   };
   </script>
 

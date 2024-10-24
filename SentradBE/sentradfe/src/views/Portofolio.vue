@@ -7,8 +7,8 @@
             </header>
             <div class="table-wrapper">
                 <div class="table-header">
-                    <h3>Portofolio</h3>
-                    <router-link :to="{ name: 'FormPortofolio' }" class="button">Tambah</router-link>
+                    <h3>Portofolio Individu</h3>
+                    <router-link :to="{ name: 'FormPortofolio' }" class="button">Tambah Portofolio</router-link>
                 </div>
                 <table class="user-table">
                     <thead>
@@ -21,10 +21,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(portofolio, index) in portofolios" :key="portofolio.id">
+                        <tr v-for="(portofolio, index) in portofoliosIndividu" :key="portofolio.id">
                             <td>{{ index + 1 }}</td>
                             <td>
-                                <router-link :to="{ name: 'InfoPortofolio', params: { id: portofolio.id } }" class="portfolio-link">
+                                <router-link :to="{ name: 'InfoPortofolioSeniman', params: { id: portofolio.id } }" class="portfolio-link">
                                     {{ portofolio.judul_portofolio }}
                                 </router-link>
                             </td>
@@ -38,17 +38,60 @@
                                 <router-link :to="{ name: 'FormPortofolioEdit', params: { id: portofolio.id } }" class="edit-btn material-icons">
                                     settings
                                 </router-link>
-                                <button @click="deletePortofolio(portofolio.id)" class="delete-btn">
+                                <button @click="deletePortofolioIndividu(portofolio.id)" class="delete-btn">
                                     <span class="material-icons">delete</span>
                                 </button>
                             </td>
                         </tr>
-                        <tr v-if="portofolios.length === 0">
-                            <td colspan="5" class="no-data">Portofolio kosong</td>
+                        <tr v-if="portofoliosIndividu.length === 0">
+                            <td colspan="5" class="no-data">Portofolio Individu kosong</td>
                         </tr>
                     </tbody>
                 </table>
-                <div class="pagination" v-if="portofolios.length > 0">
+
+                <div class="table-header">
+                    <h3>Portofolio Kelompok</h3>
+                </div>
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>Judul Portofolio</th>
+                            <th>Jumlah Karya</th>
+                            <th>Tambah Karya</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(portofolio, index) in portofoliosKelompok" :key="portofolio.id">
+                            <td>{{ index + 1 }}</td>
+                            <td>
+                                <router-link :to="{ name: 'InfoPortofolioSeniman', params: { id: portofolio.id } }" class="portfolio-link">
+                                    {{ portofolio.judul_portofolio }}
+                                </router-link>
+                            </td>
+                            <td>{{ portofolio.jumlah_karya }}</td>
+                            <td>
+                                <router-link :to="{ name: 'FormKarya', params: { portofolioId: portofolio.id } }" class="add-karya-btn">
+                                    <span class="material-icons">add_circle</span>
+                                </router-link>
+                            </td>
+                            <td>
+                                <router-link :to="{ name: 'FormPortofolioEdit', params: { id: portofolio.id } }" class="edit-btn material-icons">
+                                    settings
+                                </router-link>
+                                <button @click="deletePortofolioKelompok(portofolio.id)" class="delete-btn">
+                                    <span class="material-icons">delete</span>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr v-if="portofoliosKelompok.length === 0">
+                            <td colspan="5" class="no-data">Portofolio Kelompok kosong</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pagination" v-if="portofoliosIndividu.length > 0 || portofoliosKelompok.length > 0">
                     <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
                     <span>{{ currentPage }} / {{ totalPages }}</span>
                     <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
@@ -65,12 +108,13 @@ import Sidebar from '../components/SidebarSeniman.vue';
 import Swal from 'sweetalert2';
 
 const userName = ref(localStorage.getItem('username') || '');
-const portofolios = ref([]);
+const portofoliosIndividu = ref([]);
+const portofoliosKelompok = ref([]);
 const currentPage = ref(1);
 const totalPages = ref(1);
 const perPage = 10;
 
-const loadPortofolios = async () => {
+const loadPortofoliosIndividu = async () => {
     try {
         const response = await axios.get('/portofolio', {
             params: {
@@ -79,19 +123,38 @@ const loadPortofolios = async () => {
             }
         });
         if (response.status === 200 && response.data.status === 'success') {
-            portofolios.value = response.data.data;
-            console.log('response:', response.data.data),
+            portofoliosIndividu.value = response.data.data;
             currentPage.value = response.data.current_page;
             totalPages.value = response.data.last_page;
         } else {
-            console.error('Failed to load portofolio data:', response.data.message);
+            console.error('Failed to load portofolio individu data:', response.data.message);
         }
     } catch (error) {
         console.error('Error:', error.message);
     }
 };
 
-const deletePortofolio = async (id) => {
+const loadPortofoliosKelompok = async () => {
+    try {
+        const response = await axios.get('/portofolio/kelompok', {
+            params: {
+                per_page: perPage,
+                page: currentPage.value
+            }
+        });
+        if (response.status === 200 && response.data.status === 'success') {
+            portofoliosKelompok.value = response.data.data;
+            currentPage.value = response.data.current_page;
+            totalPages.value = response.data.last_page;
+        } else {
+            console.error('Failed to load portofolio kelompok data:', response.data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error.message);
+    }
+};
+
+const deletePortofolioIndividu = async (id) => {
     const result = await Swal.fire({
         title: 'Apakah Anda yakin ingin menghapus portofolio ini?',
         icon: 'warning',
@@ -108,40 +171,64 @@ const deletePortofolio = async (id) => {
         const response = await axios.delete(`/portofolio/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
             Swal.fire('Portofolio berhasil dihapus', '', 'success');
-            loadPortofolios();
+            loadPortofoliosIndividu();
         } else {
             Swal.fire('Gagal menghapus portofolio', response.data.message, 'error');
-            console.error('Gagal menghapus portofolio:', response.data.message);
         }
     } catch (error) {
-        Swal.fire('Error menghapus user', error.message, 'error');
-        console.error('Error menghapus user:', error.message);
+        Swal.fire('Error menghapus portofolio', error.message, 'error');
+    }
+};
+
+
+const deletePortofolioKelompok = async (id) => {
+    const result = await Swal.fire({
+        title: 'Apakah Anda yakin ingin menghapus portofolio ini?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Tidak',
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    try {
+        const response = await axios.delete(`/portofolio/${id}`);
+        if (response.status === 200 && response.data.status === 'success') {
+            Swal.fire('Portofolio berhasil dihapus', '', 'success');
+            loadPortofoliosKelompok();
+        } else {
+            Swal.fire('Gagal menghapus portofolio', response.data.message, 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error menghapus portofolio', error.message, 'error');
     }
 };
 
 const prevPage = () => {
     if (currentPage.value > 1) {
         currentPage.value--;
-        loadPortofolios();
+        loadPortofoliosIndividu();
+        loadPortofoliosKelompok();
     }
 };
 
 const nextPage = () => {
     if (currentPage.value < totalPages.value) {
         currentPage.value++;
-        loadPortofolios();
+        loadPortofoliosIndividu();
+        loadPortofoliosKelompok();
     }
 };
 
 onMounted(() => {
-    if (!localStorage.getItem('token')) {
-        alert('Please login first.');
-        router.push('/login');
-        return;
-    }
-    loadPortofolios();
+    loadPortofoliosIndividu();
+    loadPortofoliosKelompok();
 });
 </script>
+
 
 <style lang="scss" scoped>
 .no-data {
@@ -244,10 +331,10 @@ onMounted(() => {
         }
 
         .edit-btn {
-            background-color: #4caf50;
+            background-color: #f7941e;
 
             &:hover {
-            background-color: #45a049;
+            background-color: #f7941e;
             }
 
             .material-icons {
@@ -268,10 +355,10 @@ onMounted(() => {
         }
 
         .add-karya-btn {
-            background-color: #f7941e;
+            background-color: #45a049;
 
             &:hover {
-            background-color: #f7941e;
+            background-color: #45a049;
             }
             .material-icons {
             color: #fff;

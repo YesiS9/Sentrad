@@ -15,7 +15,7 @@
                         <tr>
                             <th>NO</th>
                             <th>Nama Rubrik</th>
-                            <th>Kategori Seni</th>
+                            <th>Bobot</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -23,7 +23,7 @@
                         <tr v-for="(rubrik, index) in rubriks" :key="rubrik.id">
                             <td>{{ (currentPageRubrikSaya - 1) * perPageRubrikSaya + index + 1 }}</td>
                             <td>{{ rubrik.nama_rubrik }}</td>
-                            <td>{{ rubrik.kategori_seni[0]?.nama_kategori || 'N/A' }}</td>
+                            <td>{{ rubrik.bobot }}</td>
                             <td>
                                 <router-link :to="{ name: 'FormRubrikEdit', params: { id: rubrik.id } }" class="edit-btn material-icons">
                                     settings
@@ -53,7 +53,7 @@
                         <tr>
                             <th>NO</th>
                             <th>Nama Rubrik</th>
-                            <th>Kategori Seni</th>
+                            <th>Bobot</th>
                             <th>Penilai</th>
                         </tr>
                     </thead>
@@ -61,8 +61,8 @@
                         <tr v-for="(rubrikPenilai, index) in rubrikPenilai" :key="rubrikPenilai.id">
                             <td>{{ (currentPageRubrikLainnya - 1) * perPageRubrikLainnya + index + 1 }}</td>
                             <td>{{ rubrikPenilai.nama_rubrik }}</td>
-                            <td>{{ rubrikPenilai.kategori_seni[0]?.nama_kategori || 'N/A' }}</td>
-                            <td>{{ rubrikPenilai.penilai.nama_penilai }}</td>
+                            <td>{{ rubrikPenilai.bobot }}</td>
+                            <td>{{ rubrikPenilai.nama_penilai || 'N/A' }}</td>
                         </tr>
                         <tr v-if="rubrikPenilai.length === 0">
                             <td colspan="4" class="no-data">Data rubrik penilai kosong</td>
@@ -155,7 +155,7 @@ const deleteRubrik = async (id) => {
         const response = await axios.delete(`/rubrik/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
             Swal.fire('Rubrik berhasil dihapus', '', 'success');
-            fetchRubriks(); // Refresh rubriks list after deletion
+            fetchRubriks();
         } else {
             Swal.fire('Gagal menghapus rubrik', response.data.message, 'error');
             console.error('Gagal menghapus rubrik:', response.data.message);
@@ -291,10 +291,10 @@ onMounted(() => {
             }
 
             .edit-btn {
-                background-color: #4caf50;
+                background-color: #f7941e;
 
                 &:hover {
-                    background-color: #45a049;
+                    background-color: #f7941e;
                 }
 
                 .material-icons {

@@ -36,6 +36,16 @@ import RubrikData from '../views/RubrikData.vue'
 import PenilaianKarya from '../views/PenilaianKarya.vue'
 import FormRubrik from '../components/FormRubrik.vue'
 import PortofolioSeniman from '../components/PortofolioSeniman.vue'
+import FormPenilaian from '../components/FormPenilaian.vue'
+import InfoPortofolioPenilaian from '../components/InfoPortofolioPenilaian.vue'
+import DetailForum from '../components/DetailForum.vue'
+import FormForum from '../components/FormForum.vue'
+import FormProyek from '../components/FormProyek.vue'
+import DetailProyek from '../components/DetailProyek.vue'
+import FormAnggota from '../components/FormAnggota.vue'
+import FormPortofolioKelompok from '../components/FormPortofolioKelompok.vue'
+import PortofolioKelompok from '../components/PortofolioKelompok.vue'
+import DetailPenilaian from '../components/DetailPenilaian.vue'
 
 
 const router = createRouter({
@@ -86,11 +96,28 @@ const router = createRouter({
         { path: '/form-seniman/edit/:id', name: 'FormSenimanEdit', component: FormSeniman, props: true },
         { path: '/form-karya/:portofolioId', name: 'FormKarya', component: FormKarya, props: true },
         { path: '/form-karya/edit/:id', name: 'FormKaryaEdit', component: FormKarya, props: true },
-        { path: '/info-portofolio/:id', name: 'InfoPortofolio', component: InfoPortofolio, props: true },
+        { path: '/infoPortofolio/:id', name: 'InfoPortofolioSeniman', component: InfoPortofolio, props: true},
+        { path: '/infoPortofolioPenilai/:individuId/:id', name: 'InfoPortofolioPenilai', component: InfoPortofolioPenilaian, props: true},
+        { path: '/infoPortofolioPenilai/:kelompokId/:id', name: 'InfoPortoKelompok', component: InfoPortofolioPenilaian, props: true},
         { path: '/info-karya/:id', name: 'InfoKarya', component: InfoKarya },
         { path: '/form-rubrik', name: 'FormRubrik', component: FormRubrik, props: true },
         { path: '/form-rubrik/edit/:id', name: 'FormRubrikEdit', component: FormRubrik, props: true },
-        { path: '/portofolioRegis/:id', name: 'PortofolioSeniman', component: PortofolioSeniman, props: true },
+        { path: '/portofolioRegis/:individuId ', name: 'PortofolioIndividu', component: PortofolioSeniman, props: true },
+        { path: '/portofolioRegisKlmpk/:kelompokId ', name: 'PortofolioKelompok', component: PortofolioKelompok, props: true },
+        { path: '/form-penilaian/:individuId', name: 'FormPenilaianIndividu', component: FormPenilaian, props: true },
+        { path: '/form-penilaian/:kelompokId', name: 'FormPenilaianKelompok', component: FormPenilaian, props: true },
+        { path: '/form-penilaian/edit/:id', name: 'FormPenilaianEdit', component: FormPenilaian, props: true },
+        { path: '/detail-forum/:id', name: 'DetailForum', component: DetailForum, props: true },
+        { path: '/detail-proyek/:id', name: 'DetailProyek', component: DetailProyek, props: true },
+        { path: '/form-forum', name: 'FormForum', component: FormForum, props: true },
+        { path: '/form-forum/edit/:id', name: 'FormForumEdit', component: FormForum, props: true },
+        { path: '/form-proyek', name: 'FormProyek', component: FormProyek, props: true },
+        { path: '/form-proyek/edit/:id', name: 'FormProyekEdit', component: FormProyek, props: true },
+        { path: '/form-anggota/:kelompok_id', name: 'FormAnggota', component: FormAnggota, props: true },
+        { path: '/form-anggota/edit/:id', name: 'FormAnggotaEdit', component: FormAnggota, props: true },
+        { path: '/form-portofolio/kelompok', name: 'FormPortofolioKelompok', component: FormPortofolioKelompok, props: true },
+        { path: '/form-portofolio/kelompok/edit/:id', name: 'FormPortofolioKelompokEdit', component: FormPortofolioKelompok, props: true },
+        { path: '/detail-penilaian/:id', name: 'DetailPenilaian', component: DetailPenilaian, props: true },
         { path: '/:pathMatch(.*)*', redirect: '/' }
     ]
 })

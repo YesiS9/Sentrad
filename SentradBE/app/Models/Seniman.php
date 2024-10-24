@@ -35,12 +35,17 @@ class Seniman extends Model
 
     public function registrasiIndividu()
     {
-        return $this->hasMany(RegistrasiIndividu::class);
+        return $this->hasOne(RegistrasiIndividu::class, 'seniman_id');
     }
 
     public function registrasiKelompok()
     {
         return $this->hasMany(RegistrasiKelompok::class);
+    }
+
+    public function portofolios()
+    {
+        return $this->hasMany(Portofolio::class, 'seniman_id');
     }
 }
 

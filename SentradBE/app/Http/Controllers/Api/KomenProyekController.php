@@ -10,15 +10,57 @@ use Illuminate\Support\Facades\Validator;
 
 class KomenProyekController extends Controller
 {
+    public function index(Request $request)
+    {
+        try {
+            $proyekId = $request->input('proyek_id');
+
+            if (!$proyekId) {
+                return response()->json([
+                    'status' => 'error',
+                    'data' => null,
+                    'message' => 'Proyek ID tidak diberikan',
+                ], 400);
+            }
+
+            $komenProyeks = KomenProyek::where('proyek_id', $proyekId)
+                ->select('id', 'proyek_id', 'seniman_id','isi_komenProyek', 'waktu_komenProyek', 'created_at')
+                ->paginate(10);
+
+            if ($komenProyeks->count() > 0) {
+                return response()->json([
+                    'status' => 'success',
+                    'data' => $komenProyeks->items(),
+                    'current_page' => $komenProyeks->currentPage(),
+                    'last_page' => $komenProyeks->lastPage(),
+                    'per_page' => $komenProyeks->perPage(),
+                    'total' => $komenProyeks->total(),
+                ], 200);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => null,
+                'message' => 'Komentar Proyek tidak ditemukan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'data' => null,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function store(Request $request)
     {
         try {
             $storeData = $request->all();
-
             $validate = Validator::make($storeData, [
                 'proyek_id' => 'required|string',
+                'seniman_id' => 'required|string',
                 'isi_komenProyek' => 'required|string',
-                'waktu_komenProyek' => 'required|date',
             ]);
 
             if ($validate->fails()) {
@@ -29,7 +71,7 @@ class KomenProyekController extends Controller
                     'message' => $validate->errors(),
                 ], 400);
             }
-
+            $storeData['waktu_komenProyek'] = now();
             $komenProyek = KomenProyek::create($storeData);
 
             Log::info('Komentar Proyek Berhasil Ditambahkan');
@@ -47,6 +89,7 @@ class KomenProyekController extends Controller
             ], 500);
         }
     }
+
 
     public function show($id)
     {
@@ -80,22 +123,18 @@ class KomenProyekController extends Controller
     {
         try {
             $komenProyek = KomenProyek::whereNull('deleted_at')->find($id);
-
             if (!$komenProyek) {
-                Log::error('Komentar Proyek Tidak Ditemukan');
+                Log::error('Komentar tidak ditemukan');
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
-                    'message' => 'Komentar Proyek Tidak Ditemukan',
+                    'message' => 'Komentar tidak ditemukan',
                 ], 404);
             }
 
             $validate = Validator::make($request->all(), [
-                'proyek_id' => 'required|string',
                 'isi_komenProyek' => 'required|string',
-                'waktu_komenProyek' => 'required|date',
             ]);
-
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
                 return response()->json([
@@ -105,7 +144,12 @@ class KomenProyekController extends Controller
                 ], 400);
             }
 
-            $komenProyek->update($request->all());
+            $komenProyek->update([
+                'isi_komenProyek' => $request->isi_komenProyek,
+            ]);
+
+            $komenProyek->waktu_komenProyek = $komenProyek->updated_at;
+            $komenProyek->save();
 
             Log::info('Komentar Proyek Berhasil Diupdate');
             return response()->json([
@@ -122,6 +166,8 @@ class KomenProyekController extends Controller
             ], 500);
         }
     }
+
+
 
     public function destroy($id)
     {

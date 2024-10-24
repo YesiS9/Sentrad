@@ -3,8 +3,13 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AnggotaController;
+use App\Http\Controllers\Api\AnggotaForumController;
 use App\Http\Controllers\Api\ForumController;
+use App\Http\Controllers\Api\ProyekController;
 use App\Http\Controllers\Api\KaryaController;
+use App\Http\Controllers\Api\KomenProyekController;
+use App\Http\Controllers\Api\KomenForumController;
 use App\Http\Controllers\Api\KategoriSeniController;
 use App\Http\Controllers\Api\PenilaianKaryaController;
 use App\Http\Controllers\Api\PenilaiController;
@@ -17,9 +22,9 @@ use App\Http\Controllers\Api\SeniController;
 use App\Http\Controllers\Api\SenimanController;
 use App\Http\Controllers\Api\TingkatanController;
 use App\Http\Controllers\Api\UserController;
+use Laravel\Passport\Passport;
 
-
-// Route untuk register, login, dan verifikasi email
+Passport::routes();
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::get('email/verify/{id}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
@@ -27,12 +32,12 @@ Route::get('/roles', [AuthController::class, 'getRoles']);
 Route::post('/user/store-byAdmin', [UserController::class, 'storeByAdmin']);
 Route::post('seniman', [SenimanController::class, 'store']);
 
-// Middleware untuk memproteksi rute-rute di bawah ini dengan autentikasi
 Route::middleware('auth:api')->group(function () {
     Route::apiResource('penilai', PenilaiController::class);
     Route::apiResource('forum', ForumController::class);
+    Route::apiResource('proyek', ProyekController::class);
     Route::apiResource('seni', SeniController::class);
-    Route::apiResource('penilaian', PenilaianKaryaController::class);
+    Route::apiResource('penilaianKarya', PenilaianKaryaController::class);
     Route::apiResource('kategoriSeni', KategoriSeniController::class);
     Route::apiResource('registerIndividu', RegisterIndividuController::class);
     Route::apiResource('registerKelompok', RegisterKelompokController::class);
@@ -41,18 +46,24 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('user', UserController::class);
     Route::apiResource('role', RoleController::class);
     Route::apiResource('karya', KaryaController::class);
+    Route::apiResource('komenProyek', KomenProyekController::class);
+    Route::apiResource('komenForum', KomenForumController::class);
     Route::apiResource('portofolio', PortofolioController::class);
+    Route::apiResource('anggota', AnggotaController::class);
+    Route::post('/get-kuota-id', [PenilaianKaryaController::class, 'getKuotaId']);
     Route::get('/karyas/{id}', [KaryaController::class, 'index']);
     Route::get('/seniman', [SenimanController::class, 'index']);
     Route::get('/rubrikPenilai', [RubrikController::class, 'indexByUser']);
+    Route::get('/myForum', [ForumController::class, 'indexByUser']);
+    Route::get('/followForum', [ForumController::class, 'indexFollowForum']);
     Route::put('/seniman/{id}', [SenimanController::class, 'update']);
     Route::get('/seniman/{id}', [SenimanController::class, 'show']);
     Route::delete('/seniman/{id}', [SenimanController::class, 'destroy']);
     Route::get('/nama-kategori', [KategoriSeniController::class, 'indexKategori']);
     Route::get('/userbypenilai', [UserController::class,'indexByPenilai']);
     Route::get('/userbyseniman', [UserController::class,'indexBySeniman']);
+    Route::get('/index-proyek', [ProyekController::class, 'indexProyekUser']);
     Route::get('/portofolio/data/{id}', [PortofolioController::class, 'showData']);
-    Route::get('/penilai/download', [PenilaiController::class, 'downloadPenilai'])->name('penilai.downloadPenilai');
     Route::get('/penilai/laporan', [PenilaiController::class, 'showLaporan']);
     Route::get('/penilai/downloadLaporan', [PenilaiController::class, 'downloadPenilaiLaporan']);
     Route::post('/seniman/storeByAdmin', [SenimanController::class, 'storebyAdmin']);
@@ -65,9 +76,17 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/registerKelompok/storeByAdmin/{id}', [RegisterKelompokController::class, 'updateByAdmin']);
     Route::get('/registerIndividuUser', [RegisterIndividuController::class, 'getRegistrasiIndividu']);
     Route::get('/registerKelompokUser', [RegisterKelompokController::class, 'getRegistrasiKelompok']);
-    Route::get('/registerIndividuPenilai', [RegisterIndividuController::class, 'indexForPenilai']);
-    Route::get('/registerKelompokPenilai', [RegisterKelompokController::class, 'indexForPenilai']);
-    Route::get('/indexByRegis', [PortofolioController::class, 'filterByRegistrasi']);
+    Route::get('/registerIndividuPenilai/{penilai_id}', [RegisterIndividuController::class, 'indexForPenilai']);
+    Route::get('/registerKelompokPenilai/{penilai_id}', [RegisterKelompokController::class, 'indexForPenilai']);
+    Route::get('/registrasi-portofolio/individu', [PortofolioController::class, 'filterByIndividu']);
+    Route::get('/registrasi-portofolio/kelompok', [PortofolioController::class, 'filterByKelompok']);
+    Route::post('/proyek/{id}/like', [ProyekController::class, 'likeProyek']);
+    Route::post('/proyek/{id}/unlike', [ProyekController::class, 'unlikeProyek']);
+    Route::get('/anggota/kelompok/{kelompok_id}', [AnggotaController::class, 'indexByKelompok']);
+    Route::get('/portofolio/kelompok', [PortofolioController::class, 'indexKelompok']);
+    Route::post('/join-forum', [AnggotaForumController::class, 'joinForum']);
+    Route::delete('/out-forum/{id}', [AnggotaForumController::class, 'destroy']);
+    Route::get('/anggota-forum/{forum_id}', [AnggotaForumController::class, 'index']);
 
     Route::get('/user-profile', function (Request $request) {
         return $request->user();

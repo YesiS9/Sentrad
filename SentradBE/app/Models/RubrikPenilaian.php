@@ -26,6 +26,6 @@ class RubrikPenilaian extends Model
 
     public function penilaianKarya()
     {
-        return $this->belongsTo(PenilaianKarya::class, 'penilaian_karya_id', 'id');
+        return $this->belongsTo(PenilaianKarya::class);
     }
 }

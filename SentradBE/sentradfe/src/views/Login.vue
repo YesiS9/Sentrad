@@ -50,6 +50,7 @@ export default {
 
                     if (seniman_id !== null) {
                         localStorage.setItem('seniman_id', seniman_id);
+                        console.log('seniman: ',seniman_id)
                     } else {
                         localStorage.removeItem('seniman_id');
                     }

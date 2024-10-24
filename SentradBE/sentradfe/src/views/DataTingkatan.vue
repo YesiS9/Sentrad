@@ -220,10 +220,10 @@
             }
 
             .edit-btn {
-                background-color: #4caf50;
+                background-color: #f7941e;
 
                 &:hover {
-                    background-color: #45a049;
+                    background-color: #f7941e;
                 }
 
                 .material-icons {

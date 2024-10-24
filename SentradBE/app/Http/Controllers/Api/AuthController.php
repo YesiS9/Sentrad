@@ -21,9 +21,10 @@ class AuthController extends Controller{
     {
         try {
             $validator = Validator::make($request->all(), [
-                'username' => 'required|string|max:255',
+                'username' => 'required|string|max:255|unique:users',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
+                'foto' => 'nullable|file|image|max:20480',
             ]);
 
             if ($validator->fails()) {
@@ -33,18 +34,31 @@ class AuthController extends Controller{
             try {
                 $role = Role::where('nama_role', 'seniman')->firstOrFail();
 
+                // Handle foto file upload
+                $fotoPath = 'profil_user/user.jpg'; // Default photo path
+                if ($request->hasFile('foto')) {
+                    $file = $request->file('foto');
+                    if ($file->isValid()) {
+                        $fotoPath = $file->store('profil_user', 'public');
+                    }
+                }
+
+
+                // Create user
                 $user = User::create([
                     'username' => $request->username,
                     'email' => $request->email,
                     'password' => Hash::make($request->password),
+                    'foto' => $fotoPath,
                 ]);
 
-                $userRole = UserRole::create([
+                // Assign role to user
+                UserRole::create([
                     'user_id' => $user->id,
                     'role_id' => $role->id,
                 ]);
 
-                // Trigger the registered event and send email verification notification
+                // Send email verification
                 event(new Registered($user));
                 $user->sendEmailVerificationNotification();
 
@@ -63,12 +77,13 @@ class AuthController extends Controller{
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
             return response()->json([
-                'data' => null,
                 'status' => 'error',
                 'message' => 'Error during registration: ' . $e->getMessage(),
             ], 500);
         }
     }
+
+
 
 
     public function login(Request $request)

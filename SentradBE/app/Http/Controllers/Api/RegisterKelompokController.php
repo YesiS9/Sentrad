@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RegistrasiKelompok;
 use App\Models\Seniman;
 use App\Models\KategoriSeni;
+use App\Models\Penilai;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,13 +49,34 @@ class RegisterKelompokController extends Controller
         }
     }
 
-    public function indexForPenilai(Request $request)
+    public function indexForPenilai(Request $request, $penilai_id)
     {
         try {
             $perPage = $request->input('per_page', 10);
 
-            $register = RegistrasiKelompok::where('status_kelompok', 1)
+            $penilai = Penilai::find($penilai_id);
+            if (!$penilai) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Penilai tidak ditemukan',
+                ], 404);
+            }
+
+            $kategoriIdPenilai = $penilai->kategori_id;
+            if (!$kategoriIdPenilai) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Penilai tidak memiliki kategori ID',
+                ], 404);
+            }
+
+            $register = RegistrasiKelompok::where('status_kelompok', 'Dalam proses')
                 ->whereNull('deleted_at')
+                ->whereHas('seniman', function ($query) use ($kategoriIdPenilai) {
+                    $query->where('kategori_id', $kategoriIdPenilai);
+                })
                 ->with('seniman:id,nama_seniman')
                 ->paginate($perPage);
 
@@ -87,7 +109,6 @@ class RegisterKelompokController extends Controller
             ], 500);
         }
     }
-
 
     public function getRegistrasiKelompok()
     {
@@ -153,7 +174,6 @@ class RegisterKelompokController extends Controller
                 'status_kelompok' => 'required',
             ]);
 
-
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
                 return response()->json([
@@ -174,7 +194,6 @@ class RegisterKelompokController extends Controller
                 ], 401);
             }
 
-            // Add kategori_id to storeData
             $kategori = KategoriSeni::where('nama_kategori', $storeData['nama_kategori'])->first();
             if (!$kategori) {
                 Log::error('Kategori tidak ditemukan');
@@ -184,8 +203,8 @@ class RegisterKelompokController extends Controller
                     'message' => 'Kategori tidak ditemukan',
                 ], 400);
             }
-            $storeData['kategori_id'] = $kategori->id;
 
+            $storeData['kategori_id'] = $kategori->id;
             $storeData['tgl_terbentuk'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_terbentuk'])->format('Y-m-d');
             $storeData['seniman_id'] = $seniman->id;
 
@@ -194,9 +213,11 @@ class RegisterKelompokController extends Controller
             Log::info('Data Registrasi Kelompok Berhasil Ditambahkan');
             return response()->json([
                 'data' => $register,
+                'kelompok_id' => $register->id,
                 'status' => 'success',
                 'message' => 'Data Registrasi Kelompok Berhasil Ditambahkan',
             ], 200);
+
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
             return response()->json([
@@ -206,6 +227,7 @@ class RegisterKelompokController extends Controller
             ], 500);
         }
     }
+
 
 
 
@@ -282,12 +304,9 @@ class RegisterKelompokController extends Controller
     }
 
 
-
-
     public function show($id){
         try {
-            $register = RegistrasiKelompok::whereNull('deleted_at')->find($id);
-
+            $register = RegistrasiKelompok::with('kategoriSeni')->where('id', $id)->whereNull('deleted_at')->find($id);
             if (!$register) {
                 return response()->json([
                     'data' => null,
@@ -440,12 +459,10 @@ class RegisterKelompokController extends Controller
     public function updateByAdmin(Request $request, $id)
     {
         try {
-            $updateData = $request->all();
-
-            $validate = Validator::make($updateData, [
+            $validate = Validator::make($request->all(), [
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'nama_seniman' => 'required|exists:seniman,nama_seniman',
-                'nama_kelompok' => 'required',
+                'nama_kelompok' => 'required|unique:registrasi_kelompoks,nama_kelompok,' . $id,
                 'tgl_terbentuk' => 'required|date_format:d/m/Y',
                 'alamat_kelompok' => 'required',
                 'deskripsi_kelompok' => 'required',
@@ -464,23 +481,9 @@ class RegisterKelompokController extends Controller
                 ], 400);
             }
 
-            $seniman = Seniman::where('nama_seniman', $request->nama_seniman)->first();
-            $kategori = KategoriSeni::where('nama_kategori', $storeData['nama_kategori'])->first();
-
-            if (!$seniman) {
-                Log::error('Seniman not found with nama_seniman: ' . $request->nama_seniman);
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'Seniman not found',
-                ], 404);
-            }
-
-
             $register = RegistrasiKelompok::find($id);
-
             if (!$register) {
-                Log::error('Registrasi Kelompok not found with ID: ' . $id);
+                Log::error('Data Registrasi Kelompok tidak ditemukan dengan ID: ' . $id);
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
@@ -488,34 +491,59 @@ class RegisterKelompokController extends Controller
                 ], 404);
             }
 
+
+            $seniman = Seniman::where('nama_seniman', $request->nama_seniman)->first();
+            if (!$seniman) {
+                Log::error('Seniman tidak ditemukan dengan nama_seniman: ' . $request->nama_seniman);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Seniman tidak ditemukan',
+                ], 404);
+            }
+
+            $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->first();
+            if (!$kategori) {
+                Log::error('Kategori Seni tidak ditemukan dengan nama_kategori: ' . $request->nama_kategori);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Kategori Seni tidak ditemukan',
+                ], 404);
+            }
+
+
+            $tgl_terbentuk = Carbon::createFromFormat('d/m/Y', $request->tgl_terbentuk)->format('Y-m-d');
+
             $register->update([
-                'nama_kelompok' => $storeData['nama_kelompok'],
-                'tgl_terbentuk' => Carbon::createFromFormat('d/m/Y', $storeData['tgl_terbentuk'])->format('Y-m-d'),
-                'alamat_kelompok' => $storeData['alamat_kelompok'],
-                'deskripsi_kelompok' => $storeData['deskripsi_kelompok'],
-                'noTelp_kelompok' => $storeData['noTelp_kelompok'],
-                'email_kelompok' => $storeData['email_kelompok'],
-                'jumlah_anggota' => $storeData['jumlah_anggota'],
-                'status_kelompok' => $storeData['status_kelompok'],
-                'seniman_id' => $seniman->id,
                 'kategori_id' => $kategori->id,
+                'seniman_id' => $seniman->id,
+                'nama_kelompok' => $request->nama_kelompok,
+                'tgl_terbentuk' => $tgl_terbentuk,
+                'alamat_kelompok' => $request->alamat_kelompok,
+                'deskripsi_kelompok' => $request->deskripsi_kelompok,
+                'noTelp_kelompok' => $request->noTelp_kelompok,
+                'email_kelompok' => $request->email_kelompok,
+                'jumlah_anggota' => $request->jumlah_anggota,
+                'status_kelompok' => $request->status_kelompok,
             ]);
 
-            Log::info('Data Registrasi Kelompok Berhasil Diupdate');
+            Log::info('Data Registrasi Kelompok berhasil diupdate dengan ID: ' . $id);
             return response()->json([
                 'data' => $register,
                 'status' => 'success',
-                'message' => 'Data Registrasi Kelompok Berhasil Diupdate',
+                'message' => 'Data Registrasi Kelompok berhasil diupdate',
             ], 200);
         } catch (\Exception $e) {
-            Log::error('Exception Error: ' . $e->getMessage());
+            Log::error('Exception error: ' . $e->getMessage());
             return response()->json([
                 'data' => null,
                 'status' => 'error',
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
+
 
 
 

@@ -57,7 +57,7 @@ const formData = reactive({
     judul_karya: '',
     deskripsi_karya: '',
     tgl_pembuatan: '',
-    media_karya: [], // Array to hold multiple files
+    media_karya: [],
     bentuk_karya: '',
     status_karya: '1',
 });
@@ -68,7 +68,7 @@ const route = useRoute();
 const router = useRouter();
 const mode = ref('add');
 const toast = useToast();
-const isEdit = ref(false); // Define isEdit
+const isEdit = ref(false);
 
 const getKarya = async (id) => {
   try {
@@ -127,7 +127,6 @@ const handleSubmit = async () => {
       }
     });
 
-    // Debugging FormData
     for (let pair of formDataObj.entries()) {
       console.log(`${pair[0]}: ${pair[1]}`);
     }
@@ -260,10 +259,10 @@ button {
         margin-left: 0.5rem;
 }
 button[type="submit"] {
-    background-color: #f7941e;
+    background-color: #45a049;
 }
 button[type="submit"]:hover {
-    background-color: #e68318;
+    background-color: #45a049;
 }
 
 button[type="button"] {

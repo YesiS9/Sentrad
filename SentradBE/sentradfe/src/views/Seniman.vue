@@ -36,6 +36,10 @@
       };
     },
     methods: {
+      formatDate(date) {
+        const [year, month, day] = date.split('-');
+        return `${day}/${month}/${year}`;
+      },
       async createSeniman() {
         const toast = useToast();
         try {
@@ -45,19 +49,24 @@
             return;
           }
 
-          const response = await axios.post(
-            'http://localhost:8000/api/seniman',
-            {
-              user_id: user_id,
-              nama_seniman: this.nama_seniman,
-              tgl_lahir: this.tgl_lahir,
-              deskripsi_seniman: this.deskripsi_seniman,
-              alamat_seniman: this.alamat_seniman,
-              noTelp_seniman: this.noTelp_seniman,
-              lama_pengalaman: this.lama_pengalaman,
-              status_seniman: this.status_seniman,
-            }
-          );
+          // Ensure all required fields are filled
+          if (!this.nama_seniman || !this.tgl_lahir || !this.deskripsi_seniman || !this.alamat_seniman || !this.noTelp_seniman || !this.lama_pengalaman) {
+            toast.error('Please fill in all required fields.');
+            return;
+          }
+
+          const formattedDate = this.formatDate(this.tgl_lahir);
+
+          const response = await axios.post('http://localhost:8000/api/seniman', {
+            user_id: user_id,
+            nama_seniman: this.nama_seniman,
+            tgl_lahir: formattedDate,
+            deskripsi_seniman: this.deskripsi_seniman,
+            alamat_seniman: this.alamat_seniman,
+            noTelp_seniman: this.noTelp_seniman,
+            lama_pengalaman: this.lama_pengalaman,
+            status_seniman: this.status_seniman,
+          });
 
           if (response.status === 200 || response.status === 201) {
             toast.success(response.data.message);
@@ -67,15 +76,15 @@
           }
         } catch (error) {
           if (error.response) {
-            toast.error('Server responded with: ' + error.response.status + ' ' + error.response.data.message);
+            toast.error('Server responded with: ' + error.response.status + ' ' + (error.response.data.message || 'Unknown error'));
           } else if (error.request) {
             toast.error('No response received: ' + error.request);
           } else {
             toast.error('Error: ' + error.message);
           }
         }
-      },
-    },
+      }
+    }
   };
   </script>
 

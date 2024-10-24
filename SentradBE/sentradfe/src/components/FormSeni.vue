@@ -93,16 +93,18 @@
   const handleSubmit = async () => {
     const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
 
-    const result = await Swal.fire({
-        title: `Apakah Anda yakin ingin ${action} seni ini?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Ya',
-        cancelButtonText: 'Tidak',
-    });
+    if (mode.value === 'edit') {
+        const result = await Swal.fire({
+            title: `Apakah Anda yakin ingin ${action} seni ini?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
 
-    if (!result.isConfirmed) {
-        return;
+        if (!result.isConfirmed) {
+            return;
+        }
     }
     try {
       let response;
@@ -116,15 +118,12 @@
       }
 
       if (response.status === 200 && response.data.status === 'success') {
-        if (mode.value === 'add') {
-            console.log('Adding seni:', response.data.data);
+            toast.success(`Berhasil ${action} seni!`);
+            router.push({ name: 'DataSeni' });
+            closeForm();
         } else {
-            console.log('Editing seni:', response.data.data);
+            toast.error(response.data.message || `Gagal ${action} seni!`);
         }
-        router.push({ name: 'DataSeni' });
-      } else {
-        console.error(mode.value === 'add' ? 'Failed to add seni:' : 'Failed to edit seni:', response.data.message);
-      }
     } catch (error) {
       console.error('Error saving data:', error.message);
       if (error.response) {
@@ -207,11 +206,11 @@ main{
     }
 
     button[type="submit"] {
-      background-color: #f7941e;
+      background-color: #45a049;
     }
 
     button[type="submit"]:hover {
-      background-color: #f7941e;
+      background-color: #45a049;
     }
 
     button[type="button"] {

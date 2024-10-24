@@ -96,7 +96,7 @@
       const response = await axios.delete(`/seni/${id}`);
       if (response.status === 200 && response.data.status === 'success') {
         Swal.fire('Seni berhasil dihapus', '', 'success');
-        getSeni(); // Refresh penilais list after deletion
+        getSeni();
       } else {
         Swal.fire('Gagal menghapus seni', response.data.message, 'error');
         console.error('Failed to delete seni:', response.data.message);
@@ -117,11 +117,10 @@
   const nextPage = () => {
     if (currentPage.value < totalPages.value) {
       currentPage.value++;
-      getSeni(); // Fetch next page data
+      getSeni();
     }
   };
 
-  // Load data on component mount
   onMounted(() => {
     if (!localStorage.getItem('token')) {
       alert('Please login first.');
@@ -217,10 +216,10 @@
       }
 
       .edit-btn {
-        background-color: #4caf50;
+        background-color: #f7941e;
 
         &:hover {
-          background-color: #45a049;
+          background-color: #f7941e;
         }
 
         .material-icons {

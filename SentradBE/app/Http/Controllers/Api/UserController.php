@@ -10,6 +10,7 @@ use App\Models\UserRole;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -64,13 +65,16 @@ class UserController extends Controller
                 ], 404);
             }
 
-            $users = User::whereHas('roles', function ($query) use ($role) {
+            $usernames = User::whereHas('roles', function ($query) use ($role) {
                 $query->where('role_id', $role->id);
-            })->get();
+            })
+            ->whereNull('deleted_at')
+            ->whereDoesntHave('penilai')
+            ->pluck('username');
 
-            Log::info('Users with role Penilai:', $users->toArray());
+            Log::info('Users with role Penilai:', $usernames->toArray());
             return response()->json([
-                'data' => $users,
+                'data' => $usernames,
                 'status' => 'success',
                 'message' => 'Data User dengan role Penilai Berhasil Ditampilkan',
             ], 200);
@@ -131,6 +135,7 @@ class UserController extends Controller
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8',
                 'nama_role' => 'required|string|exists:roles,nama_role',
+                'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:10240',
             ]);
 
             if ($validator->fails()) {
@@ -142,12 +147,20 @@ class UserController extends Controller
 
             $role = Role::where('nama_role', $request->nama_role)->firstOrFail();
 
-            $user = User::create([
-                'username' => $request->username,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
-                'email_verified_at' => now(), // Tanpa verifikasi, langsung dianggap terverifikasi
-            ]);
+            $fotoPath = 'profil_user/user.jpg';
+            if ($request->hasFile('foto')) {
+                $file = $request->file('foto');
+                if ($file->isValid()) {
+                    $fotoPath = $file->store('profil_user', 'public');
+                }
+            }
+
+            $storeData = $request->except('foto');
+            $storeData['password'] = Hash::make($request->password);
+            $storeData['email_verified_at'] = now();
+            $storeData['foto'] = $fotoPath;
+
+            $user = User::create($storeData);
 
             UserRole::create([
                 'user_id' => $user->id,
@@ -172,6 +185,8 @@ class UserController extends Controller
     }
 
 
+
+
     public function store(Request $request)
     {
         try {
@@ -179,7 +194,8 @@ class UserController extends Controller
                 'username' => 'required|string|max:255|unique:users',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8',
-                'nama_role' => 'required|string|exists:roles,nama_role', // Assuming roles table has 'nama_role' column
+                'nama_role' => 'required|string|exists:roles,nama_role',
+                'foto' => 'nullable|file|image|max:20480',
             ]);
 
             if ($validator->fails()) {
@@ -189,46 +205,50 @@ class UserController extends Controller
                 ], 422);
             }
 
-            try {
-                $role = Role::where('nama_role', $request->nama_role)->firstOrFail();
+            $role = Role::where('nama_role', $request->nama_role)->firstOrFail();
 
-                $user = User::create([
-                    'username' => $request->username,
-                    'email' => $request->email,
-                    'password' => Hash::make($request->password),
-                ]);
-
-                UserRole::create([
-                    'user_id' => $user->id,
-                    'role_id' => $role->id,
-                ]);
-
-                Log::info('User added successfully', ['user' => $user]);
-
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'User added successfully',
-                    'data' => $user,
-                ], 201);
-            } catch (\Exception $e) {
-                Log::error('Error adding user: ' . $e->getMessage());
-
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Error adding user: ' . $e->getMessage(),
-                ], 500);
+            $fotoPath = null;
+            if ($request->hasFile('foto')) {
+                foreach ($request->file('foto') as $file) {
+                    if ($file->isValid()) {
+                        $fotoPath = $file->store('profil_user', 'public');
+                    }
+                }
             }
 
-        } catch (\Exception $e) {
-            Log::error('Exception Error: ' . $e->getMessage());
+            if (is_null($fotoPath)) {
+                $fotoPath = 'profil_user/user.jpg';
+            }
+
+            $user = User::create([
+                'username' => $request->username,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'foto' => $fotoPath,
+            ]);
+
+            UserRole::create([
+                'user_id' => $user->id,
+                'role_id' => $role->id,
+            ]);
+
+            Log::info('User added successfully', ['user' => $user]);
 
             return response()->json([
-                'data' => null,
+                'status' => 'success',
+                'message' => 'User added successfully',
+                'data' => $user,
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error adding user: ' . $e->getMessage());
+
+            return response()->json([
                 'status' => 'error',
                 'message' => 'Error adding user: ' . $e->getMessage(),
             ], 500);
         }
     }
+
 
 
     public function update(Request $request, $id)
@@ -248,6 +268,7 @@ class UserController extends Controller
                 'email' => 'required|string|email|max:255|unique:users,email,' . $id,
                 'password' => 'sometimes|nullable|string|min:8',
                 'nama_role' => 'required|string|max:255',
+                'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:10240',
             ]);
 
             if ($validate->fails()) {
@@ -261,17 +282,33 @@ class UserController extends Controller
             $user->email = $request->email;
 
             if ($request->filled('password')) {
-                $user->password = Hash::make($request->password); // Hash the password
+                $user->password = Hash::make($request->password);
             }
 
             $role = Role::where('nama_role', $request->nama_role)->first();
             if ($role) {
-                UserRole::where('user_id', $user->id)->delete(); // Remove existing roles
+                UserRole::where('user_id', $user->id)->delete();
                 UserRole::create([
                     'user_id' => $user->id,
                     'role_id' => $role->id,
                 ]);
             }
+
+            if ($request->hasFile('foto')) {
+                if ($request->file('foto')->isValid()) {
+                    if ($user->foto && $user->foto !== 'profil_user/user.jpg') {
+                        Storage::disk('public')->delete($user->foto);
+                    }
+
+                    $fotoPath = $request->file('foto')->store('profil_user', 'public');
+                    $user->foto = $fotoPath;
+                }
+            } else {
+                if (is_null($user->foto) || $user->foto === 'profil_user/user.jpg') {
+                    $user->foto = 'profil_user/user.jpg';
+                }
+            }
+
 
             $user->save();
 
@@ -287,6 +324,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
 
 
     public function show($id){

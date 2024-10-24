@@ -4,7 +4,6 @@
         <div class="auth-form">
           <h3>{{ mode === 'add' ? 'Tambah Profile Seniman' : 'Edit Profile Seniman' }}</h3>
           <form @submit.prevent="handleSubmit">
-            <!-- Conditionally render the username as a read-only input in 'edit' mode -->
             <div v-if="mode === 'edit'" class="form-group">
               <label for="username">Username</label>
               <input
@@ -33,7 +32,6 @@
               ></Multiselect>
             </div>
 
-            <!-- Rest of the form fields -->
             <div class="form-group">
               <label for="nama_seniman">Nama Lengkap Seniman</label>
               <input type="text" id="nama_seniman" v-model="formData.nama_seniman" placeholder="Nama Lengkap" required>
@@ -140,23 +138,25 @@ const formatDate = (date) => {
 const handleSubmit = async () => {
   const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
 
-  const result = await Swal.fire({
-    title: `Apakah Anda yakin ingin ${action} seniman ini?`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Ya',
-    cancelButtonText: 'Tidak',
-  });
+  if (mode.value === 'edit') {
+        const result = await Swal.fire({
+            title: `Apakah Anda yakin ingin ${action} seniman ini?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak',
+        });
 
-  if (!result.isConfirmed) {
-    return;
-  }
+        if (!result.isConfirmed) {
+            return;
+        }
+    }
 
   try {
     const formattedData = { ...formData, tgl_lahir: formatDate(formData.tgl_lahir) };
     let response;
     if (mode.value === 'add') {
-      response = await axios.post('/seniman', formattedData);
+      response = await axios.post('/seniman/storeByAdmin', formattedData);
     } else if (mode.value === 'edit' && formData.id) {
       response = await axios.put(`/seniman/${formData.id}`, formattedData);
     } else {
@@ -261,11 +261,11 @@ main{
     }
 
     button[type="submit"] {
-      background-color: #f7941e;
+      background-color: #45a049;
     }
 
     button[type="submit"]:hover {
-      background-color: #f7941e;
+      background-color: #45a049;
     }
 
     button[type="button"] {

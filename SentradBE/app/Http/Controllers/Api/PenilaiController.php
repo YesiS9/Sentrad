@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Penilai;
 use App\Models\KategoriSeni;
 use App\Models\User;
+use App\Models\KuotaPenilai;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -60,11 +61,11 @@ class PenilaiController extends Controller
                 'nama_penilai' => 'required|string|max:100',
                 'alamat_penilai' => 'required|string',
                 'noTelp_penilai' => 'required|regex:/^08\d{8,12}$/',
-                'nama_seni' => 'required|exists:senis,nama_seni',
+                'nama_seni' => 'required',//|exists:senis,nama_seni
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'lembaga' => 'required|string|max:100',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
-                'status_penilai' => 'required|string|in:aktif,tidak aktif',
+                'status_penilai' => 'required|string|in:Aktif,Nonaktif',
                 'kuota' => 'required|numeric',
             ]);
 
@@ -79,7 +80,6 @@ class PenilaiController extends Controller
 
             $user = User::where('username', $storeData['username'])->first();
             $kategori = KategoriSeni::where('nama_kategori', $storeData['nama_kategori'])->first();
-
 
             $existingPenilai = Penilai::where('user_id', $user->id)->first();
             if ($existingPenilai) {
@@ -99,11 +99,18 @@ class PenilaiController extends Controller
 
             $penilai = Penilai::create($storeData);
 
+            $currentMonth = Carbon::now()->startOfMonth();
+            KuotaPenilai::create([
+                'penilai_id' => $penilai->id,
+                'periode_bulan' => $currentMonth,
+                'kuota_terpakai' => 0,
+            ]);
+
             Log::info('Data Penilai Berhasil Ditambahkan');
             return response()->json([
                 'data' => $penilai,
                 'status' => 'success',
-                'message' => 'Data Penilai Berhasil Ditambahkan',
+                'message' => 'Data Penilai Berhasil Ditambahkan dan Kuota Penilaian Ditambahkan',
             ], 200);
         } catch (\Exception $e) {
             Log::error('Exception Error: ' . $e->getMessage());
@@ -114,11 +121,6 @@ class PenilaiController extends Controller
             ], 500);
         }
     }
-
-
-
-
-
 
 
     public function show($id){
@@ -169,10 +171,10 @@ class PenilaiController extends Controller
                 'alamat_penilai' => 'required|string',
                 'noTelp_penilai' => 'required|regex:/^08\d{8,12}$/',
                 'bidang_ahli' => 'required|string',
-                'nama_kategori' => 'required|exists:kategori_senis,nama_kategori', // Corrected table name here
+                'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'lembaga' => 'required|string|max:100',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
-                'status_penilai' => 'required|string|in:aktif,tidak aktif',
+                'status_penilai' => 'required|string|in:Aktif,Nonaktif',
                 'kuota' => 'required|numeric',
             ]);
 
@@ -185,17 +187,21 @@ class PenilaiController extends Controller
                 ], 400);
             }
 
+
             $user = User::where('username', $request->username)->first();
             $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->first();
-            if (!$user) {
+
+
+            try {
+                $tgl_lahir = Carbon::createFromFormat('d/m/Y', $request->tgl_lahir)->format('Y-m-d');
+            } catch (\Exception $e) {
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
-                    'message' => 'User not found',
-                ], 404);
+                    'message' => 'Invalid date format for tgl_lahir',
+                ], 400);
             }
 
-            $tgl_lahir = Carbon::createFromFormat('d/m/Y', $request->tgl_lahir)->format('Y-m-d');
 
             $penilai->user_id = $user->id;
             $penilai->kategori_id = $kategori->id;
@@ -225,6 +231,7 @@ class PenilaiController extends Controller
             ], 500);
         }
     }
+
 
 
 
@@ -316,4 +323,7 @@ class PenilaiController extends Controller
             ], 500);
         }
     }
+
+    
+
 }

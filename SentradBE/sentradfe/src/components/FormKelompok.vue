@@ -144,7 +144,7 @@ const getKategori = async () => {
 
 const getKelompok = async (id) => {
     try {
-        const response = await axios.get(`/registerIndividu/showByAdmin/${id}`);
+        const response = await axios.get(`/registerKelompok/showByAdmin/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
         const kelompokData = response.data.data;
         console.log('Kelompok response:', response.data);
@@ -177,7 +177,7 @@ const handleSubmit = async () => {
     const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
 
     const result = await Swal.fire({
-        title: `Apakah Anda yakin ingin ${action} registrasi individu ini?`,
+        title: `Apakah Anda yakin ingin ${action} registrasi kelompok ini?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Ya',
@@ -196,7 +196,7 @@ const handleSubmit = async () => {
         if (mode.value === 'add') {
             response = await axios.post('/registerKelompok/storeByAdmin', formattedData);
         } else if (mode.value === 'edit' && formData.id) {
-            response = await axios.put(`/registerIndividu/updateByAdmin//${formData.id}`, formattedData);
+            response = await axios.put(`/registerKelompok/storeByAdmin/${formData.id}`, formattedData);
         } else {
             console.error('Invalid mode or missing formData.id for edit.');
         return;
@@ -313,11 +313,11 @@ main {
   }
 
   button[type='submit'] {
-    background-color: #f7941e;
+    background-color: #45a049;
   }
 
   button[type='submit']:hover {
-    background-color: #f7941e;
+    background-color: #45a049;
   }
 
   button[type='button'] {

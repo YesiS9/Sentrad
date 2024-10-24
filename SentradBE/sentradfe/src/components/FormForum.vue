@@ -1,68 +1,44 @@
 <template>
-    <div class="form-karya">
-      <h2>{{ isEdit ? 'Edit Karya' : 'Tambah Karya' }}</h2>
-      <form @submit.prevent="handleSubmit">
-        <div class="form-group">
-          <label for="judul_portofolio">Judul Portofolio</label>
-          <Multiselect
-            v-model="formData.judul_portofolio"
-            :options="portofolioOptions"
-            :searchable="true"
-            :close-on-select="true"
-            :clear-on-select="false"
-            :preserve-search="true"
-            placeholder="Pilih atau cari judul portofolio"
-            label="judul_portofolio"
-            track-by="judul_portofolio"
-          ></Multiselect>
+    <main>
+      <div class="auth-container">
+        <div class="auth-form">
+          <h3>{{ mode === 'add' ? 'Tambah Forum' : 'Edit Forum' }}</h3>
+          <form @submit.prevent="handleSubmit">
+            <div class="form-group">
+              <label for="kategori">Kategori</label>
+              <Multiselect
+                v-model="formData.nama_kategori"
+                :options="kategoriOptions"
+                :searchable="true"
+                :close-on-select="true"
+                :clear-on-select="false"
+                :preserve-search="true"
+                placeholder="Pilih atau cari kategori Seni"
+                label="nama_kategori"
+                track-by="nama_kategori"
+                class="custom-multiselect"
+              ></Multiselect>
+            </div>
+
+            <div class="form-group">
+              <label for="judul_forum">Judul Forum</label>
+              <input
+                type="text"
+                id="judul_forum"
+                v-model="formData.judul_forum"
+                placeholder="Judul Forum"
+                required
+              />
+            </div>
+
+            <div class="form-actions">
+              <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
+              <button type="button" @click="closeForm">Batal</button>
+            </div>
+          </form>
         </div>
-        <div class="form-group">
-          <label for="nama_seni">Nama Seni</label>
-          <Multiselect
-            v-model="formData.nama_seni"
-            :options="seniOptions"
-            :searchable="true"
-            :close-on-select="true"
-            :clear-on-select="false"
-            :preserve-search="true"
-            placeholder="Pilih atau cari nama seni"
-            label="nama_seni"
-            track-by="nama_seni"
-          ></Multiselect>
-        </div>
-        <div class="form-group">
-          <label for="judul_karya">Judul Karya</label>
-          <input type="text" v-model="formData.judul_karya" placeholder="Judul Karya" required>
-        </div>
-        <div class="form-group">
-          <label for="deskripsi_karya">Deskripsi Karya</label>
-          <textarea v-model="formData.deskripsi_karya" placeholder="Deskripsi Karya" required></textarea>
-        </div>
-        <div class="form-group">
-          <label for="tgl_pembuatan">Tanggal Pembuatan</label>
-          <input type="date" v-model="formData.tgl_pembuatan" required>
-        </div>
-        <div class="form-group">
-          <label for="media_karya">Media Karya</label>
-          <input type="file" @change="handleFileChange" required>
-        </div>
-        <div class="form-group">
-          <label for="bentuk_karya">Bentuk Karya</label>
-          <input type="text" v-model="formData.bentuk_karya" placeholder="Bentuk Karya" required>
-        </div>
-        <div class="form-group">
-          <label for="status_karya">Status Karya</label>
-          <select v-model="formData.status_karya" required>
-            <option value="1">Aktif</option>
-            <option value="0">Nonaktif</option>
-          </select>
-        </div>
-        <div class="form-actions">
-          <button type="submit">{{ isEdit ? 'Simpan' : 'Tambah' }}</button>
-          <button type="button" @click="closeForm">Batal</button>
-        </div>
-      </form>
-    </div>
+      </div>
+    </main>
   </template>
 
   <script setup>
@@ -72,83 +48,65 @@
   import Multiselect from '@vueform/multiselect';
   import '@vueform/multiselect/themes/default.css';
   import Swal from 'sweetalert2';
-  import { useToast } from 'vue-toastification';
 
   const formData = reactive({
-    judul_portofolio: '',
-    nama_seni: '',
-    judul_karya: '',
-    deskripsi_karya: '',
-    tgl_pembuatan: '',
-    media_karya: null,
-    bentuk_karya: '',
-    status_karya: 1,
+    seniman_id: '',
+    nama_kategori: '',
+    judul_forum: '',
+    status_forum: 1,
   });
-  const portofolioOptions = ref([]);
-  const seniOptions = ref([]);
+
+
+  const kategoriOptions = ref([]);
   const route = useRoute();
   const router = useRouter();
-  const isEdit = ref(false);
-  const toast = useToast();
+  const mode = ref('add');
 
-  const getPortofolioOptions = async () => {
+
+  const getKategori = async () => {
     try {
-      const response = await axios.get('/portofolio');
+      const response = await axios.get('/nama-kategori');
       if (response.status === 200 && response.data.status === 'success') {
-        portofolioOptions.value = response.data.data.map(portofolio => portofolio.judul_portofolio);
+        kategoriOptions.value = response.data.data.map(kategori => kategori.nama_kategori);
       } else {
-        console.error('Failed to fetch portofolio options:', response.data.message);
+        console.error('Failed to fetch kategori seni options:', response.data.message);
       }
     } catch (error) {
-      console.error('Error fetching portofolio options:', error.message);
+      console.error('Error fetching kategori seni options:', error.message);
     }
   };
 
-  const getSeniOptions = async () => {
+  const getForum = async (id) => {
     try {
-      const response = await axios.get('/nama-seni');
+      const response = await axios.get(`/forum/${id}`);
       if (response.status === 200 && response.data.status === 'success') {
-        seniOptions.value = response.data.data.map(seni => seni.nama_seni);
+        const forumData = response.data.data;
+        formData.id = forumData.id;
+        Object.assign(formData, forumData);
+        mode.value = 'edit';
       } else {
-        console.error('Failed to fetch seni options:', response.data.message);
+        console.error('Failed to fetch forum:', response.data.message);
       }
     } catch (error) {
-      console.error('Error fetching seni options:', error.message);
-    }
-  };
-
-  const getKarya = async (id) => {
-    try {
-      const response = await axios.get(`/karya/${id}`);
-      if (response.status === 200 && response.data.status === 'success') {
-        Object.assign(formData, response.data.data);
-        isEdit.value = true;
-      } else {
-        console.error('Failed to fetch karya:', response.data.message);
-      }
-    } catch (error) {
-      console.error('Error fetching karya:', error.message);
+      console.error('Error fetching forum:', error.message);
     }
   };
 
   onMounted(async () => {
-    await getPortofolioOptions();
-    await getSeniOptions();
+    formData.seniman_id = localStorage.getItem('seniman_id');
+    await getKategori();
     const { id } = route.params;
     if (id) {
-      getKarya(id);
+      await getForum(id);
     }
   });
 
-  const handleFileChange = (event) => {
-    formData.media_karya = event.target.files[0];
-  };
 
   const handleSubmit = async () => {
-    const action = isEdit.value ? 'mengedit' : 'menambahkan';
+    const action = mode.value === 'add' ? 'Tambah' : 'Edit';
 
     const result = await Swal.fire({
-      title: `Apakah Anda yakin ingin ${action} karya ini?`,
+      title: `Apakah Data Forum yang anda ${action} sudah benar?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Ya',
@@ -160,108 +118,118 @@
     }
 
     try {
-      const formDataObj = new FormData();
-      Object.keys(formData).forEach(key => {
-        formDataObj.append(key, formData[key]);
-      });
-
       let response;
-      if (!isEdit.value) {
-        response = await axios.post('/karya', formDataObj);
-      } else {
-        response = await axios.post(`/karya/${formData.id}`, formDataObj);
+      if (mode.value === 'add') {
+        response = await axios.post('/forum', formData);
+      } else if (mode.value === 'edit' && formData.id) {
+        response = await axios.put(`/forum/${formData.id}`, formData);
       }
-
+      console.log('Server response:', response);
       if (response.status === 200 && response.data.status === 'success') {
-        toast.success(`Berhasil ${isEdit.value ? 'mengedit' : 'menambahkan'} karya!`);
-        router.push({ name: 'DataKarya' });
+        router.push({ name: 'Forum' });
         closeForm();
       } else {
-        toast.error(response.data.message || `Gagal ${isEdit.value ? 'mengedit' : 'menambahkan'} karya!`);
+        console.error('Error:', response.data.message);
       }
     } catch (error) {
       console.error('Error saving data:', error.message);
       if (error.response) {
         console.error('Server response:', error.response.data);
-        toast.error(error.response.data.message || 'Terjadi kesalahan saat menyimpan data!');
-      } else {
-        toast.error('Terjadi kesalahan saat menyimpan data!');
       }
     }
   };
 
   const closeForm = () => {
-    Object.keys(formData).forEach(key => {
-      formData[key] = '';
-    });
-    formData.status_karya = 1;
-    isEdit.value = false;
-    router.push({ name: 'DataKarya' });
+    formData.seniman_id = '';
+    formData.judul_forum = '';
+    formData.nama_kategori = '';
+    formData.status_forum = 1;
+    mode.value = 'add';
+    router.push({ name: 'Forum' });
   };
   </script>
 
   <style lang="scss" scoped>
-  .form-karya {
+  @import '@vueform/multiselect/themes/default.css';
+
+  main {
+    background-color: #f7941e;
+  }
+
+  .auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f7941e;
+  }
+
+  .auth-form {
     background-color: #fff;
+    width: 90vw;
+    height: 90vw;
+    max-width: 600px;
+    max-height: 500px;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    margin: 2rem auto;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 
-    h2 {
+    h3 {
       margin-bottom: 1rem;
     }
 
     .form-group {
       margin-bottom: 1rem;
       text-align: left;
+      width: 100%;
+    }
 
-      label {
-        display: block;
-        margin-bottom: 0.5rem;
-      }
+    .custom-multiselect {
+      width: 100%;
+    }
 
-      input,
-      textarea,
-      select {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-
-      textarea {
-        resize: vertical;
-      }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
 
     .form-actions {
       margin-top: 1rem;
       text-align: right;
+      width: 100%;
+    }
 
-      button {
-        background-color: #4caf50;
-        color: #fff;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-left: 0.5rem;
-      }
+    button {
+      background-color: #f7941e;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 0.5rem;
+    }
 
-      button[type="submit"]:hover {
-        background-color: #45a049;
-      }
+    button[type="submit"] {
+      background-color: #45a049;
+    }
 
-      button[type="button"] {
-        background-color: #f44336;
-      }
+    button[type="submit"]:hover {
+      background-color: #45a049;
+    }
 
-      button[type="button"]:hover {
-        background-color: #d32f2f;
-      }
+    button[type="button"] {
+      background-color: #f44336;
+    }
+
+    button[type="button"]:hover {
+      background-color: #da190b;
     }
   }
   </style>

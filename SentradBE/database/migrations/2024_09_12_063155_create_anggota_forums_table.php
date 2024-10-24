@@ -13,14 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('anggota_forums', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('username')->unique();
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->string('foto');
-            $table->timestamp('email_verified_at')->nullable();
-            $table->rememberToken();
+            $table->foreignUuid('anggota_id')->references('id')->on('seniman')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('forum_id')->references('id')->on('forums')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->date('tgl_join');
+            $table->string('role');
             $table->timestamps();
             $table->softDeletes($column = 'deleted_at', $precision = 0);
         });
@@ -33,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('anggota_forums');
     }
 };

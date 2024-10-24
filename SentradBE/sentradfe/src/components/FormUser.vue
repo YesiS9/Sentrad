@@ -23,6 +23,12 @@
                             <option v-for="role in roles" :key="role.id" :value="role.nama_role">{{ role.nama_role }}</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="foto">Foto (Optional)</label>
+                        <input type="file" id="foto" @change="handleFileChange" accept="image/*">
+                        <small v-if="errors.foto.length" class="error-text">{{ errors.foto.join(', ') }}</small>
+                    </div>
+
                     <div class="form-actions">
                         <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>
                         <button type="button" @click="closeForm">Batal</button>
@@ -44,9 +50,13 @@ const formData = reactive({
     email: '',
     password: '',
     nama_role: '',
+    foto: '',
 });
 
 const roles = ref([]);
+const errors = reactive({
+    foto: [],
+});
 const route = useRoute();
 const router = useRouter();
 const mode = ref('add');
@@ -65,12 +75,8 @@ const getUser = async (id) => {
         const response = await axios.get(`/user/${id}`);
         if (response.status === 200 && response.data.status === 'success') {
             const userData = response.data.data;
-            Object.assign(formData, {
-                id: userData.id,
-                username: userData.username,
-                email: userData.email,
-                nama_role: userData.nama_role,
-            });
+            Object.assign(formData, userData);
+            console.log('Formdata:', formData);
             mode.value = 'edit';
         } else {
             console.error('Failed to fetch user:', response.data.message);
@@ -87,6 +93,13 @@ onMounted(async () => {
         await getUser(id);
     }
 });
+
+const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    formData.foto = file ? file : null;
+    console.log('File selected:', formData.foto);
+};
+
 
 const handleSubmit = async () => {
     const action = mode.value === 'add' ? 'menambahkan' : 'mengedit';
@@ -105,34 +118,67 @@ const handleSubmit = async () => {
 
     try {
         let response;
+        const formDataToSend = new FormData();
+        formDataToSend.append('username', formData.username);
+        formDataToSend.append('email', formData.email);
+        formDataToSend.append('password', formData.password);
+        formDataToSend.append('nama_role', formData.nama_role);
+
+        if (formData.foto) {
+            formDataToSend.append('foto', formData.foto);
+        }
+
+        const config = {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        };
+
         if (mode.value === 'add') {
-            response = await axios.post('/user/store-byAdmin', formData);
+            response = await axios.post('/user/store-byAdmin', formDataToSend, config);
         } else if (mode.value === 'edit') {
-            response = await axios.put(`/user/${formData.id}`, formData);
-        } else {
-            console.error('Invalid mode:', mode.value);
-            return;
+            response = await axios.put(`/user/${formData.id}`, formDataToSend, config);
         }
 
         if (response.status === 200 && response.data.status === 'success') {
             const userId = response.data.data.id;
             localStorage.setItem('id_user', userId);
-
             router.push({ name: 'DataUser' });
             closeForm();
-        } else {
-            console.error(mode.value === 'add' ? 'Failed to add user:' : 'Failed to edit user:', response.data.message);
         }
     } catch (error) {
-        console.error('Error saving data:', error.message);
+        if (error.response && error.response.status === 422) {
+            const errorMessage = error.response.data.message;
+            console.error('Validation errors details:', errorMessage);
+            if (errorMessage.username) {
+                Swal.fire('Error', `Username error: ${errorMessage.username[0]}`, 'error');
+            }
+            if (errorMessage.email) {
+                Swal.fire('Error', `Email error: ${errorMessage.email[0]}`, 'error');
+            }
+            if (errorMessage.password) {
+                Swal.fire('Error', `Password error: ${errorMessage.password[0]}`, 'error');
+            }
+            if (errorMessage.nama_role) {
+                Swal.fire('Error', `Role error: ${errorMessage.nama_role[0]}`, 'error');
+            }
+            if (errorMessage.foto) {
+                Swal.fire('Error', `Foto error: ${errorMessage.foto[0]}`, 'error');
+            }
+        } else {
+            console.error('Error saving data:', error.message);
+        }
     }
 };
+
+
 
 const closeForm = () => {
     formData.username = '';
     formData.email = '';
     formData.password = '';
     formData.nama_role = '';
+    formData.foto = '';
     mode.value = 'add';
     router.push({ name: 'DataUser' });
 };
@@ -153,9 +199,7 @@ main {
 .auth-form {
     background-color: #fff;
     width: 90vw;
-    height: 90vw;
     max-width: 650px;
-    max-height: 700px;
     padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -175,8 +219,8 @@ main {
         width: 100%;
 
         label {
-        display: block;
-        margin-bottom: 0.5rem;
+            display: block;
+            margin-bottom: 0.5rem;
         }
 
         input[type="text"],
@@ -189,8 +233,6 @@ main {
             border-radius: 4px;
         }
     }
-
-
 
     .form-actions {
         margin-top: 1rem;
@@ -209,11 +251,11 @@ main {
     }
 
     button[type="submit"] {
-        background-color: #f7941e;
+        background-color: #45a049;
     }
 
     button[type="submit"]:hover {
-        background-color: #e6871c;
+        background-color: #45a049;
     }
 
     button[type="button"] {

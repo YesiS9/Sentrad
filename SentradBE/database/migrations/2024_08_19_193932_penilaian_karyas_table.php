@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('penilaian_karyas', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('penilai_id')->references('id')->on('penilais')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('kuota_id')->references('id')->on('kuota_penilais')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignUuid('regisIndividu_id')->nullable()->references('id')->on('registrasi_individus')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignUuid('regisKelompok_id')->nullable()->references('id')->on('registrasi_kelompoks')->cascadeOnDelete()->cascadeOnUpdate();
             $table->foreignUuid('tingkatan_id')->references('id')->on('tingkatans')->cascadeOnDelete()->cascadeOnUpdate();

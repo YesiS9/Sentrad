@@ -12,6 +12,7 @@ class KomenProyek extends Model
     use HasUuids, SoftDeletes, HasFactory;
 
     protected $fillable = [
+        'seniman_id',
         'proyek_id',
         'isi_komenProyek',
         'waktu_komenProyek',

@@ -143,12 +143,12 @@ class SenimanController extends Controller
 
 
             $validate = Validator::make($storeData, [
-                'username' => 'required|string|exists:users,username',
+                'user_id' => 'required|string|exists:users,id',
                 'nama_seniman' => 'required|string',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
                 'deskripsi_seniman' => 'required|string',
                 'alamat_seniman' => 'required|string',
-                'noTelp_seniman' => 'required|string',
+                'noTelp_seniman' => 'required|regex:/^08\d{8,12}$/',
                 'lama_pengalaman' => 'required|integer',
                 'status_seniman' => 'required|boolean',
             ]);
@@ -162,20 +162,6 @@ class SenimanController extends Controller
                     'message' => $validate->errors(),
                 ], 400);
             }
-
-            $user = User::where('username', $storeData['username'])->first();
-
-            if (!$user) {
-                Log::error('User not found for username: ' . $storeData['username']);
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'User not found',
-                ], 404);
-            }
-
-
-            $storeData['user_id'] = $user->id;
 
             $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
 
@@ -214,7 +200,7 @@ class SenimanController extends Controller
             ], 404);
         }
 
-        
+
         $responseData = $seniman->toArray();
         $responseData['username'] = $seniman->user->username;
 

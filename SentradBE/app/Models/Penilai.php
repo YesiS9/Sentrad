@@ -26,10 +26,6 @@ class Penilai extends Model
     ];
 
 
-    public function penilaian_karya()
-    {
-        return $this->hasMany(PenilaianKarya::class);
-    }
     public function rubriks()
     {
         return $this->hasMany(Rubrik::class, 'penilai_id');
@@ -39,9 +35,14 @@ class Penilai extends Model
     {
         return $this->belongsTo(User::class);
     }
-    
+
     public function kategoriSeni()
     {
         return $this->belongsTo(KategoriSeni::class, 'kategori_id');
     }
+
+    public function kuotaPenilai() {
+        return $this->hasOne(KuotaPenilai::class);
+    }
+
 }

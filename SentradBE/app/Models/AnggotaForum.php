@@ -7,22 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class KomenForum extends Model
+class AnggotaForum extends Model
 {
     use HasUuids, SoftDeletes, HasFactory;
 
-
-
     protected $fillable = [
-        'seniman_id',
+        'anggota_id',
         'forum_id',
-        'isi_komenForum',
-        'waktu_komenForum',
+        'tgl_join',
+        'role'
     ];
-
-
-    public function forum()
-    {
-        return $this->belongsTo(Forum::class, 'forum_id');
-    }
 }
