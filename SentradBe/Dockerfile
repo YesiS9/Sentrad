@@ -6,7 +6,10 @@ WORKDIR /var/www
 # Install dependency sistem yang dibutuhkan oleh Laravel (seperti git, curl, dll.)
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev zip unzip \
-    && docker-php-ext-install pdo pdo_mysql
+    && docker-php-ext-install pdo pdo_mysql\
+    libpng-dev libjpeg-dev libfreetype6-dev libzip-dev \
+    && docker-php-ext-install pdo pdo_mysql mbstring xml zip gd
+
 
 # Install Composer (manajer paket PHP)
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
