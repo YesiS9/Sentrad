@@ -15,11 +15,12 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist', 
-    emptyOutDir: true, 
-    manifest: true,
-    rollupOptions: {
-      input: 'src/main.js',
+      outDir: 'dist', 
+      emptyOutDir: true, 
+      manifest: true,
+      rollupOptions: {
+        input: path.resolve(__dirname, 'index.html'), // Gunakan index.html
+      },
     },
-  },
+  
 });
