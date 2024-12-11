@@ -15,11 +15,11 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../SentradBe/public/build', 
+    outDir: 'dist', 
     emptyOutDir: true, 
     manifest: true,
     rollupOptions: {
-      input: path.resolve(__dirname, 'SentradFe/src/main.js'),
+      input: 'src/main.js',
     },
   },
 });
