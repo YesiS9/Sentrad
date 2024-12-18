@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'stack'),
+    'default' => env('LOG_CHANNEL', 'null'),
 
     /*
     |--------------------------------------------------------------------------
@@ -113,6 +113,13 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        'redis' => [
+            'driver' => 'redis',
+            'via' => Illuminate\Log\LogManager::class,
+            'connection' => 'default',
+            'level' => env('LOG_LEVEL', 'debug'),
         ],
     ],
 
