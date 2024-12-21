@@ -5,7 +5,7 @@ import path from 'path';
 export default defineConfig({
   server: {
     proxy: {
-      '/api': 'sentrad-production-2d25.up.railway.app'
+      '/api': 'http://sentrad-production-2d25.up.railway.app/SentradBe/api'
     }
   },
   plugins: [vue()],

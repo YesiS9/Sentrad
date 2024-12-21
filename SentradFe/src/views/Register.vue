@@ -71,7 +71,7 @@
             formData.append('photo', this.photo);
           }
 
-          const response = await axios.post('http://localhost:8000/api/register', formData, {
+          const response = await axios.post('http://sentrad-production-2d25.up.railway.app/api/register', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
             },

@@ -132,7 +132,7 @@ export default {
                 }
 
                 if (this.penilai.user && this.penilai.user.foto) {
-                    this.penilai.avatar = `http://localhost:8000/storage/${this.penilai.user.foto}`;
+                    this.penilai.avatar = `http://sentrad-production-2d25.up.railway.app/storage/${this.penilai.user.foto}`;
                 } else {
                     this.penilai.avatar = 'default-avatar.jpg';
                 }

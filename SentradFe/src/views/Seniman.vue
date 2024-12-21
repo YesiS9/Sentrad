@@ -57,7 +57,7 @@
 
           const formattedDate = this.formatDate(this.tgl_lahir);
 
-          const response = await axios.post('http://localhost:8000/api/seniman', {
+          const response = await axios.post('http://sentrad-production-2d25.up.railway.app/api/seniman', {
             user_id: user_id,
             nama_seniman: this.nama_seniman,
             tgl_lahir: formattedDate,

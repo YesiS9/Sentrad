@@ -84,7 +84,7 @@ export default {
                 this.seniman = response.data.data;
                 this.editedSeniman = { ...this.seniman };
                 this.seniman.avatar = this.seniman.user?.foto
-                    ? `http://localhost:8000/storage/${this.seniman.user.foto}`
+                    ? `http://sentrad-production-2d25.up.railway.app/storage/${this.seniman.user.foto}`
                     : 'default-avatar.jpg';
 
                 const mapResponse = await axios.get(`/map?seniman_id=${senimanId}`);

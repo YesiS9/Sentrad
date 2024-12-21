@@ -100,9 +100,6 @@ export default {
         goToRegister() {
             this.$router.push('/register');
         },
-        goToForgotPassword() {
-            this.$router.push('/forgot-password'); // Halaman lupa password
-        },
         goToHome() {
             this.$router.push('/'); // Halaman utama
         }
