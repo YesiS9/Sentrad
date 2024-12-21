@@ -54,7 +54,7 @@
 
         const mediaPaths = JSON.parse(karya.value.media_karya);
         if (mediaPaths && mediaPaths.length > 0) {
-          mediaUrl.value = `http://sentrad-production-2d25.up.railway.app/storage/${mediaPaths[0]}`;
+          mediaUrl.value = `https://sentrad-production-2d25.up.railway.app/storage/${mediaPaths[0]}`;
           mediaType.value = mediaUrl.value.endsWith('.mp4') ? 'video' : 'image';
         }
         console.log('Final Media URL:', mediaUrl.value);

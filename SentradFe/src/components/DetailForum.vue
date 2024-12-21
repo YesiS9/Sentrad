@@ -278,7 +278,7 @@ const deleteComment = async (komen) => {
   border-radius: 8px;
   padding: 1rem;
   margin-bottom: 1rem;
-  position: relative; /* To make the actions menu position absolute */
+  position: relative; 
 }
 
 .komen-card p {
@@ -290,7 +290,7 @@ const deleteComment = async (komen) => {
 }
 
 .text-content {
-  margin-right: 40px; /* Allow space for the menu icon */
+  margin-right: 40px; 
 }
 
 .menu-actions {

@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://sentrad-production-2d25.up.railway.app/api',
+  baseURL: 'https://sentrad-production-2d25.up.railway.app/api',
   headers: {
     'Content-Type': 'application/json',
   },

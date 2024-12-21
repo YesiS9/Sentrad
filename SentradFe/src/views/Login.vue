@@ -35,7 +35,7 @@ export default {
     methods: {
         async login() {
             try {
-                const response = await axios.post('http://sentrad-production-2d25.up.railway.app/api/login', {
+                const response = await axios.post('https://sentrad-production-2d25.up.railway.app/api/login', {
                     email: this.email,
                     password: this.password
                 });

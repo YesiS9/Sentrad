@@ -113,7 +113,7 @@ const getKaryaList = async (portofolioId) => {
 
 
 const getMediaUrl = (path) => {
-  const baseUrl = 'http://localhost:8000';
+  const baseUrl = 'https://sentrad-production-2d25.up.railway.app';
   return `${baseUrl}/${path}`;
 };
 
