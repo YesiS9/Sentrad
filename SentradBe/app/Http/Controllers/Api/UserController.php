@@ -131,8 +131,8 @@ class UserController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'username' => 'required|string|max:255|unique:users',
-                'email' => 'required|string|email|max:255|unique:users',
+                'username' => ['required','string','max:255',Rule::unique('users')->whereNull('deleted_at')],
+                'email' => ['required','string','email','max:255', Rule::unique('users')->whereNull('deleted_at')],
                 'password' => 'required|string|min:8',
                 'nama_role' => 'required|string|exists:roles,nama_role',
                 'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:10240',
