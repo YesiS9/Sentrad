@@ -18,8 +18,12 @@ class EmailVerification extends Mailable
 
     public function build()
     {
-        return $this->view('emails.verify')->with([
-            'verification_url' => route('verification.verify', $this->user->id),
-        ]);
+        return $this->from(config('mail.from.address'), config('mail.from.name'))
+                    ->subject('Email Verification')
+                    ->view('emails.verify')
+                    ->with([
+                        'verification_url' => route('verification.verify', $this->user->id),
+                    ]);
     }
+
 }
