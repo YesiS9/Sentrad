@@ -34,7 +34,7 @@ Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);
 Route::get('email/verify/{id}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
 Route::get('/roles', [AuthController::class, 'getRoles']);
-Route::post('/user/store-byAdmin', [UserController::class, 'storeByAdmin']);
+
 Route::post('seniman', [SenimanController::class, 'store']);
 Route::get('/map-sanggar', [MapController::class, 'indexAll']);
 
@@ -58,9 +58,10 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('anggota', AnggotaController::class);
     Route::apiResource('map', MapController::class);
     Route::apiResource('info', InfoController::class);
+
+    Route::post('/user/store-byAdmin', [UserController::class, 'storeByAdmin']);
     Route::post('/get-kuota-id', [PenilaianKaryaController::class, 'getKuotaId']);
     Route::get('/karyas/{id}', [KaryaController::class, 'index']);
-
     Route::get('/seniman', [SenimanController::class, 'index']);
     Route::get('/total-seniman', [SenimanController::class, 'getTotalSeniman']);
     Route::get('/total-penilai', [PenilaiController::class, 'getTotalPenilai']);
