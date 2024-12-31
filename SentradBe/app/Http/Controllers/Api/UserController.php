@@ -131,13 +131,25 @@ class UserController extends Controller
     public function storeByAdmin(Request $request)
     {
         try {
+            $messages = [
+                'username.required' => 'Username wajib diisi.',
+                'username.unique' => 'Username telah dipakai.',
+                'email.required' => 'Email wajib diisi.',
+                'email.unique' => 'Email telah dipakai.',
+                'password.required' => 'Password wajib diisi.',
+                'password.min' => 'Password minimal harus terdiri dari 8 karakter.',
+                'nama_role.required' => 'Role wajib dipilih.',
+                'nama_role.exists' => 'Role yang dipilih tidak valid.',
+                'foto.image' => 'Foto harus berupa file gambar.',
+                'foto.max' => 'Ukuran foto tidak boleh lebih dari 200MB.',
+            ];
             $validator = Validator::make($request->all(), [
                 'username' => ['required','string','max:255',Rule::unique('users')->whereNull('deleted_at')],
                 'email' => ['required','string','email','max:255', Rule::unique('users')->whereNull('deleted_at')],
                 'password' => 'required|string|min:8',
                 'nama_role' => 'required|string|exists:roles,nama_role',
-                'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:10240',
-            ]);
+                'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:204800',
+            ], $messages);
 
             if ($validator->fails()) {
                 return response()->json([
@@ -191,13 +203,25 @@ class UserController extends Controller
     public function store(Request $request)
     {
         try {
+            $messages = [
+                'username.required' => 'Username wajib diisi.',
+                'username.unique' => 'Username telah dipakai.',
+                'email.required' => 'Email wajib diisi.',
+                'email.unique' => 'Email telah dipakai.',
+                'password.required' => 'Password wajib diisi.',
+                'password.min' => 'Password minimal harus terdiri dari 8 karakter.',
+                'nama_role.required' => 'Role wajib dipilih.',
+                'nama_role.exists' => 'Role yang dipilih tidak valid.',
+                'foto.image' => 'Foto harus berupa file gambar.',
+                'foto.max' => 'Ukuran foto tidak boleh lebih dari 200MB.',
+            ];
             $validator = Validator::make($request->all(), [
                 'username' => 'required|string|max:255|unique:users',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8',
                 'nama_role' => 'required|string|exists:roles,nama_role',
-                'foto' => 'nullable|file|image|max:20480',
-            ]);
+                'foto' => 'nullable|file|image|max:204800',
+            ], $messages);
 
             if ($validator->fails()) {
                 return response()->json([
@@ -264,13 +288,26 @@ class UserController extends Controller
                 ], 404);
             }
 
+            $messages = [
+                'username.required' => 'Username wajib diisi.',
+                'username.unique' => 'Username telah dipakai.',
+                'email.required' => 'Email wajib diisi.',
+                'email.unique' => 'Email telah dipakai.',
+                'password.required' => 'Password wajib diisi.',
+                'password.min' => 'Password minimal harus terdiri dari 8 karakter.',
+                'nama_role.required' => 'Role wajib dipilih.',
+                'nama_role.exists' => 'Role yang dipilih tidak valid.',
+                'foto.image' => 'Foto harus berupa file gambar.',
+                'foto.max' => 'Ukuran foto tidak boleh lebih dari 200MB.',
+            ];
+
             $validate = Validator::make($request->all(), [
                 'username' => 'required|string|max:255|unique:users,username,' . $id,
                 'email' => 'required|string|email|max:255|unique:users,email,' . $id,
                 'password' => 'sometimes|nullable|string|min:8',
                 'nama_role' => 'required|string|max:255',
-                'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:10240',
-            ]);
+                'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:204800',
+            ], $messages);
 
             if ($validate->fails()) {
                 return response()->json([

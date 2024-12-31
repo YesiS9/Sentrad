@@ -195,8 +195,10 @@ const handleSubmit = async () => {
             if (errorMessage.foto) {
                 Swal.fire('Error', `Foto error: ${errorMessage.foto[0]}`, 'error');
             }
+        }  else if (error.response && error.response.status === 500) {
+            Swal.fire('Error', 'Form sedang bermasalah. Silakan coba lagi.', 'error');
         } else {
-            console.error('Error saving data:', error.message);
+            Swal.fire('Error', 'Terjadi kesalahan yang tidak diketahui.', 'error');
         }
     }
 };
