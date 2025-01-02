@@ -48,9 +48,13 @@ class InfoController extends Controller
     public function store(Request $request)
     {
         try {
+            $messages = [
+                'info.required' => 'Info wajib diisi.',
+                'info.string' => 'Info harus berupa teks.',
+            ];
             $validate = Validator::make($request->all(), [
                 'info' => 'required|string',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -121,9 +125,13 @@ class InfoController extends Controller
                 ], 404);
             }
 
+            $messages = [
+                'info.required' => 'Info wajib diisi.',
+                'info.string' => 'Info harus berupa teks.',
+            ];
             $validate = Validator::make($request->all(), [
                 'info' => 'required|string',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());

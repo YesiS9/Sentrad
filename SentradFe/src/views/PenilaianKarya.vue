@@ -4,11 +4,11 @@
         <main class="data-penilaian-karya">
             <div class="penilaian-management-container">
                 <header class="header">
-                    <h2>Penilaian Karya Management</h2>
+                    <h2>Penilaian Registrasi Management</h2>
                 </header>
 
                 <div class="table-wrapper">
-                    <h3>Daftar Penilaian Karya</h3>
+                    <h3>Daftar Penilaian Registrasi</h3>
                     <table class="penilaian-table">
                         <thead>
                             <tr>

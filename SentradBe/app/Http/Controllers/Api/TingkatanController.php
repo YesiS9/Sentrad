@@ -49,12 +49,21 @@ class TingkatanController extends Controller
 
             $storeData = $request->all();
 
+            $messages = [
+                'nama_tingkatan.required' => 'Nama tingkatan wajib diisi.',
+                'deskripsi_tingkatan.required' => 'Deskripsi tingkatan wajib diisi.',
+                'nilai_min.required' => 'Nilai minimum wajib diisi.',
+                'nilai_min.numeric' => 'Nilai minimum harus berupa angka.',
+                'nilai_max.required' => 'Nilai maksimum wajib diisi.',
+                'nilai_max.numeric' => 'Nilai maksimum harus berupa angka.',
+            ];
+
             $validate = Validator::make($storeData, [
                 'nama_tingkatan' => 'required',
                 'deskripsi_tingkatan' => 'required',
                 'nilai_min' => 'required|numeric',
                 'nilai_max' => 'required|numeric',
-            ]);
+            ], $messages);
 
 
             if ($validate->fails()) {
@@ -126,12 +135,21 @@ class TingkatanController extends Controller
                 ], 404);
             }
 
+            $messages = [
+                'nama_tingkatan.required' => 'Nama tingkatan wajib diisi.',
+                'deskripsi_tingkatan.required' => 'Deskripsi tingkatan wajib diisi.',
+                'nilai_min.required' => 'Nilai minimum wajib diisi.',
+                'nilai_min.numeric' => 'Nilai minimum harus berupa angka.',
+                'nilai_max.required' => 'Nilai maksimum wajib diisi.',
+                'nilai_max.numeric' => 'Nilai maksimum harus berupa angka.',
+            ];
+
             $validate = Validator::make($request->all(), [
                 'nama_tingkatan' => 'required',
                 'deskripsi_tingkatan' => 'required',
                 'nilai_min' => 'required|numeric',
                 'nilai_max' => 'required|numeric',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());

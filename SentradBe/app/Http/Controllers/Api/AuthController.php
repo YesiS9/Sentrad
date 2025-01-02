@@ -20,22 +20,40 @@ class AuthController extends Controller{
     public function register(Request $request)
     {
         try {
+            $messages = [
+                'username.required' => 'Username harus diisi.',
+                'username.string' => 'Username harus berupa teks.',
+                'username.max' => 'Username maksimal 255 karakter.',
+                'username.unique' => 'Username sudah digunakan, silakan pilih username lain.',
+                'email.required' => 'Email harus diisi.',
+                'email.string' => 'Email harus berupa teks.',
+                'email.email' => 'Format email tidak valid.',
+                'email.max' => 'Email maksimal 255 karakter.',
+                'email.unique' => 'Email sudah digunakan, silakan gunakan email lain.',
+                'password.required' => 'Password harus diisi.',
+                'password.string' => 'Password harus berupa teks.',
+                'password.min' => 'Password minimal 8 karakter.',
+                'password.confirmed' => 'Konfirmasi password tidak cocok.',
+                'foto.file' => 'Foto harus berupa file.',
+                'foto.image' => 'File yang diunggah harus berupa gambar.',
+                'foto.max' => 'Ukuran foto maksimal adalah 200 MB.',
+            ];
+
             $validator = Validator::make($request->all(), [
                 'username' => 'required|string|max:255|unique:users',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:8|confirmed',
-                'foto' => 'nullable|file|image|max:20480',
-            ]);
+                'foto' => 'nullable|file|mimes:jpg,jpeg,png|max:204800',
+            ], $messages);
 
             if ($validator->fails()) {
-                return response()->json($validator->errors(), 422);
+                return response()->json($validator->errors(), 400);
             }
 
             try {
                 $role = Role::where('nama_role', 'seniman')->firstOrFail();
 
-                // Handle foto file upload
-                $fotoPath = 'profil_user/user.jpg'; // Default photo path
+                $fotoPath = 'profil_user/user.jpg';
                 if ($request->hasFile('foto')) {
                     $file = $request->file('foto');
                     if ($file->isValid()) {
@@ -44,7 +62,6 @@ class AuthController extends Controller{
                 }
 
 
-                // Create user
                 $user = User::create([
                     'username' => $request->username,
                     'email' => $request->email,
@@ -52,13 +69,11 @@ class AuthController extends Controller{
                     'foto' => $fotoPath,
                 ]);
 
-                // Assign role to user
                 UserRole::create([
                     'user_id' => $user->id,
                     'role_id' => $role->id,
                 ]);
 
-                // Send email verification
                 event(new Registered($user));
                 $user->sendEmailVerificationNotification();
 

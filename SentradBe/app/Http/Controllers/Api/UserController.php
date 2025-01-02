@@ -227,7 +227,7 @@ class UserController extends Controller
                 return response()->json([
                     'status' => 'error',
                     'message' => $validator->errors(),
-                ], 422);
+                ], 400);
             }
 
             $role = Role::where('nama_role', $request->nama_role)->firstOrFail();

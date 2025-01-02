@@ -7,17 +7,17 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="nama_rubrik">Nama Rubrik</label>
-                            <input type="text" id="nama_rubrik" v-model="formData.nama_rubrik" placeholder="Nama Rubrik" required>
+                            <input type="text" id="nama_rubrik" v-model="formData.nama_rubrik" placeholder="Nama Rubrik" required oninvalid="this.setCustomValidity('Nama Rubrik tidak boleh kosong')" oninput="this.setCustomValidity('')">
                         </div>
                         <div class="form-group">
                             <label for="bobot">Bobot</label>
-                            <input type="number" id="bobot" v-model="formData.bobot" placeholder="Bobot" required>
+                            <input type="number" id="bobot" v-model="formData.bobot" placeholder="Bobot" required oninvalid="this.setCustomValidity('Bobot Rubrik tidak boleh kosong')" oninput="this.setCustomValidity('')">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label for="deskripsi_rubrik">Deskripsi Rubrik</label>
-                            <textarea id="deskripsi_rubrik" v-model="formData.deskripsi_rubrik" placeholder="Deskripsi Rubrik" required></textarea>
+                            <textarea id="deskripsi_rubrik" v-model="formData.deskripsi_rubrik" placeholder="Deskripsi Rubrik" required oninvalid="this.setCustomValidity('Deskripsi Rubrik tidak boleh kosong')" oninput="this.setCustomValidity('')"> </textarea>>
                         </div>
                     </div>
                     <div class="form-actions">

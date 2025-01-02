@@ -100,17 +100,30 @@ class RubrikController extends Controller
     public function store(Request $request)
     {
         try {
+            $messages = [
+                'nama_rubrik.required' => 'Nama rubrik harus diisi.',
+                'nama_rubrik.string' => 'Nama rubrik harus berupa teks.',
+                'nama_rubrik.max' => 'Nama rubrik tidak boleh lebih dari 100 karakter.',
+                'nama_rubrik.unique' => 'Nama rubrik sudah digunakan, silakan gunakan nama lain.',
+                'deskripsi_rubrik.required' => 'Deskripsi rubrik harus diisi.',
+                'deskripsi_rubrik.string' => 'Deskripsi rubrik harus berupa teks.',
+                'bobot.required' => 'Bobot harus diisi.',
+                'bobot.numeric' => 'Bobot harus berupa angka.',
+                'bobot.gte' => 'Bobot tidak boleh kurang dari 0.',
+                'bobot.lte' => 'Bobot tidak boleh lebih dari 20.',
+            ];
+
             $validator = Validator::make($request->all(), [
                 'nama_rubrik' => 'required|string|max:100|unique:rubriks',
                 'deskripsi_rubrik' => 'required|string',
-                'bobot' => 'required|numeric|lte:20',
-            ]);
+                'bobot' => 'required|numeric|gte:0|lte:20',
+            ], $messages);
 
             if ($validator->fails()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => $validator->errors(),
-                ], 422);
+                ], 400);
             }
 
             try {
@@ -187,11 +200,24 @@ class RubrikController extends Controller
                 ], 404);
             }
 
+            $messages = [
+                'nama_rubrik.required' => 'Nama rubrik harus diisi.',
+                'nama_rubrik.string' => 'Nama rubrik harus berupa teks.',
+                'nama_rubrik.max' => 'Nama rubrik tidak boleh lebih dari 100 karakter.',
+                'nama_rubrik.unique' => 'Nama rubrik sudah digunakan, silakan gunakan nama lain.',
+                'deskripsi_rubrik.required' => 'Deskripsi rubrik harus diisi.',
+                'deskripsi_rubrik.string' => 'Deskripsi rubrik harus berupa teks.',
+                'bobot.required' => 'Bobot harus diisi.',
+                'bobot.numeric' => 'Bobot harus berupa angka.',
+                'bobot.gte' => 'Bobot tidak boleh kurang dari 0.',
+                'bobot.lte' => 'Bobot tidak boleh lebih dari 20.',
+            ];
+
             $validator = Validator::make($request->all(), [
                 'nama_rubrik' => 'required|string|max:100',
                 'deskripsi_rubrik' => 'required|string',
-                'bobot' => 'required|numeric',
-            ]);
+                'bobot' => 'required|numeric|gte:0|lte:20',
+            ], $messages);
 
             if ($validator->fails()) {
                 Log::error('Validation error: ' . $validator->errors());
@@ -199,7 +225,7 @@ class RubrikController extends Controller
                     'data' => null,
                     'status' => 'error',
                     'message' => $validator->errors(),
-                ], 422);
+                ], 400);
             }
 
             $rubrik->nama_rubrik = $request->nama_rubrik;

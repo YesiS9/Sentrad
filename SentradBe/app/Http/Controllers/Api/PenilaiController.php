@@ -55,19 +55,41 @@ class PenilaiController extends Controller
     {
         try {
             $storeData = $request->all();
+            $messages = [
+                'username.required' => 'Username wajib diisi.',
+                'nama_penilai.required' => 'Nama penilai wajib diisi.',
+                'nama_penilai.string' => 'Nama penilai harus berupa teks.',
+                'nama_penilai.max' => 'Nama penilai tidak boleh lebih dari 100 karakter.',
+                'alamat_penilai.required' => 'Alamat penilai wajib diisi.',
+                'alamat_penilai.string' => 'Alamat penilai harus berupa teks.',
+                'noTelp_penilai.required' => 'Nomor telepon penilai wajib diisi.',
+                'noTelp_penilai.regex' => 'Nomor telepon harus diawali dengan 08 dan memiliki panjang antara 10 hingga 14 digit.',
+                'nama_seni.required' => 'Nama seni wajib diisi.',
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'lembaga.required' => 'Lembaga wajib diisi.',
+                'lembaga.string' => 'Lembaga harus berupa teks.',
+                'lembaga.max' => 'Lembaga tidak boleh lebih dari 100 karakter.',
+                'tgl_lahir.required' => 'Tanggal lahir wajib diisi.',
+                'tgl_lahir.date_format' => 'Tanggal lahir harus dalam format d/m/Y.',
+                'status_penilai.required' => 'Status penilai wajib diisi.',
+                'status_penilai.string' => 'Status penilai harus berupa teks.',
+                'status_penilai.in' => 'Status penilai harus salah satu dari: Aktif atau Nonaktif.',
+                'kuota.required' => 'Kuota wajib diisi.',
+                'kuota.numeric' => 'Kuota harus berupa angka.',
+            ];
 
             $validate = Validator::make($storeData, [
                 'username' => 'required|exists:users,username',
                 'nama_penilai' => 'required|string|max:100',
                 'alamat_penilai' => 'required|string',
                 'noTelp_penilai' => 'required|regex:/^08\d{8,12}$/',
-                'nama_seni' => 'required',//|exists:senis,nama_seni
+                'nama_seni' => 'required|exists:senis,nama_seni',
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'lembaga' => 'required|string|max:100',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
                 'status_penilai' => 'required|string|in:Aktif,Nonaktif',
                 'kuota' => 'required|numeric',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -122,6 +144,109 @@ class PenilaiController extends Controller
         }
     }
 
+    public function update(Request $request, $id)
+    {
+        try {
+            $penilai = Penilai::whereNull('deleted_at')->find($id);
+
+            if (!$penilai) {
+                Log::error('Data Penilai Tidak Ditemukan');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Data Penilai Tidak Ditemukan',
+                ], 404);
+            }
+
+            $messages = [
+                'username.required' => 'Username wajib diisi.',
+                'nama_penilai.required' => 'Nama penilai wajib diisi.',
+                'nama_penilai.string' => 'Nama penilai harus berupa teks.',
+                'nama_penilai.max' => 'Nama penilai tidak boleh lebih dari 100 karakter.',
+                'alamat_penilai.required' => 'Alamat penilai wajib diisi.',
+                'alamat_penilai.string' => 'Alamat penilai harus berupa teks.',
+                'noTelp_penilai.required' => 'Nomor telepon penilai wajib diisi.',
+                'noTelp_penilai.regex' => 'Nomor telepon harus diawali dengan 08 dan memiliki panjang antara 10 hingga 14 digit.',
+                'nama_seni.required' => 'Nama seni wajib diisi.',
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'lembaga.required' => 'Lembaga wajib diisi.',
+                'lembaga.string' => 'Lembaga harus berupa teks.',
+                'lembaga.max' => 'Lembaga tidak boleh lebih dari 100 karakter.',
+                'tgl_lahir.required' => 'Tanggal lahir wajib diisi.',
+                'tgl_lahir.date_format' => 'Tanggal lahir harus dalam format d/m/Y.',
+                'status_penilai.required' => 'Status penilai wajib diisi.',
+                'status_penilai.string' => 'Status penilai harus berupa teks.',
+                'status_penilai.in' => 'Status penilai harus salah satu dari: Aktif atau Nonaktif.',
+                'kuota.required' => 'Kuota wajib diisi.',
+                'kuota.numeric' => 'Kuota harus berupa angka.',
+            ];
+
+            $validate = Validator::make($request->all(), [
+                'username' => 'required|exists:users,username',
+                'nama_penilai' => 'required|string|max:100',
+                'alamat_penilai' => 'required|string',
+                'noTelp_penilai' => 'required|regex:/^08\d{8,12}$/',
+                'nama_seni' => 'required|exists:senis,nama_seni',
+                'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
+                'lembaga' => 'required|string|max:100',
+                'tgl_lahir' => 'required|date_format:d/m/Y',
+                'status_penilai' => 'required|string|in:Aktif,Nonaktif',
+                'kuota' => 'required|numeric',
+            ], $messages);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors()->first(),
+                ], 400);
+            }
+
+            $user = User::where('username', $request->username)->first();
+            $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->first();
+
+            // Convert date format
+            try {
+                $tgl_lahir = Carbon::createFromFormat('d/m/Y', $request->tgl_lahir)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Invalid date format for tgl_lahir',
+                ], 400);
+            }
+
+            // Update penilai data
+            $penilai->user_id = $user->id;
+            $penilai->kategori_id = $kategori->id;
+            $penilai->nama_penilai = $request->nama_penilai;
+            $penilai->alamat_penilai = $request->alamat_penilai;
+            $penilai->noTelp_penilai = $request->noTelp_penilai;
+            $penilai->bidang_ahli = $request->nama_seni; // Assign bidang_ahli from nama_seni
+            $penilai->lembaga = $request->lembaga;
+            $penilai->tgl_lahir = $tgl_lahir;
+            $penilai->status_penilai = $request->status_penilai;
+            $penilai->kuota = $request->kuota;
+
+            $penilai->save();
+
+            Log::info('Data Penilai Berhasil Diupdate');
+            return response()->json([
+                'data' => $penilai,
+                'status' => 'success',
+                'message' => 'Data Penilai Berhasil Diupdate',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
+            return response()->json([
+                'data' => null,
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 
     public function show($id){
         try {
@@ -149,90 +274,6 @@ class PenilaiController extends Controller
             ], 500);
         }
     }
-
-
-    public function update(Request $request, $id)
-    {
-        try {
-            $penilai = Penilai::whereNull('deleted_at')->find($id);
-
-            if (!$penilai) {
-                Log::error('Data Penilai Tidak Ditemukan');
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'Data Penilai Tidak Ditemukan',
-                ], 404);
-            }
-
-            $validate = Validator::make($request->all(), [
-                'username' => 'required|exists:users,username',
-                'nama_penilai' => 'required|string|max:100',
-                'alamat_penilai' => 'required|string',
-                'noTelp_penilai' => 'required|regex:/^08\d{8,12}$/',
-                'bidang_ahli' => 'required|string',
-                'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
-                'lembaga' => 'required|string|max:100',
-                'tgl_lahir' => 'required|date_format:d/m/Y',
-                'status_penilai' => 'required|string|in:Aktif,Nonaktif',
-                'kuota' => 'required|numeric',
-            ]);
-
-            if ($validate->fails()) {
-                Log::error('Validation error: ' . $validate->errors());
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => $validate->errors()->first(),
-                ], 400);
-            }
-
-
-            $user = User::where('username', $request->username)->first();
-            $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->first();
-
-
-            try {
-                $tgl_lahir = Carbon::createFromFormat('d/m/Y', $request->tgl_lahir)->format('Y-m-d');
-            } catch (\Exception $e) {
-                return response()->json([
-                    'data' => null,
-                    'status' => 'error',
-                    'message' => 'Invalid date format for tgl_lahir',
-                ], 400);
-            }
-
-
-            $penilai->user_id = $user->id;
-            $penilai->kategori_id = $kategori->id;
-            $penilai->nama_penilai = $request->nama_penilai;
-            $penilai->alamat_penilai = $request->alamat_penilai;
-            $penilai->noTelp_penilai = $request->noTelp_penilai;
-            $penilai->bidang_ahli = $request->bidang_ahli;
-            $penilai->lembaga = $request->lembaga;
-            $penilai->tgl_lahir = $tgl_lahir;
-            $penilai->status_penilai = $request->status_penilai;
-            $penilai->kuota = $request->kuota;
-
-            $penilai->save();
-
-            Log::info('Data Penilai Berhasil Diupdate');
-            return response()->json([
-                'data' => $penilai,
-                'status' => 'success',
-                'message' => 'Data Penilai Berhasil Diupdate',
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Exception Error: ' . $e->getMessage());
-            return response()->json([
-                'data' => null,
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-
 
 
 

@@ -92,6 +92,22 @@ class ProyekController extends Controller
         try {
             $storeData = $request->all();
 
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'judul_proyek.required' => 'Judul proyek wajib diisi.',
+                'judul_proyek.max' => 'Judul proyek tidak boleh lebih dari 100 karakter.',
+                'deskripsi_proyek.required' => 'Deskripsi proyek wajib diisi.',
+                'deskripsi_proyek.string' => 'Deskripsi proyek harus berupa teks.',
+                'waktu_mulai.required' => 'Waktu mulai proyek wajib diisi.',
+                'waktu_mulai.date' => 'Waktu mulai proyek harus berupa tanggal yang valid.',
+                'waktu_selesai.required' => 'Waktu selesai proyek wajib diisi.',
+                'waktu_selesai.date' => 'Waktu selesai proyek harus berupa tanggal yang valid.',
+                'lokasi_proyek.required' => 'Lokasi proyek wajib diisi.',
+                'lokasi_proyek.string' => 'Lokasi proyek harus berupa teks.',
+                'tautan_proyek.required' => 'Tautan proyek wajib diisi.',
+                'tautan_proyek.string' => 'Tautan proyek harus berupa teks.',
+            ];
+
             $validate = Validator::make($storeData, [
                 'seniman_id' => 'required|exists:seniman,id',
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
@@ -103,7 +119,7 @@ class ProyekController extends Controller
                 'tautan_proyek' => 'required|string',
                 'status_proyek' => 'required|boolean',
                 'jumlah_like' => 'required|numeric',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -187,6 +203,21 @@ class ProyekController extends Controller
                 ], 404);
             }
 
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'judul_proyek.required' => 'Judul proyek wajib diisi.',
+                'judul_proyek.max' => 'Judul proyek tidak boleh lebih dari 100 karakter.',
+                'deskripsi_proyek.required' => 'Deskripsi proyek wajib diisi.',
+                'deskripsi_proyek.string' => 'Deskripsi proyek harus berupa teks.',
+                'waktu_mulai.required' => 'Waktu mulai proyek wajib diisi.',
+                'waktu_mulai.date' => 'Waktu mulai proyek harus berupa tanggal yang valid.',
+                'waktu_selesai.required' => 'Waktu selesai proyek wajib diisi.',
+                'waktu_selesai.date' => 'Waktu selesai proyek harus berupa tanggal yang valid.',
+                'lokasi_proyek.required' => 'Lokasi proyek wajib diisi.',
+                'lokasi_proyek.string' => 'Lokasi proyek harus berupa teks.',
+                'tautan_proyek.required' => 'Tautan proyek wajib diisi.',
+                'tautan_proyek.string' => 'Tautan proyek harus berupa teks.',
+            ];
             $validate = Validator::make($request->all(), [
                 'seniman_id' => 'required|exists:seniman,id',
                 'kategori_id' => 'required|exists:kategori_senis,id',
@@ -197,7 +228,7 @@ class ProyekController extends Controller
                 'lokasi_proyek' => 'required|string',
                 'tautan_proyek' => 'required|string',
                 'status_proyek' => 'required|boolean',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());

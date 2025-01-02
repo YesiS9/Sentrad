@@ -6,7 +6,7 @@
           <form @submit.prevent="handleSubmit">
             <div class="form-group">
               <label for="nama_kategori">Kategori Seni</label>
-              <select id="nama_kategori" v-model="formData.nama_kategori" required>
+              <select id="nama_kategori" v-model="formData.nama_kategori" required oninvalid="this.setCustomValidity('Kategori Seni tidak boleh kosong')" oninput="this.setCustomValidity('')">
                 <option value="">Pilih Kategori</option>
                 <option v-for="kategori in kategori_senis" :key="kategori.id" :value="kategori.nama_kategori">
                   {{ kategori.nama_kategori }}
@@ -15,15 +15,20 @@
             </div>
             <div class="form-group">
               <label for="nama_seni">Nama Seni</label>
-              <input type="text" id="nama_seni" v-model="formData.nama_seni" placeholder="Nama Seni" required>
+              <input type="text" id="nama_seni" v-model="formData.nama_seni" placeholder="Nama Seni" required oninvalid="this.setCustomValidity('Nama Seni tidak boleh kosong')" oninput="this.setCustomValidity('')">
             </div>
             <div class="form-group">
               <label for="deskripsi_seni">Deskripsi Seni</label>
-              <textarea id="deskripsi_seni" v-model="formData.deskripsi_seni" placeholder="Deskripsi Seni" rows="3" required></textarea>
+              <textarea id="deskripsi_seni" v-model="formData.deskripsi_seni" placeholder="Deskripsi Seni" rows="3" required oninvalid="this.setCustomValidity('Deskripsi Seni tidak boleh kosong')" oninput="this.setCustomValidity('')"></textarea>
             </div>
             <div class="form-group">
               <label for="status_seni">Status Seni</label>
-              <input type="text" id="status_seni" v-model="formData.status_seni" placeholder="Status Seni" required>
+              <select id="status_seni" v-model="formData.status_seni" required oninvalid="this.setCustomValidity('Status Seni tidak boleh kosong')" oninput="this.setCustomValidity('')">
+                <option value="">Pilih Status Seni</option>
+                <option value="Budaya">Budaya</option>
+                <option value="Non-budaya">Non-Budaya</option>
+                <option value="Modern">Modern</option>
+              </select>
             </div>
             <div class="form-actions">
               <button type="submit">{{ mode === 'add' ? 'Tambah' : 'Simpan' }}</button>

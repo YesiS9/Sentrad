@@ -72,7 +72,6 @@ class AnggotaForumController extends Controller
     public function destroy($forum_id, $anggota_id)
     {
         try {
-            // Find the anggota record with both forum_id and anggota_id (senimanID) matching the provided values
             $anggota = AnggotaForum::where('forum_id', $forum_id)
                                     ->where('anggota_id', $anggota_id)
                                     ->whereNull('deleted_at')
@@ -87,7 +86,6 @@ class AnggotaForumController extends Controller
                 ], 404);
             }
 
-            // Check if the role of the user is 'pemilik'
             if ($anggota->role === 'pemilik') {
                 Log::warning('Pemilik Forum Tidak Bisa Keluar, Hanya Bisa Menghapus Forum');
                 return response()->json([
@@ -97,7 +95,6 @@ class AnggotaForumController extends Controller
                 ], 403);
             }
 
-            // Delete the anggota record
             if ($anggota->delete()) {
                 Log::info('Data Anggota Berhasil Dihapus');
                 return response()->json([

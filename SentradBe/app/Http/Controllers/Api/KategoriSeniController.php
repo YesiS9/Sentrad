@@ -77,10 +77,16 @@ class KategoriSeniController extends Controller
     public function store(Request $request)
     {
         try {
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.string' => 'Nama kategori harus berupa teks.',
+                'nama_kategori.max' => 'Nama kategori tidak boleh lebih dari 100 karakter.',
+                'deskripsi_kategori.required' => 'Deskripsi kategori wajib diisi.',
+            ];
             $validate = Validator::make($request->all(), [
                 'nama_kategori' => 'required|string|max:100',
                 'deskripsi_kategori' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -155,11 +161,18 @@ class KategoriSeniController extends Controller
                 ], 404);
             }
 
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.string' => 'Nama kategori harus berupa teks.',
+                'nama_kategori.max' => 'Nama kategori tidak boleh lebih dari 100 karakter.',
+                'deskripsi_kategori.required' => 'Deskripsi kategori wajib diisi.',
+            ];
+
             $validate = Validator::make($request->all(), [
-                'user_id' => 'required|uuid',
+                'user_id' => 'required',
                 'nama_kategori' => 'required|string|max:100',
                 'deskripsi_kategori' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());

@@ -29,19 +29,16 @@ class PortofolioController extends Controller
 
         $senimanId = $user->seniman->id;
 
-        // Query portofolio individu
         $individualPortfolios = Portofolio::where('seniman_id', $senimanId)
             ->whereNull('kelompok_id')
             ->select('id', 'judul_portofolio', 'jumlah_karya', 'created_at')
-            ->paginate(10, ['*'], 'individual_page'); // Custom pagination name
+            ->paginate(10, ['*'], 'individual_page');
 
-        // Query portofolio kelompok
         $groupPortfolios = Portofolio::where('seniman_id', $senimanId)
             ->whereNotNull('kelompok_id')
             ->select('id', 'judul_portofolio', 'jumlah_karya', 'created_at')
-            ->paginate(10, ['*'], 'group_page'); // Custom pagination name
+            ->paginate(10, ['*'], 'group_page');
 
-        // Response JSON dengan kedua data
         return response()->json([
             'status' => 'success',
             'data' => [
@@ -77,13 +74,24 @@ class PortofolioController extends Controller
     public function store(Request $request)
     {
         try {
+            $messages = [
+                'kelompok_id.exists' => 'Kelompok tidak ditemukan pada data registrasi kelompok.',
+                'seniman_id.exists' => 'Seniman tidak ditemukan pada data seniman.',
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori tidak ditemukan pada data kategori seni.',
+                'judul_portofolio.required' => 'Judul portofolio wajib diisi.',
+                'judul_portofolio.string' => 'Judul portofolio harus berupa teks.',
+                'judul_portofolio.max' => 'Judul portofolio tidak boleh lebih dari 100 karakter.',
+                'deskripsi_portofolio.required' => 'Deskripsi portofolio wajib diisi.',
+            ];
+
             $validate = Validator::make($request->all(), [
                 'kelompok_id' => 'nullable|exists:registrasi_kelompoks,id',
                 'seniman_id' => 'required|exists:seniman,id',
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'judul_portofolio' => 'required|string|max:100',
                 'deskripsi_portofolio' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -104,7 +112,7 @@ class PortofolioController extends Controller
                 'seniman_id' => $senimanId,
                 'kategori_id' => $kategori->id,
                 'judul_portofolio' => $request->judul_portofolio,
-                'tgl_dibuat' => now(),  // Set tgl_dibuat to the current timestamp
+                'tgl_dibuat' => now(),
                 'deskripsi_portofolio' => $request->deskripsi_portofolio,
                 'jumlah_karya' => $jumlahKarya,
             ]);
@@ -139,12 +147,22 @@ class PortofolioController extends Controller
                 ], 404);
             }
 
+            $messages = [
+                'kelompok_id.exists' => 'Kelompok tidak ditemukan pada data registrasi kelompok.',
+                'seniman_id.exists' => 'Seniman tidak ditemukan pada data seniman.',
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori tidak ditemukan pada data kategori seni.',
+                'judul_portofolio.required' => 'Judul portofolio wajib diisi.',
+                'judul_portofolio.string' => 'Judul portofolio harus berupa teks.',
+                'judul_portofolio.max' => 'Judul portofolio tidak boleh lebih dari 100 karakter.',
+                'deskripsi_portofolio.required' => 'Deskripsi portofolio wajib diisi.',
+            ];
             $validate = Validator::make($request->all(), [
                 'kelompok_id' => 'nullable|exists:registrasi_kelompoks,id',
                 'seniman_id' => 'nullable|exists:seniman,id',
                 'judul_portofolio' => 'required|string|max:100',
                 'deskripsi_portofolio' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());

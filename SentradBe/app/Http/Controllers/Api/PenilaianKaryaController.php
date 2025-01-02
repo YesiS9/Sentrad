@@ -103,15 +103,36 @@ class PenilaianKaryaController extends Controller
     public function store(Request $request)
     {
         try {
+            $messages = [
+                'kuota_id.required' => 'Kuota wajib diisi.',
+                'rubrik_penilaians.required' => 'Rubrik penilaian wajib diisi.',
+                'rubrik_penilaians.min' => 'Rubrik penilaian harus memiliki minimal 5 item.',
+                'rubrik_penilaians.*.nama_rubrik.required' => 'Nama rubrik pada setiap item wajib diisi.',
+                'rubrik_penilaians.*.skor.required' => 'Skor pada setiap rubrik wajib diisi.',
+                'rubrik_penilaians.*.skor.numeric' => 'Skor pada setiap rubrik harus berupa angka.',
+                'rubrik_penilaians.*.skor.min' => 'Skor pada setiap rubrik harus minimal 0.',
+                'rubrik_penilaians.*.skor.max' => 'Skor pada setiap rubrik tidak boleh lebih dari 100.',
+                'komentar.string' => 'Komentar harus berupa teks.',
+                'komentar.max' => 'Komentar tidak boleh lebih dari 500 karakter.',
+            ];
             $validated = $request->validate([
                 'kuota_id' => 'required|exists:kuota_penilais,id',
                 'regisIndividu_id' => 'nullable|exists:registrasi_individus,id',
                 'regisKelompok_id' => 'nullable|exists:registrasi_kelompoks,id',
                 'rubrik_penilaians' => 'required|array|min:5',
                 'rubrik_penilaians.*.nama_rubrik' => 'required|exists:rubriks,nama_rubrik',
-                'rubrik_penilaians.*.skor' => 'required|numeric|min:1|max:100',
+                'rubrik_penilaians.*.skor' => 'required|numeric|min:0|max:100',
                 'komentar' => 'nullable|string|max:500',
-            ]);
+            ], $messages);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
 
             $total_nilai = array_sum(array_column($validated['rubrik_penilaians'], 'skor'));
 
@@ -130,7 +151,6 @@ class PenilaianKaryaController extends Controller
                 return response()->json(['error' => 'Total nilai tidak sesuai dengan tingkatan yang tersedia.'], 400);
             }
 
-            // Simpan data Penilaian Karya
             $penilaianKarya = PenilaianKarya::create([
                 'kuota_id' => $validated['kuota_id'],
                 'regisIndividu_id' => $validated['regisIndividu_id'],
@@ -141,7 +161,6 @@ class PenilaianKaryaController extends Controller
                 'tingkatan_id' => $tingkatan->id,
             ]);
 
-            // Simpan data Rubrik Penilaian
             foreach ($validated['rubrik_penilaians'] as $rubrik) {
                 $rubrikId = Rubrik::where('nama_rubrik', $rubrik['nama_rubrik'])->value('id');
                 if ($rubrikId) {
@@ -153,22 +172,17 @@ class PenilaianKaryaController extends Controller
                 }
             }
 
-            // Update kuota penilai
             $kuotaPenilai->increment('kuota_terpakai');
-
-            // Update status individu
             if ($validated['regisIndividu_id']) {
                 $registrasiIndividu = RegistrasiIndividu::find($validated['regisIndividu_id']);
                 $registrasiIndividu->update(['status_individu' => 'Penilaian Selesai']);
 
-                // Update tingkatan seniman
                 $seniman = $registrasiIndividu->seniman;
                 if ($seniman) {
                     $seniman->update(['tingkatan_id' => $tingkatan->id]);
                 }
             }
 
-            // Update status kelompok
             if ($validated['regisKelompok_id']) {
                 $registrasiKelompok = RegistrasiKelompok::find($validated['regisKelompok_id']);
                 $registrasiKelompok->update(['status_kelompok' => 'Penilaian Selesai']);
@@ -190,12 +204,32 @@ class PenilaianKaryaController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $messages = [
+                'rubrik_penilaians.required' => 'Rubrik penilaian wajib diisi.',
+                'rubrik_penilaians.min' => 'Rubrik penilaian harus memiliki minimal 5 item.',
+                'rubrik_penilaians.*.nama_rubrik.required' => 'Nama rubrik pada setiap item wajib diisi.',
+                'rubrik_penilaians.*.skor.required' => 'Skor pada setiap rubrik wajib diisi.',
+                'rubrik_penilaians.*.skor.numeric' => 'Skor pada setiap rubrik harus berupa angka.',
+                'rubrik_penilaians.*.skor.min' => 'Skor pada setiap rubrik harus minimal 0.',
+                'rubrik_penilaians.*.skor.max' => 'Skor pada setiap rubrik tidak boleh lebih dari 100.',
+                'komentar.string' => 'Komentar harus berupa teks.',
+                'komentar.max' => 'Komentar tidak boleh lebih dari 500 karakter.',
+            ];
             $validated = $request->validate([
                 'rubrik_penilaians' => 'required|array|min:5',
                 'rubrik_penilaians.*.nama_rubrik' => 'required|exists:rubriks,nama_rubrik',
-                'rubrik_penilaians.*.skor' => 'required|numeric|min:1|max:100',
+                'rubrik_penilaians.*.skor' => 'required|numeric|min:0|max:100',
                 'komentar' => 'nullable|string|max:500',
-            ]);
+            ], $messages);
+
+            if ($validate->fails()) {
+                Log::error('Validation error: ' . $validate->errors());
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => $validate->errors(),
+                ], 400);
+            }
 
             $total_nilai = array_sum(array_column($validated['rubrik_penilaians'], 'skor'));
 
@@ -259,7 +293,6 @@ class PenilaianKaryaController extends Controller
     public function show($id)
     {
         try {
-            // Ambil data PenilaianKarya beserta rubrik penilaian yang terkait
             $penilaianKarya = PenilaianKarya::whereNull('deleted_at')->find($id);
 
             if (!$penilaianKarya) {
@@ -270,7 +303,6 @@ class PenilaianKaryaController extends Controller
                 ], 404);
             }
 
-            // Ambil rubrik-rubrik yang terkait dengan PenilaianKarya
             $rubrikPenilaians = RubrikPenilaian::where('penilaian_karya_id', $penilaianKarya->id)
                 ->join('rubriks', 'rubrik_penilaians.rubrik_id', '=', 'rubriks.id')
                 ->select('rubriks.nama_rubrik', 'rubrik_penilaians.skor')

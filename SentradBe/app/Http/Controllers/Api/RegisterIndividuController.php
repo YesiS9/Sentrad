@@ -187,7 +187,21 @@ class RegisterIndividuController extends Controller
             $user = Auth::user();
             $storeData = $request->all();
 
-            // Validate incoming request
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori yang dipilih tidak valid.',
+                'tgl_lahir.required' => 'Tanggal lahir wajib diisi.',
+                'tgl_lahir.date_format' => 'Format tanggal lahir harus sesuai dengan format dd/mm/yyyy.',
+                'tgl_mulai.required' => 'Tanggal mulai berkarya wajib diisi.',
+                'tgl_mulai.date_format' => 'Format tanggal mulai harus sesuai dengan format dd/mm/yyyy.',
+                'alamat.required' => 'Alamat wajib diisi.',
+                'noTelp.required' => 'Nomor telepon wajib diisi.',
+                'noTelp.regex' => 'Nomor telepon harus dimulai dengan 08 dan terdiri dari 9 hingga 13 digit.',
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'status_individu.required' => 'Status individu wajib diisi.',
+            ];
+
             $validate = Validator::make($storeData, [
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'tgl_lahir' => 'required|date_format:d/m/Y',
@@ -196,7 +210,7 @@ class RegisterIndividuController extends Controller
                 'noTelp' => 'required|regex:/^08\d{8,12}$/',
                 'email' => 'required|email',
                 'status_individu' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -207,7 +221,7 @@ class RegisterIndividuController extends Controller
                 ], 400);
             }
 
-            // Retrieve the Seniman for the logged-in user
+
             $seniman = $user->seniman;
             if (!$seniman) {
                 Log::error('Seniman not logged in');
@@ -218,7 +232,7 @@ class RegisterIndividuController extends Controller
                 ], 401);
             }
 
-            // Check if the user has already registered
+
             $existingRegistration = RegistrasiIndividu::where('seniman_id', $seniman->id)->first();
             if ($existingRegistration) {
                 Log::error('User has already registered an individual: ' . $existingRegistration->id);
@@ -229,7 +243,6 @@ class RegisterIndividuController extends Controller
                 ], 400);
             }
 
-            // Retrieve the KategoriSeni
             $kategori = KategoriSeni::where('nama_kategori', $storeData['nama_kategori'])->first();
             if (!$kategori) {
                 Log::error('Kategori Seni not found with nama_kategori: ' . $storeData['nama_kategori']);
@@ -240,7 +253,6 @@ class RegisterIndividuController extends Controller
                 ], 404);
             }
 
-            // Prepare data for registration
             $storeData['nama'] = $seniman->nama_seniman;
             $storeData['tgl_lahir'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_lahir'])->format('Y-m-d');
             $storeData['tgl_mulai'] = Carbon::createFromFormat('d/m/Y', $storeData['tgl_mulai'])->format('Y-m-d');
@@ -248,7 +260,6 @@ class RegisterIndividuController extends Controller
             $storeData['kategori_id'] = $kategori->id;
             unset($storeData['nama_kategori']);
 
-            // Create the registration
             $register = RegistrasiIndividu::create($storeData);
 
             Log::info('Data Registrasi Individu Berhasil Ditambahkan');
@@ -274,6 +285,21 @@ class RegisterIndividuController extends Controller
         try {
             $storeData = $request->all();
 
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori yang dipilih tidak valid.',
+                'tgl_lahir.required' => 'Tanggal lahir wajib diisi.',
+                'tgl_lahir.date_format' => 'Format tanggal lahir harus sesuai dengan format dd/mm/yyyy.',
+                'tgl_mulai.required' => 'Tanggal mulai berkarya wajib diisi.',
+                'tgl_mulai.date_format' => 'Format tanggal mulai harus sesuai dengan format dd/mm/yyyy.',
+                'alamat.required' => 'Alamat wajib diisi.',
+                'noTelp.required' => 'Nomor telepon wajib diisi.',
+                'noTelp.regex' => 'Nomor telepon harus dimulai dengan 08 dan terdiri dari 9 hingga 13 digit.',
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'status_individu.required' => 'Status individu wajib diisi.',
+            ];
+
             $validate = Validator::make($storeData, [
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'nama_seniman' => 'required|exists:seniman,nama_seniman',
@@ -284,7 +310,7 @@ class RegisterIndividuController extends Controller
                 'noTelp' => 'required|regex:/^08\d{8,12}$/',
                 'email' => 'required|email',
                 'status_individu' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -413,6 +439,39 @@ class RegisterIndividuController extends Controller
                 ], 404);
             }
 
+            if ($register->status_individu !== 'dalam proses') {
+                Log::error('Status individu bukan "dalam proses".');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Penilaian registrasi telah selesai sehingga pembaruan data tidak dapat dilakukan.',
+                ], 400);
+            }
+
+            if (Carbon::now()->diffInHours($register->created_at) > 24) {
+                Log::error('Waktu pembuatan lebih dari 24 jam.');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Pembaruan hanya dapat dilakukan jika waktu pendaftaran kurang dari 24 jam.',
+                ], 400);
+            }
+
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori yang dipilih tidak valid.',
+                'tgl_lahir.required' => 'Tanggal lahir wajib diisi.',
+                'tgl_lahir.date_format' => 'Format tanggal lahir harus sesuai dengan format dd/mm/yyyy.',
+                'tgl_mulai.required' => 'Tanggal mulai berkarya wajib diisi.',
+                'tgl_mulai.date_format' => 'Format tanggal mulai harus sesuai dengan format dd/mm/yyyy.',
+                'alamat.required' => 'Alamat wajib diisi.',
+                'noTelp.required' => 'Nomor telepon wajib diisi.',
+                'noTelp.regex' => 'Nomor telepon harus dimulai dengan 08 dan terdiri dari 9 hingga 13 digit.',
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'status_individu.required' => 'Status individu wajib diisi.',
+            ];
+
             $validate = Validator::make($request->all(), [
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'nama' => 'required',
@@ -422,7 +481,7 @@ class RegisterIndividuController extends Controller
                 'noTelp' => 'required|regex:/^08\d{8,12}$/',
                 'email' => 'required|email',
                 'status_individu' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());

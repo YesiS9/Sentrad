@@ -162,6 +162,24 @@ class RegisterKelompokController extends Controller
             $user = Auth::user();
             $storeData = $request->all();
 
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori yang dipilih tidak valid.',
+                'nama_kelompok.required' => 'Nama kelompok wajib diisi.',
+                'nama_kelompok.unique' => 'Nama kelompok sudah digunakan, harap pilih nama yang lain.',
+                'tgl_terbentuk.required' => 'Tanggal terbentuk wajib diisi.',
+                'tgl_terbentuk.date_format' => 'Format tanggal terbentuk harus sesuai dengan format dd/mm/yyyy.',
+                'alamat_kelompok.required' => 'Alamat kelompok wajib diisi.',
+                'deskripsi_kelompok.required' => 'Deskripsi kelompok wajib diisi.',
+                'noTelp_kelompok.required' => 'Nomor telepon kelompok wajib diisi.',
+                'noTelp_kelompok.regex' => 'Nomor telepon kelompok harus dimulai dengan 08 dan terdiri dari 9 hingga 13 digit.',
+                'email_kelompok.required' => 'Email kelompok wajib diisi.',
+                'email_kelompok.email' => 'Format email kelompok tidak valid.',
+                'jumlah_anggota.required' => 'Jumlah anggota wajib diisi.',
+                'jumlah_anggota.numeric' => 'Jumlah anggota harus berupa angka.',
+                'status_kelompok.required' => 'Status kelompok wajib diisi.',
+            ];
+
             $validate = Validator::make($storeData, [
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'nama_kelompok' => 'required|unique:registrasi_kelompoks,nama_kelompok',
@@ -172,7 +190,7 @@ class RegisterKelompokController extends Controller
                 'email_kelompok' => 'required|email',
                 'jumlah_anggota' => 'required|numeric',
                 'status_kelompok' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -236,6 +254,24 @@ class RegisterKelompokController extends Controller
         try {
             $storeData = $request->all();
 
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori yang dipilih tidak valid.',
+                'nama_kelompok.required' => 'Nama kelompok wajib diisi.',
+                'nama_kelompok.unique' => 'Nama kelompok sudah digunakan, harap pilih nama yang lain.',
+                'tgl_terbentuk.required' => 'Tanggal terbentuk wajib diisi.',
+                'tgl_terbentuk.date_format' => 'Format tanggal terbentuk harus sesuai dengan format dd/mm/yyyy.',
+                'alamat_kelompok.required' => 'Alamat kelompok wajib diisi.',
+                'deskripsi_kelompok.required' => 'Deskripsi kelompok wajib diisi.',
+                'noTelp_kelompok.required' => 'Nomor telepon kelompok wajib diisi.',
+                'noTelp_kelompok.regex' => 'Nomor telepon kelompok harus dimulai dengan 08 dan terdiri dari 9 hingga 13 digit.',
+                'email_kelompok.required' => 'Email kelompok wajib diisi.',
+                'email_kelompok.email' => 'Format email kelompok tidak valid.',
+                'jumlah_anggota.required' => 'Jumlah anggota wajib diisi.',
+                'jumlah_anggota.numeric' => 'Jumlah anggota harus berupa angka.',
+                'status_kelompok.required' => 'Status kelompok wajib diisi.',
+            ];
+
             $validate = Validator::make($storeData, [
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
                 'nama_seniman'=>'required|exists:seniman,nama_seniman',
@@ -247,7 +283,7 @@ class RegisterKelompokController extends Controller
                 'email_kelompok' => 'required|email',
                 'jumlah_anggota' => 'required|numeric',
                 'status_kelompok' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -331,49 +367,49 @@ class RegisterKelompokController extends Controller
     }
 
     public function showByAdmin($id)
-{
-    try {
-        $register = RegistrasiKelompok::with('seniman')->find($id);
+    {
+        try {
+            $register = RegistrasiKelompok::with('seniman')->find($id);
 
-        if (!$register) {
-            Log::error('RegistrasiKelompok not found with ID: ' . $id);
+            if (!$register) {
+                Log::error('RegistrasiKelompok not found with ID: ' . $id);
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'RegistrasiKelompok not found',
+                ], 404);
+            }
+
+            $data = [
+                'id' => $register->id,
+                'nama_seniman' => $register->seniman->nama_seniman,
+                'nama_kelompok' => $register->nama_kelompok,
+                'tgl_terbentuk' => $register->tgl_terbentuk,
+                'alamat_kelompok' => $register->alamat_kelompok,
+                'deskripsi_kelompok' => $register->deskripsi_kelompok,
+                'noTelp_kelompok' => $register->noTelp_kelompok,
+                'email_kelompok' => $register->email_kelompok,
+                'jumlah_anggota' => $register->jumlah_anggota,
+                'status_kelompok' => $register->status_kelompok,
+                'created_at' => $register->created_at,
+                'updated_at' => $register->updated_at,
+            ];
+
+            Log::info('Data Registrasi Kelompok Berhasil Ditampilkan');
+            return response()->json([
+                'data' => $data,
+                'status' => 'success',
+                'message' => 'Data Registrasi Kelompok Berhasil Ditampilkan',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Exception Error: ' . $e->getMessage());
             return response()->json([
                 'data' => null,
                 'status' => 'error',
-                'message' => 'RegistrasiKelompok not found',
-            ], 404);
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        $data = [
-            'id' => $register->id,
-            'nama_seniman' => $register->seniman->nama_seniman,
-            'nama_kelompok' => $register->nama_kelompok,
-            'tgl_terbentuk' => $register->tgl_terbentuk,
-            'alamat_kelompok' => $register->alamat_kelompok,
-            'deskripsi_kelompok' => $register->deskripsi_kelompok,
-            'noTelp_kelompok' => $register->noTelp_kelompok,
-            'email_kelompok' => $register->email_kelompok,
-            'jumlah_anggota' => $register->jumlah_anggota,
-            'status_kelompok' => $register->status_kelompok,
-            'created_at' => $register->created_at,
-            'updated_at' => $register->updated_at,
-        ];
-
-        Log::info('Data Registrasi Kelompok Berhasil Ditampilkan');
-        return response()->json([
-            'data' => $data,
-            'status' => 'success',
-            'message' => 'Data Registrasi Kelompok Berhasil Ditampilkan',
-        ], 200);
-    } catch (\Exception $e) {
-        Log::error('Exception Error: ' . $e->getMessage());
-        return response()->json([
-            'data' => null,
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ], 500);
     }
-}
 
 
 
@@ -391,6 +427,42 @@ class RegisterKelompokController extends Controller
                 ], 404);
             }
 
+            if ($register->status_kelompok !== 'dalam proses') {
+                Log::error('Status kelompok harus bernilai "dalam proses" untuk melakukan pembaruan.');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Penilaian registrasi telah selesai sehingga pembaruan data tidak dapat dilakukan.',
+                ], 400);
+            }
+
+            if (Carbon::now()->diffInHours($register->created_at) > 24) {
+                Log::error('Waktu pembuatan lebih dari 24 jam. Pembaruan tidak diperbolehkan.');
+                return response()->json([
+                    'data' => null,
+                    'status' => 'error',
+                    'message' => 'Pembaruan hanya dapat dilakukan jika waktu pendaftaran kurang dari 24 jam.',
+                ], 400);
+            }
+
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori yang dipilih tidak valid.',
+                'nama_kelompok.required' => 'Nama kelompok wajib diisi.',
+                'nama_kelompok.unique' => 'Nama kelompok sudah digunakan, harap pilih nama yang lain.',
+                'tgl_terbentuk.required' => 'Tanggal terbentuk wajib diisi.',
+                'tgl_terbentuk.date_format' => 'Format tanggal terbentuk harus sesuai dengan format dd/mm/yyyy.',
+                'alamat_kelompok.required' => 'Alamat kelompok wajib diisi.',
+                'deskripsi_kelompok.required' => 'Deskripsi kelompok wajib diisi.',
+                'noTelp_kelompok.required' => 'Nomor telepon kelompok wajib diisi.',
+                'noTelp_kelompok.regex' => 'Nomor telepon kelompok harus dimulai dengan 08 dan terdiri dari 9 hingga 13 digit.',
+                'email_kelompok.required' => 'Email kelompok wajib diisi.',
+                'email_kelompok.email' => 'Format email kelompok tidak valid.',
+                'jumlah_anggota.required' => 'Jumlah anggota wajib diisi.',
+                'jumlah_anggota.numeric' => 'Jumlah anggota harus berupa angka.',
+                'status_kelompok.required' => 'Status kelompok wajib diisi.',
+            ];
+
             $validate = Validator::make($request->all(), [
                 'seniman_id' => 'required|exists:seniman,id',
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
@@ -402,7 +474,7 @@ class RegisterKelompokController extends Controller
                 'email_kelompok' => 'required|email',
                 'jumlah_anggota' => 'required|numeric',
                 'status_kelompok' => 'required',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -586,6 +658,6 @@ class RegisterKelompokController extends Controller
         return response()->json(['total_kelompoks' => $totalKelompok]);
     }
 
-    
+
 
 }

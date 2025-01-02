@@ -149,12 +149,20 @@ class ForumController extends Controller
         try {
             $storeData = $request->all();
 
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori tidak ditemukan dalam data kategori seni.',
+                'judul_forum.required' => 'Judul forum wajib diisi.',
+                'judul_forum.string' => 'Judul forum harus berupa teks.',
+                'judul_forum.max' => 'Judul forum tidak boleh lebih dari 100 karakter.',
+                'status_forum.required' => 'Status forum wajib diisi.',
+            ];
             $validate = Validator::make($storeData, [
                 'seniman_id' => 'required|exists:seniman,id',
                 'nama_kategori' => 'required|string|exists:kategori_senis,nama_kategori',
                 'judul_forum' => 'required|string|max:100',
                 'status_forum' => 'required|boolean',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -217,12 +225,20 @@ class ForumController extends Controller
                     'message' => 'Data Forum Tidak Ditemukan',
                 ], 404);
             }
+            $messages = [
+                'nama_kategori.required' => 'Nama kategori wajib diisi.',
+                'nama_kategori.exists' => 'Nama kategori tidak ditemukan dalam data kategori seni.',
+                'judul_forum.required' => 'Judul forum wajib diisi.',
+                'judul_forum.string' => 'Judul forum harus berupa teks.',
+                'judul_forum.max' => 'Judul forum tidak boleh lebih dari 100 karakter.',
+                'status_forum.required' => 'Status forum wajib diisi.',
+            ];
             $validate = Validator::make($request->all(), [
                 'seniman_id' => 'required|exists:seniman,id',
                 'nama_kategori' => 'required|string|exists:kategori_senis,nama_kategori',
                 'judul_forum' => 'required|string|max:100',
                 'status_forum' => 'required|boolean',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -245,7 +261,7 @@ class ForumController extends Controller
             }
 
             $forum->seniman_id = $request->seniman_id;
-            $forum->kategori_id = $kategori->id; // Set kategori_id berdasarkan nama_kategori
+            $forum->kategori_id = $kategori->id;
             $forum->judul_forum = $request->judul_forum;
             $forum->status_forum = $request->status_forum;
 

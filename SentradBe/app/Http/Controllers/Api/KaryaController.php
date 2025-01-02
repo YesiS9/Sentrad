@@ -62,15 +62,31 @@ class KaryaController extends Controller
     public function store(Request $request)
     {
         try {
+            $messages = [
+                'portofolio_id.required' => 'Nama Portofolio wajib diisi.',
+                'judul_karya.required' => 'Judul karya wajib diisi.',
+                'judul_karya.string' => 'Judul karya harus berupa teks.',
+                'tgl_pembuatan.required' => 'Tanggal pembuatan wajib diisi.',
+                'tgl_pembuatan.date_format' => 'Tanggal pembuatan harus menggunakan format d/m/Y.',
+                'deskripsi_karya.required' => 'Deskripsi karya wajib diisi.',
+                'deskripsi_karya.string' => 'Deskripsi karya harus berupa teks.',
+                'bentuk_karya.required' => 'Bentuk karya wajib diisi.',
+                'bentuk_karya.string' => 'Bentuk karya harus berupa teks.',
+                'media_karya.*.required' => 'Media karya wajib diunggah.',
+                'media_karya.*.file' => 'Media karya harus berupa file.',
+                'media_karya.*.mimes' => 'Media karya harus berupa file dengan ekstensi jpg, jpeg, png, mp4, atau mov.',
+                'media_karya.*.max' => 'Ukuran file media karya tidak boleh lebih dari 200MB.',
+                'status_karya.required' => 'Status karya wajib diisi.',
+            ];
             $validate = Validator::make($request->all(), [
                 'portofolio_id' => 'required|exists:portofolios,id',
                 'judul_karya' => 'required|string',
                 'tgl_pembuatan' => 'required|date_format:d/m/Y',
                 'deskripsi_karya' => 'required|string',
                 'bentuk_karya' => 'required|string',
-                'media_karya.*' => 'required|file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
+                'media_karya.*' => 'required|file|mimes:jpg,jpeg,png,mp4,mov|max:204800',
                 'status_karya' => 'required|boolean',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
@@ -127,15 +143,31 @@ class KaryaController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $messages = [
+                'portofolio_id.required' => 'Nama Portofolio wajib diisi.',
+                'judul_karya.required' => 'Judul karya wajib diisi.',
+                'judul_karya.string' => 'Judul karya harus berupa teks.',
+                'tgl_pembuatan.required' => 'Tanggal pembuatan wajib diisi.',
+                'tgl_pembuatan.date_format' => 'Tanggal pembuatan harus menggunakan format d/m/Y.',
+                'deskripsi_karya.required' => 'Deskripsi karya wajib diisi.',
+                'deskripsi_karya.string' => 'Deskripsi karya harus berupa teks.',
+                'bentuk_karya.required' => 'Bentuk karya wajib diisi.',
+                'bentuk_karya.string' => 'Bentuk karya harus berupa teks.',
+                'media_karya.*.required' => 'Media karya wajib diunggah.',
+                'media_karya.*.file' => 'Media karya harus berupa file.',
+                'media_karya.*.mimes' => 'Media karya harus berupa file dengan ekstensi jpg, jpeg, png, mp4, atau mov.',
+                'media_karya.*.max' => 'Ukuran file media karya tidak boleh lebih dari 200MB.',
+                'status_karya.required' => 'Status karya wajib diisi.',
+            ];
             $validate = Validator::make($request->all(), [
                 'portofolio_id' => 'required|exists:portofolios,id',
                 'judul_karya' => 'required|string',
                 'tgl_pembuatan' => 'required|date_format:d/m/Y',
                 'deskripsi_karya' => 'required|string',
                 'bentuk_karya' => 'required|string',
-                'media_karya.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:10240',
+                'media_karya.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov|max:204800',
                 'status_karya' => 'required|boolean',
-            ]);
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());

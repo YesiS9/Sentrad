@@ -8,6 +8,7 @@ use App\Models\Seni;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class SeniController extends Controller
 {
@@ -106,11 +107,19 @@ class SeniController extends Controller
 
             $storeData = $request->all();
 
+            $masseges = [
+                'nama_kategori.required' => 'Nama kategori harus diisi.',
+                'nama_seni.required' => 'Nama seni harus diisi.',
+                'nama_seni.unique' => 'Nama seni sudah digunakan, silakan gunakan nama lain.',
+                'deskripsi_seni.required' => 'Deskripsi seni harus diisi.',
+                'deskripsi_seni.string' => 'Deskripsi seni harus berupa teks.',
+                'status_seni.required' => 'Status seni harus diisi.',
+            ];
             $validate = Validator::make($storeData, [
                 'nama_kategori' => 'required|exists:kategori_senis,nama_kategori',
-                'nama_seni' => 'required',
+                'nama_seni' => 'required', Rule::unique('senis', 'nama_seni')->whereNull('deleted_at'),
                 'deskripsi_seni' => 'required',
-                'status_seni' => 'required'
+                'status_seni' => 'required|in:Budaya,Non-budaya,Modern'
             ]);
 
 

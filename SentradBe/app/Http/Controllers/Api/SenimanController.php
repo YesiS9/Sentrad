@@ -50,20 +50,9 @@ class SenimanController extends Controller
     public function storeByAdmin(Request $request)
     {
         try {
-            // Retrieve all request data
             $storeData = $request->all();
 
-            // Validate request data
-            $validate = Validator::make($storeData, [
-                'username' => 'required|string|exists:users,username',
-                'nama_seniman' => 'required|string|max:100',
-                'tgl_lahir' => 'required|date_format:d/m/Y',
-                'deskripsi_seniman' => 'required|string',
-                'alamat_seniman' => 'required|string',
-                'noTelp_seniman' => 'required|numeric',
-                'lama_pengalaman' => 'required|integer|min:0',
-                'status_seniman' => 'required|boolean',
-            ], [
+            $messages = [
                 'username.required' => 'Username wajib diisi.',
                 'username.exists' => 'Username tidak ditemukan.',
                 'nama_seniman.required' => 'Nama Seniman wajib diisi.',
@@ -80,7 +69,18 @@ class SenimanController extends Controller
                 'lama_pengalaman.required' => 'Lama Pengalaman wajib diisi.',
                 'lama_pengalaman.integer' => 'Lama Pengalaman harus berupa angka.',
                 'lama_pengalaman.min' => 'Lama Pengalaman tidak boleh kurang dari 0.',
-            ]);
+
+            ];
+            $validate = Validator::make($storeData, [
+                'username' => 'required|string|exists:users,username',
+                'nama_seniman' => 'required|string|max:100',
+                'tgl_lahir' => 'required|date_format:d/m/Y',
+                'deskripsi_seniman' => 'required|string',
+                'alamat_seniman' => 'required|string',
+                'noTelp_seniman' => 'required|numeric',
+                'lama_pengalaman' => 'required|integer|min:0',
+                'status_seniman' => 'required|boolean',
+            ], $messages);
 
 
             if ($validate->fails()) {
@@ -141,7 +141,25 @@ class SenimanController extends Controller
         try {
             $storeData = $request->all();
 
+            $messages = [
+                'username.required' => 'Username wajib diisi.',
+                'username.exists' => 'Username tidak ditemukan.',
+                'nama_seniman.required' => 'Nama Seniman wajib diisi.',
+                'nama_seniman.string' => 'Nama Seniman harus berupa teks.',
+                'nama_seniman.max' => 'Nama Seniman tidak boleh lebih dari 100 karakter.',
+                'tgl_lahir.required' => 'Tanggal Lahir wajib diisi.',
+                'tgl_lahir.date_format' => 'Tanggal Lahir harus dalam format Y-m-d.',
+                'deskripsi_seniman.required' => 'Deskripsi Seniman wajib diisi.',
+                'deskripsi_seniman.string' => 'Deskripsi Seniman harus berupa teks.',
+                'alamat_seniman.required' => 'Alamat Seniman wajib diisi.',
+                'alamat_seniman.string' => 'Alamat Seniman harus berupa teks.',
+                'noTelp_seniman.required' => 'No. Telp Seniman wajib diisi.',
+                'noTelp_seniman.numeric' => 'No. Telp Seniman harus berupa angka.',
+                'lama_pengalaman.required' => 'Lama Pengalaman wajib diisi.',
+                'lama_pengalaman.integer' => 'Lama Pengalaman harus berupa angka.',
+                'lama_pengalaman.min' => 'Lama Pengalaman tidak boleh kurang dari 0.',
 
+            ];
             $validate = Validator::make($storeData, [
                 'user_id' => 'required|string|exists:users,id',
                 'nama_seniman' => 'required|string',
@@ -151,7 +169,7 @@ class SenimanController extends Controller
                 'noTelp_seniman' => 'required|regex:/^08\d{8,12}$/',
                 'lama_pengalaman' => 'required|integer',
                 'status_seniman' => 'required|boolean',
-            ]);
+            ],$messages);
 
 
             if ($validate->fails()) {
@@ -227,23 +245,14 @@ class SenimanController extends Controller
 
             $updateData = $request->all();
 
-            $validate = Validator::make($updateData, [
-                'username' => 'required|string|exists:users,username',
-                'nama_seniman' => 'required|string|max:100',
-                'tgl_lahir' => 'required|date_format:d/m/Y',
-                'deskripsi_seniman' => 'required|string',
-                'alamat_seniman' => 'required|string',
-                'noTelp_seniman' => 'required|numeric',
-                'lama_pengalaman' => 'required|integer|min:0',
-                'status_seniman' => 'required|boolean',
-            ], [
+            $messages = [
                 'username.required' => 'Username wajib diisi.',
                 'username.exists' => 'Username tidak ditemukan.',
                 'nama_seniman.required' => 'Nama Seniman wajib diisi.',
                 'nama_seniman.string' => 'Nama Seniman harus berupa teks.',
                 'nama_seniman.max' => 'Nama Seniman tidak boleh lebih dari 100 karakter.',
                 'tgl_lahir.required' => 'Tanggal Lahir wajib diisi.',
-                'tgl_lahir.date_format' => 'Tanggal Lahir harus dalam format d/m/Y.',
+                'tgl_lahir.date_format' => 'Tanggal Lahir harus dalam format Y-m-d.',
                 'deskripsi_seniman.required' => 'Deskripsi Seniman wajib diisi.',
                 'deskripsi_seniman.string' => 'Deskripsi Seniman harus berupa teks.',
                 'alamat_seniman.required' => 'Alamat Seniman wajib diisi.',
@@ -253,7 +262,18 @@ class SenimanController extends Controller
                 'lama_pengalaman.required' => 'Lama Pengalaman wajib diisi.',
                 'lama_pengalaman.integer' => 'Lama Pengalaman harus berupa angka.',
                 'lama_pengalaman.min' => 'Lama Pengalaman tidak boleh kurang dari 0.',
-            ]);
+
+            ];
+            $validate = Validator::make($updateData, [
+                'username' => 'required|string|exists:users,username',
+                'nama_seniman' => 'required|string|max:100',
+                'tgl_lahir' => 'required|date_format:d/m/Y',
+                'deskripsi_seniman' => 'required|string',
+                'alamat_seniman' => 'required|string',
+                'noTelp_seniman' => 'required|numeric',
+                'lama_pengalaman' => 'required|integer|min:0',
+                'status_seniman' => 'required|boolean',
+            ], $messages);
 
             if ($validate->fails()) {
                 Log::error('Validation error: ' . $validate->errors());
