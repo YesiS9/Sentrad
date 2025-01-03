@@ -206,7 +206,6 @@ class PenilaiController extends Controller
             $user = User::where('username', $request->username)->first();
             $kategori = KategoriSeni::where('nama_kategori', $request->nama_kategori)->first();
 
-            // Convert date format
             try {
                 $tgl_lahir = Carbon::createFromFormat('d/m/Y', $request->tgl_lahir)->format('Y-m-d');
             } catch (\Exception $e) {
@@ -217,13 +216,12 @@ class PenilaiController extends Controller
                 ], 400);
             }
 
-            // Update penilai data
             $penilai->user_id = $user->id;
             $penilai->kategori_id = $kategori->id;
             $penilai->nama_penilai = $request->nama_penilai;
             $penilai->alamat_penilai = $request->alamat_penilai;
             $penilai->noTelp_penilai = $request->noTelp_penilai;
-            $penilai->bidang_ahli = $request->nama_seni; // Assign bidang_ahli from nama_seni
+            $penilai->bidang_ahli = $request->nama_seni;
             $penilai->lembaga = $request->lembaga;
             $penilai->tgl_lahir = $tgl_lahir;
             $penilai->status_penilai = $request->status_penilai;

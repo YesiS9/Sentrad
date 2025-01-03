@@ -65,7 +65,7 @@ class SenimanController extends Controller
                 'alamat_seniman.required' => 'Alamat Seniman wajib diisi.',
                 'alamat_seniman.string' => 'Alamat Seniman harus berupa teks.',
                 'noTelp_seniman.required' => 'No. Telp Seniman wajib diisi.',
-                'noTelp_seniman.numeric' => 'No. Telp Seniman harus berupa angka.',
+                'noTelp_seniman.regex' => 'Nomor telepon harus diawali dengan 08 dan memiliki panjang antara 10 hingga 14 digit.',
                 'lama_pengalaman.required' => 'Lama Pengalaman wajib diisi.',
                 'lama_pengalaman.integer' => 'Lama Pengalaman harus berupa angka.',
                 'lama_pengalaman.min' => 'Lama Pengalaman tidak boleh kurang dari 0.',
@@ -77,7 +77,7 @@ class SenimanController extends Controller
                 'tgl_lahir' => 'required|date_format:d/m/Y',
                 'deskripsi_seniman' => 'required|string',
                 'alamat_seniman' => 'required|string',
-                'noTelp_seniman' => 'required|numeric',
+                'noTelp_seniman' => 'required|regex:/^08\d{8,12}$/',
                 'lama_pengalaman' => 'required|integer|min:0',
                 'status_seniman' => 'required|boolean',
             ], $messages);
@@ -108,7 +108,7 @@ class SenimanController extends Controller
                 return response()->json([
                     'data' => null,
                     'status' => 'error',
-                    'message' => 'User already has a Seniman entry',
+                    'message' => 'User telah memiliki data seniman',
                 ], 400);
             }
 
@@ -154,7 +154,7 @@ class SenimanController extends Controller
                 'alamat_seniman.required' => 'Alamat Seniman wajib diisi.',
                 'alamat_seniman.string' => 'Alamat Seniman harus berupa teks.',
                 'noTelp_seniman.required' => 'No. Telp Seniman wajib diisi.',
-                'noTelp_seniman.numeric' => 'No. Telp Seniman harus berupa angka.',
+                'noTelp_seniman.regex' => 'Nomor telepon harus diawali dengan 08 dan memiliki panjang antara 10 hingga 14 digit.',
                 'lama_pengalaman.required' => 'Lama Pengalaman wajib diisi.',
                 'lama_pengalaman.integer' => 'Lama Pengalaman harus berupa angka.',
                 'lama_pengalaman.min' => 'Lama Pengalaman tidak boleh kurang dari 0.',
@@ -258,7 +258,7 @@ class SenimanController extends Controller
                 'alamat_seniman.required' => 'Alamat Seniman wajib diisi.',
                 'alamat_seniman.string' => 'Alamat Seniman harus berupa teks.',
                 'noTelp_seniman.required' => 'No. Telp Seniman wajib diisi.',
-                'noTelp_seniman.numeric' => 'No. Telp Seniman harus berupa angka.',
+                'noTelp_seniman.regex' => 'Nomor telepon harus diawali dengan 08 dan memiliki panjang antara 10 hingga 14 digit.',
                 'lama_pengalaman.required' => 'Lama Pengalaman wajib diisi.',
                 'lama_pengalaman.integer' => 'Lama Pengalaman harus berupa angka.',
                 'lama_pengalaman.min' => 'Lama Pengalaman tidak boleh kurang dari 0.',
@@ -270,7 +270,7 @@ class SenimanController extends Controller
                 'tgl_lahir' => 'required|date_format:d/m/Y',
                 'deskripsi_seniman' => 'required|string',
                 'alamat_seniman' => 'required|string',
-                'noTelp_seniman' => 'required|numeric',
+                'noTelp_seniman' => 'required||regex:/^08\d{8,12}$/',
                 'lama_pengalaman' => 'required|integer|min:0',
                 'status_seniman' => 'required|boolean',
             ], $messages);

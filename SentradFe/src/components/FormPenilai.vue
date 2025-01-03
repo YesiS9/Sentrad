@@ -84,6 +84,22 @@
 
               <div class="form-group">
                 <label for="nama_seni">Bidang Ahli</label>
+                <Multiselect
+                  v-model="formData.nama_seni"
+                  :options="seniOptions"
+                  :searchable="true"
+                  :close-on-select="true"
+                  :clear-on-select="false"
+                  :preserve-search="true"
+                  placeholder="Pilih atau cari Seni"
+                  label="nama_seni"
+                  track-by="nama_seni"
+                  class="custom-multiselect"
+                ></Multiselect>
+              </div>
+
+              <!-- <div class="form-group">
+                <label for="nama_seni">Bidang Ahli</label>
                 <input
                   type="text"
                   id="nama_seni"
@@ -91,7 +107,7 @@
                   placeholder="Bidang Ahli"
                   required
                 />
-              </div>
+              </div> -->
 
               <div class="form-group">
                 <label for="alamat_penilai">Alamat Penilai</label>
@@ -172,6 +188,7 @@ const formData = reactive({
 });
 
 const kategoriOptions = ref([]);
+const seniOptions = ref([]);
 const users = ref([]);
 const route = useRoute();
 const router = useRouter();
@@ -204,6 +221,34 @@ const getKategoriOptions = async () => {
   }
 };
 
+
+
+const getSeniOptions = async (nama_kategori) => {
+  try {
+    const response = await axios.get(`/seni-by-kategori/${nama_kategori}`);
+    if (Array.isArray(response.data.data)) {
+      seniOptions.value = response.data.data.map((seni) => seni.nama_seni);
+    } else {
+      console.error('Unexpected response data format:', response.data);
+    }
+  } catch (error) {
+    console.error('Error fetching seni:', error.message);
+  }
+};
+
+watch(
+  () => formData.nama_kategori,
+  async (newValue) => {
+    seniOptions.value = [];
+
+    if (newValue) {
+      await getSeniOptions(newValue);
+    }
+  }
+);
+
+
+
 const getPenilai = async (id) => {
   try {
     const response = await axios.get(`/penilai/${id}`);
@@ -222,6 +267,7 @@ const getPenilai = async (id) => {
 onMounted(async () => {
   await getUser();
   await getKategoriOptions();
+  
 
   const { id } = route.params;
   if (id) {

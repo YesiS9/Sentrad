@@ -72,36 +72,6 @@ class SeniController extends Controller
         }
     }
 
-    public function indexSeni(Request $request){
-        try {
-            $seni = Seni::whereNull('deleted_at')->get();
-
-            if ($seni->isNotEmpty()) {
-                Log::info('Data Seni Berhasil Ditampilkan');
-                return response()->json([
-                    'data' => $seni,
-                    'status' => 'success',
-                    'message' => 'Data Seni Berhasil Ditampilkan',
-                ], 200);
-            }
-
-            Log::info('Data Seni Kosong');
-            return response()->json([
-                'data' => null,
-                'status' => 'success',
-                'message' => 'Data Seni Kosong',
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Exception Error: ' . $e->getMessage());
-            return response()->json([
-                'data' => null,
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-
     public function store(Request $request){
         try {
 
