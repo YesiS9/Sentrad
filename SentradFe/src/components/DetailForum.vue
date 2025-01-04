@@ -1,69 +1,89 @@
 <template>
-    <div class="page">
+  <div class="container-fluid page">
+    <div class="row">
+      <div class="col-lg-3 col-md-4 d-none d-md-block">
         <Sidebar />
-        <main class="info-forum" v-bind="$attrs">
-        <div class="card forum-detail" v-if="forum">
+      </div>
+      <div class="col-lg-9 col-md-8">
+        <main class="info-forum mt-3" v-bind="$attrs">
+          <div class="card forum-detail mb-3" v-if="forum">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h2 class="h5 mb-0">Detail Forum</h2>
+              <button @click="goBack" class="btn btn-outline-secondary btn-sm">
+                <i class="material-icons">arrow_back_ios</i> Kembali
+              </button>
+            </div>
+            <div class="card-body">
+              <p><strong>Judul Forum:</strong> {{ forum.judul_forum }}</p>
+              <p><strong>Seniman:</strong> {{ forum.nama_seniman }}</p>
+              <p><strong>Kategori:</strong> {{ forum.nama_kategori }}</p>
+              <p><strong>Jumlah Anggota:</strong> {{ forum.anggota_forums_count }}</p>
+            </div>
+          </div>
+
+          <div class="card komen-forum">
             <div class="card-header">
-            <h2>Detail Forum</h2>
-            <button @click="goBack" class="back-button">
-                <i class="material-icons">arrow_back_ios</i>
-            </button>
+              <h3 class="h6 mb-0">Komentar Forum</h3>
             </div>
-            <div class="forum-info">
-            <p><strong>Judul Forum:</strong> {{ forum.judul_forum }}</p>
-            <p><strong>Seniman:</strong> {{ forum.nama_seniman }}</p>
-            <p><strong>Kategori:</strong> {{ forum.nama_kategori }}</p>
-            <p><strong>Jumlah Anggota:</strong> {{ forum.anggota_forums_count }}</p>
-            </div>
-        </div>
-        <div class="card komen-forum">
-        <h3>Komentar Forum</h3>
-        <div class="komen-list" v-if="komenForum.length">
-            <div v-for="(komen, index) in komenForum" :key="komen.id" class="komen-card">
-            <div class="komen-content">
-                <div class="text-content">
-                <p class="nama-seniman">{{ komen.nama_seniman }}:</p>
-                <template v-if="editIndex === index">
-                    <input v-model="editedComment" class="edit-input" />
-                </template>
-                <template v-else>
-                    <p class="isi-komen">{{ komen.isi_komenForum }}</p>
-                </template>
+            <div class="card-body">
+              <div v-if="komenForum.length">
+                <div v-for="(komen, index) in komenForum" :key="komen.id" class="card mb-3">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                      <div>
+                        <p class="fw-bold mb-1">{{ komen.nama_seniman }}</p>
+                        <template v-if="editIndex === index">
+                          <input v-model="editedComment" class="form-control" />
+                        </template>
+                        <template v-else>
+                          <p class="mb-0">{{ komen.isi_komenForum }}</p>
+                        </template>
+                      </div>
+                      <div>
+                        <button
+                          v-if="editIndex !== index"
+                          @click="toggleMenu(index)"
+                          class="btn btn-sm btn-outline-secondary"
+                        >
+                          <i class="material-icons">more_vert</i>
+                        </button>
+                        <div v-if="showMenu === index" class="dropdown-menu dropdown-menu-end show">
+                          <a class="dropdown-item" @click="replyComment(komen)">Reply</a>
+                          <a class="dropdown-item" @click="startEditComment(index, komen)">Edit</a>
+                          <a class="dropdown-item text-danger" @click="deleteComment(komen)">Hapus</a>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div v-if="editIndex === index" class="mt-2">
+                      <button @click="saveEditComment(komen)" class="btn btn-primary btn-sm me-2">Simpan</button>
+                      <button @click="cancelEditComment" class="btn btn-outline-secondary btn-sm">Batal</button>
+                    </div>
+                  </div>
                 </div>
-                <div class="menu-actions">
-                <button v-if="editIndex !== index" @click="toggleMenu(index)" class="menu-button">
-                    <i class="material-icons">more_vert</i>
+              </div>
+              <p v-else class="text-muted">Tidak ada komentar pada forum ini.</p>
+
+              <div class="input-group mt-3">
+                <input
+                  v-model="newComment"
+                  type="text"
+                  class="form-control"
+                  placeholder="Tambahkan komentar..."
+                  @keyup.enter="addComment"
+                />
+                <button @click="addComment" class="btn btn-primary">
+                  <i class="material-icons">send</i>
                 </button>
-                <div v-if="showMenu === index" class="popup-menu">
-                    <ul>
-                    <li @click="replyComment(komen)">Reply</li>
-                    <li @click="startEditComment(index, komen)">Edit</li>
-                    <li @click="deleteComment(komen)">Hapus</li>
-                    </ul>
-                </div>
-                <div v-if="editIndex === index" class="edit-actions">
-                    <button @click="saveEditComment(komen)">Simpan</button>
-                    <button @click="cancelEditComment">Batal</button>
-                </div>
-                </div>
+              </div>
             </div>
-            </div>
-        </div>
-        <p v-else>Tidak ada komentar pada forum ini.</p>
-
-        <div class="add-comment">
-            <input v-model="newComment" type="text" placeholder="Tambahkan komentar..." @keyup.enter="addComment" />
-            <button @click="addComment" class="send-button">
-            <i class="material-icons">send</i>
-            </button>
-        </div>
-        </div>
+          </div>
         </main>
+      </div>
     </div>
-
-  </template>
-
-  <script setup>
+  </div>
+</template>
+<script setup>
   import { ref, onMounted } from 'vue';
   import axios from '../services/api.js';
   import { useRoute, useRouter } from 'vue-router';
@@ -238,146 +258,95 @@ const deleteComment = async (komen) => {
   });
   </script>
 
-  <style lang="scss" scoped>
-  .page {
-  display: flex;
-  flex: 1;
+<style scoped>
+.page {
   background-color: #f2d395;
   color: #333;
-}
-  .info-forum {
-  padding: 2rem;
-  background-color: #f5d99d;
+  min-height: 100vh;
 }
 
+/* Info Forum */
+.info-forum {
+  padding: 1rem;
+}
+
+/* Kartu */
 .card {
-  padding: 1.5rem;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-  display: flex;
-  flex-direction: column;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ffffff;
-  padding-bottom: 0.5rem;
+/* Detail Forum */
+.forum-detail .card-header {
+  background-color: #ffe4b2;
+  font-weight: bold;
+  color: #333;
 }
 
-.komen-list {
-  margin-top: 1rem;
+/* Komentar Forum */
+.komen-forum .card-header {
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #ddd;
 }
 
-.komen-card {
-  background-color: #fafafa;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  position: relative; 
-}
-
-.komen-card p {
-  margin: 0;
-}
-
-.komen-card strong {
-  color: #007bff;
-}
-
-.text-content {
-  margin-right: 40px; 
-}
-
-.menu-actions {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-}
-
-.menu-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #555;
-}
-
-.popup-menu {
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  position: absolute;
-  right: 0;
-  top: 30px;
-  width: 100px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 999;
-}
-
-.popup-menu ul {
-  list-style: none;
+.komen-forum .dropdown-menu {
   padding: 0;
-  margin: 0;
 }
 
-.popup-menu ul li {
-  padding: 10px;
-  cursor: pointer;
-  border-bottom: 1px solid #eee;
-
+.komen-forum .dropdown-item {
+  font-size: 0.875rem;
 }
 
-.popup-menu ul li:hover {
-  background-color: #f0f0f0;
+.komen-forum .dropdown-item:hover {
+  background-color: #f2d395;
 }
 
-.edit-actions {
-  display: flex;
-  gap: 10px; /* Add space between buttons */
-  margin-top: 10px;
+.komen-forum .input-group input {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
 }
 
-.edit-actions button {
-  padding: 0.5rem 1rem;
+.komen-forum .input-group button {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+/* Tombol */
+.btn {
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background-color: #f2d395;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
-.edit-actions button:first-child {
-  background-color: #4caf50; /* Save button */
-  color: white;
+.btn-primary:hover {
+  background-color: #f1c27d;
 }
 
-.edit-actions button:last-child {
-  background-color: #f44336; /* Cancel button */
-  color: white;
-}
-
-.add-comment {
-  display: flex;
-  margin-top: 1rem;
-}
-
-.add-comment input {
-  flex: 1;
-  padding: 0.5rem;
+.btn-outline-secondary {
+  color: #333;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-right: 0.5rem;
 }
 
-.send-button {
-  background-color: #4caf50;
-  color: white;
-  padding: 0.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.btn-outline-secondary:hover {
+  background-color: #f9f9f9;
 }
 
-  </style>
+/* Responsivitas */
+@media (max-width: 768px) {
+  .info-forum {
+    padding: 0.5rem;
+  }
+
+  .komen-forum .dropdown-item {
+    font-size: 0.75rem;
+  }
+
+  .btn {
+    font-size: 0.75rem;
+  }
+}
+</style>
