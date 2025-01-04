@@ -245,6 +245,7 @@ const deleteComment = async (komen) => {
     } catch (error) {
       console.error('Error adding comment:', error.message);
     }
+    //saas
   };
 
   const goBack = () => {
