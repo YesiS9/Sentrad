@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://sentrad-powwdrpfa-yesis-projects-c3bd1885.vercel.app','http://localhost:5173'],
+    'allowed_origins' => ['https://sentrad-git-main-yesis-projects-c3bd1885.vercel.app','http://localhost:5173'],
 
     'allowed_origins_patterns' => [],
 
