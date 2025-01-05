@@ -155,8 +155,8 @@ class AuthController extends Controller{
                     'user' => $user,
                     'role' => $getRole,
                     'token' => $token,
-                    'seniman_id' => $seniman_id,  // Include seniman_id if applicable
-                    'penilai_id' => $penilai_id   // Include penilai_id if applicable
+                    'seniman_id' => $seniman_id,
+                    'penilai_id' => $penilai_id
                 ],
                 'status' => 'success',
                 'message' => 'Login berhasil'

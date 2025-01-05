@@ -4,8 +4,8 @@
             <div class="auth-form">
                 <img :src="logoURL" alt="Sentrad Logo" class="logo" />
                 <h2>Login Form</h2>
-                <input v-model="email" type="email" placeholder="Email" />
-                <input v-model="password" type="password" placeholder="Password" />
+                <input v-model="email" type="email" placeholder="Email" autocomplete="email"/>
+                <input v-model="password" type="password" placeholder="Password" autocomplete="current-password" />
                 <button @click="login">Login</button>
                 <div class="links">
                     <a href="#" @click.prevent="goToHome">Home</a>
