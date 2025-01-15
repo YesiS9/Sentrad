@@ -108,10 +108,9 @@ class ForumController extends Controller
                 ], 400);
             }
 
-            // Get forums by seniman_id and count the number of anggota for each forum
             $forums = Forum::where('seniman_id', $seniman_id)
                 ->whereNull('deleted_at')
-                ->withCount('anggotaForums') // Add anggota count
+                ->withCount('anggotaForums')
                 ->get();
 
             if ($forums->count() > 0) {

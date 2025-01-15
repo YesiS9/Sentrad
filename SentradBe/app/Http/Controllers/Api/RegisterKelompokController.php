@@ -507,7 +507,7 @@ class RegisterKelompokController extends Controller
             $register->email_kelompok = $request->email_kelompok;
             $register->jumlah_anggota = $request->jumlah_anggota;
             $register->status_kelompok = $request->status_kelompok;
-            $register->kategori_id = $kategori->id; // Assign the kategori_id
+            $register->kategori_id = $kategori->id;
 
             $register->save();
 
