@@ -184,7 +184,7 @@ class PortofolioController extends Controller
                 'seniman_id' => $senimanId,
                 'kategori_id' => $kategori ? $kategori->id : $portofolio->kategori_id,
                 'judul_portofolio' => $request->judul_portofolio,
-                'tgl_dibuat' => $portofolio->tgl_dibuat,  
+                'tgl_dibuat' => $portofolio->tgl_dibuat,
                 'deskripsi_portofolio' => $request->deskripsi_portofolio,
                 'jumlah_karya' => $jumlahKarya,
             ]);

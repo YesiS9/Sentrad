@@ -77,7 +77,6 @@ class RubrikPenilaianController extends Controller
      */
     public function show(string $id)
     {
-
     }
 
     /**
@@ -85,7 +84,6 @@ class RubrikPenilaianController extends Controller
      */
     public function update(Request $request, string $id)
     {
-
     }
 
     /**
@@ -93,6 +91,5 @@ class RubrikPenilaianController extends Controller
      */
     public function destroy(string $id)
     {
-        
     }
 }
