@@ -396,7 +396,6 @@ class PenilaianKaryaController extends Controller
                 ], 404);
             }
 
-            // Ambil rubrik-rubrik yang terkait dengan PenilaianKarya
             $rubrikPenilaians = RubrikPenilaian::where('penilaian_karya_id', $penilaianKarya->id)
                 ->join('rubriks', 'rubrik_penilaians.rubrik_id', '=', 'rubriks.id')
                 ->select('rubriks.nama_rubrik', 'rubrik_penilaians.skor')

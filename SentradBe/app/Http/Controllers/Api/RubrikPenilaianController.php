@@ -17,7 +17,6 @@ class RubrikPenilaianController extends Controller
      */
     public function index()
     {
-        // You can implement the index method if you need to list all rubrik-penilaian entries
     }
 
     /**
@@ -78,7 +77,7 @@ class RubrikPenilaianController extends Controller
      */
     public function show(string $id)
     {
-        // You can implement the show method if you need to display a specific rubrik-penilaian entry
+
     }
 
     /**
@@ -86,7 +85,7 @@ class RubrikPenilaianController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // You can implement the update method if you need to update a specific rubrik-penilaian entry
+
     }
 
     /**
@@ -94,6 +93,6 @@ class RubrikPenilaianController extends Controller
      */
     public function destroy(string $id)
     {
-        // You can implement the destroy method if you need to delete a specific rubrik-penilaian entry
+        
     }
 }
