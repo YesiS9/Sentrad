@@ -45,7 +45,7 @@
         email: '',
         password: '',
         password_confirmation: '',
-        photo: null, // Adjusted to null to match the second example
+        photo: null,
         logoURL: logo,
         errors: {
           photo: [],
@@ -103,67 +103,97 @@
   };
   </script>
 
+<style lang="scss" scoped>
+main {
+  background-color: #f7941e;
+}
 
-  <style lang="scss" scoped>
-  main {
-    background-color: #f7941e;
-  }
-  .auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f7941e;
-  }
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f7941e;
+  padding: 1rem;
+}
+
+.auth-form {
+  background-color: #fff;
+  width: 100%;
+  max-width: 450px;
+  min-width: 300px;
+  max-height: 600px;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.logo {
+  width: 100px;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+label {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #f7941e;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #e6830d;
+}
+
+a {
+  display: block;
+  margin-top: 1rem;
+  color: #f7941e;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
   .auth-form {
-    background-color: #fff;
-    width: 85vw;
-    height: 85vw;
-    max-width: 450px;
-    max-height: 600px;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    height: auto;
+    padding: 1.5rem;
   }
+}
+
+@media (max-width: 480px) {
+  .auth-form {
+    width: 95%;
+    max-width: 350px;
+    padding: 1rem;
+  }
+
   .logo {
-    width: 100px;
-    margin-bottom: 1rem;
+    width: 80px;
   }
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    width: 100%;
-  }
-  label {
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-    font-size: 0.9rem;
-  }
-  input {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  button {
-    background-color: #f7941e;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  button:hover {
-    background-color: #e6830d;
-  }
-  a {
-    display: block;
-    margin-top: 1rem;
-    color: #f7941e;
-    text-decoration: none;
-    cursor: pointer;
-  }
-  </style>
+}
+</style>
