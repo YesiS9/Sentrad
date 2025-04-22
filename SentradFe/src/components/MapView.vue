@@ -138,7 +138,7 @@
           description: "",
           latitude: null,
           longitude: null,
-          seniman_id: localStorage.getItem("seniman_id"), // Tetap ambil dari localStorage
+          seniman_id: localStorage.getItem("seniman_id"),
         };
         this.locationConfirmed = false;
         this.clearMarkers();
