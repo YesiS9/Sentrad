@@ -79,7 +79,7 @@ class AuthController extends Controller{
 
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'User registered successfully. Please check your email for verification.',
+                    'message' => 'Register Berhasil, Tolong cek email anda untuk verifikasi.',
                     'data' => $user,
                 ], 201);
             } catch (\Exception $e) {
